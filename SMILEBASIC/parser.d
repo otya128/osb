@@ -51,8 +51,22 @@ class Lexical
 }
 unittest
 {
-    auto lex = new Lexical("1");
-
+    {
+        auto lex = new Lexical("1");
+        assert(lex.empty() == false);
+        lex.popFront();
+        auto token = lex.front();
+        assert(token.type == TokenType.Integer);
+        assert(token.value.integerValue == 1);
+    }
+    {
+        auto lex = new Lexical("12345");
+        assert(lex.empty() == false);
+        lex.popFront();
+        auto token = lex.front();
+        assert(token.type == TokenType.Integer);
+        assert(token.value.integerValue == 12345);
+    }
 }
 class Parser
 {
