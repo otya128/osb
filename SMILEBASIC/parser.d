@@ -21,6 +21,8 @@ class Lexical
         table['-'] = TokenType.Minus;
         table['*'] = TokenType.Mul;
         table['/'] = TokenType.Div;
+        table['('] = TokenType.LParen;
+        table[')'] = TokenType.RParen;
     }
     bool empty()
     {
@@ -140,6 +142,7 @@ class Parser
     }
     int calc()
     {
+        lex.popFront();
         auto exp = expression();
         writeln();
         return calc(exp);
@@ -177,7 +180,6 @@ class Parser
     Expression expression()
     {
         Expression node = null;
-        lex.popFront();
         return term(8, node);
     }
     Expression term(int order, Expression node)
@@ -221,10 +223,19 @@ class Parser
                 stdout.flush();
                 node = new Constant(Value(token.value.integerValue));
                 break;
+            case TokenType.LParen:
+                lex.popFront();
+                node = expression();
+                token = lex.front();
+                if(token.type != TokenType.RParen)
+                    //error
+                {}
+                break;
             default:
                 return node;
         }
-        if(!lex.empty())lex.popFront();
+        if(!lex.empty())
+            lex.popFront();
         return node;
     }
 }

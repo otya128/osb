@@ -16,6 +16,8 @@ enum TokenType
     Xor,
     Print,
     If,
+    LParen,
+    RParen,
 }
 
 struct Token
