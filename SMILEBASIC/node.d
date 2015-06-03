@@ -29,11 +29,17 @@ class BinaryOperator : Expression
     Expression item1;
     TokenType operator;
     Expression item2;
-    this(Expression i1, TokenType o)
+    this(BinaryOperator bop)
+    {
+        this.type = NodeType.BinaryOperator;
+        this.item1 = bop.item1;
+        this.operator = bop.operator;
+        this.item2 = bop.item2;
+    }
+    this(Expression i1)
     {
         this.type = NodeType.BinaryOperator;
         this.item1 = i1;
-        this.operator = o;
     }
     this(Expression i1, TokenType o, Expression i2)
     {

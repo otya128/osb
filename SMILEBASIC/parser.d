@@ -141,6 +141,7 @@ class Parser
     int calc()
     {
         auto exp = expression();
+        writeln();
         return calc(exp);
     }
     int calc(Expression exp)
@@ -189,14 +190,20 @@ class Parser
         auto token = lex.front();
         if(order == getOPRank(token.type))
         {
-            BinaryOperator op = new BinaryOperator(exp, token.type);
+            BinaryOperator op = new BinaryOperator(exp);
             while(order == getOPRank(token.type))
             {
                 auto tt = token.type;
+                op.operator = token.type;
                 lex.popFront();
                 op.item2 = term(order - 1, node);
                 token = lex.front();
                 write(tt, " ");
+                if(order == getOPRank(token.type))
+                {
+                    BinaryOperator op2 = new BinaryOperator(op);
+                    op.item1 = op2;
+                }
                 stdout.flush();
             }
             return op;
@@ -220,4 +227,19 @@ class Parser
         if(!lex.empty())lex.popFront();
         return node;
     }
+}
+void test(wstring exp, int result)
+{
+    auto parser = new Parser(exp);
+    assert(parser.calc() == result);
+}
+//D言語の式の評価結果と同じか検証
+void Test(const char[] V)()
+{
+    mixin("writeln(\""~V~"\",\" = \" ,"~V~");test(\""~V~"\", "~V~");");
+}
+unittest
+{
+    Test!"2+20/5*3"();
+    Test!"2-3*4-5"();
 }
