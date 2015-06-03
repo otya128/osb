@@ -27,4 +27,8 @@ struct Token
         type = t;
         value = v;
     }
+    this(TokenType t)
+    {
+        type = t;
+    }
 }

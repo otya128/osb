@@ -3,13 +3,24 @@ import otya.smilebasic.token;
 import otya.smilebasic.type;
 import otya.smilebasic.node;
 import std.ascii;
+import std.stdio;
 class Lexical
 {
+    TokenType[] table;
     wstring code;
     int index;
     this(wstring input)
     {
         this.code = input;
+        table = new TokenType[256];
+        for(int i = 0;i<256;i++)
+        {
+            table[i] = TokenType.Unknown;
+        }
+        table['+'] = TokenType.Plus;
+        table['-'] = TokenType.Minus;
+        table['*'] = TokenType.Mul;
+        table['/'] = TokenType.Div;
     }
     bool empty()
     {
@@ -18,6 +29,11 @@ class Lexical
     Token token;
     void popFront()
     {
+        if(empty())
+        {
+            token = Token(TokenType.Unknown);
+            return;
+        }
         int i = index;
         for(;i < code.length;i++)
         {
@@ -38,8 +54,12 @@ class Lexical
                 token = Token(TokenType.Integer, Value(num));
                 break;
             }
-            //error
-           
+            if(table[cast(char)c] == TokenType.Unknown)
+            {
+                //error
+            }
+            token = Token(table[cast(char)c]);
+            i++;
             break;
         }
         index = i;
@@ -111,19 +131,93 @@ class Parser
             return 4;//+,-(bin)
             case TokenType.Mul:
             case TokenType.Div:
-//            return 3;//*,/,DIV,MOD
+            return 3;//*,/,DIV,MOD
 //            return 2;//-,NOT,!
 //            return 1;//()
             default:
                 return 0;//TODO:エラーにすべきかは実装次第
         }
     }
-    void expression(Expression node)
+    int calc()
     {
-        term(8, node);
+        auto exp = expression();
+        return calc(exp);
     }
-    void term(int order, Expression node)
+    int calc(Expression exp)
     {
-        
+        switch(exp.type)
+        {
+            case NodeType.Constant:
+                return (cast(Constant)exp).value.integerValue;
+            case NodeType.BinaryOperator:
+                {
+                    auto binop = cast(BinaryOperator)exp;
+                    auto i1 = calc(binop.item1);
+                    auto i2 = calc(binop.item2);
+                    switch(binop.operator)
+                    {
+                        case TokenType.Plus:
+                            return i1 + i2;
+                        case TokenType.Minus:
+                            return i1 - i2;
+                        case TokenType.Mul:
+                            return i1 * i2;
+                        case TokenType.Div:
+                            return i1 / i2;
+                        default:
+                            return - - -1;
+                    }
+                }
+                break;
+            default:
+                return - - -1;
+        }
+    }
+    Expression expression()
+    {
+        Expression node = null;
+        lex.popFront();
+        return term(8, node);
+    }
+    Expression term(int order, Expression node)
+    {
+        if(order == 1)
+        {
+            return factor();
+        }
+        Expression exp = term(order - 1, node);
+        auto token = lex.front();
+        if(order == getOPRank(token.type))
+        {
+            BinaryOperator op = new BinaryOperator(exp, token.type);
+            while(order == getOPRank(token.type))
+            {
+                auto tt = token.type;
+                lex.popFront();
+                op.item2 = term(order - 1, node);
+                token = lex.front();
+                write(tt, " ");
+                stdout.flush();
+            }
+            return op;
+        }
+        return exp;
+    }
+    Expression factor()
+    {
+        auto token = lex.front();
+        Expression node = null;
+        switch(token.type)
+        {
+            case TokenType.Integer:
+                write(token.value.integerValue, ' ');
+                stdout.flush();
+                node = new Constant(Value(token.value.integerValue));
+                break;
+            default:
+                return node;
+        }
+        if(!lex.empty())lex.popFront();
+        return node;
     }
 }
