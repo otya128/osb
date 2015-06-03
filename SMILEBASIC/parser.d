@@ -144,7 +144,7 @@ class Parser
     {
         lex.popFront();
         auto exp = expression();
-        writeln();
+        version(none)writeln();
         return calc(exp);
     }
     int calc(Expression exp)
@@ -200,13 +200,14 @@ class Parser
                 lex.popFront();
                 op.item2 = term(order - 1, node);
                 token = lex.front();
-                write(tt, " ");
+                version(none)
+                    write(tt, " ");
                 if(order == getOPRank(token.type))
                 {
                     BinaryOperator op2 = new BinaryOperator(op);
                     op.item1 = op2;
                 }
-                stdout.flush();
+                version(none)stdout.flush();
             }
             return op;
         }
@@ -219,8 +220,8 @@ class Parser
         switch(token.type)
         {
             case TokenType.Integer:
-                write(token.value.integerValue, ' ');
-                stdout.flush();
+                version(none)write(token.value.integerValue, ' ');
+                version(none)stdout.flush();
                 node = new Constant(Value(token.value.integerValue));
                 break;
             case TokenType.LParen:
@@ -239,13 +240,13 @@ class Parser
         return node;
     }
 }
-void test(wstring exp, int result)
+private void test(wstring exp, int result)
 {
     auto parser = new Parser(exp);
     assert(parser.calc() == result);
 }
 //D言語の式の評価結果と同じか検証
-void Test(const char[] V)()
+private void Test(const char[] V)()
 {
     mixin("writeln(\""~V~"\",\" = \" ,"~V~");test(\""~V~"\", "~V~");");
 }
@@ -272,9 +273,6 @@ unittest
             return false;
         }
     }
-    Test!"2+(3+4)*5"();
-    Test!"2+20/5*3"();
-    Test!"2-3*4-5"();
     test("1+1", 2);//1+1は2
     test("2*3+2", 8);//2*3+2は8
     test("2*3+2+1", 9);//2*3+2+1は9
