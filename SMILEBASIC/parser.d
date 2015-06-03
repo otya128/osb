@@ -58,6 +58,7 @@ unittest
         auto token = lex.front();
         assert(token.type == TokenType.Integer);
         assert(token.value.integerValue == 1);
+        assert(lex.empty() == true);
     }
     {
         auto lex = new Lexical("12345");
@@ -66,6 +67,21 @@ unittest
         auto token = lex.front();
         assert(token.type == TokenType.Integer);
         assert(token.value.integerValue == 12345);
+        assert(lex.empty() == true);
+    }
+    {
+        auto lex = new Lexical("12345 67890");
+        assert(lex.empty() == false);
+        lex.popFront();
+        auto token = lex.front();
+        assert(token.type == TokenType.Integer);
+        assert(token.value.integerValue == 12345);
+        assert(lex.empty() == false);
+        lex.popFront();
+        token = lex.front();
+        assert(token.type == TokenType.Integer);
+        assert(token.value.integerValue == 67890);
+        assert(lex.empty() == true);
     }
 }
 class Parser
