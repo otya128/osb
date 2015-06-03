@@ -23,6 +23,7 @@ class Lexical
         table['/'] = TokenType.Div;
         table['('] = TokenType.LParen;
         table[')'] = TokenType.RParen;
+        table[','] = TokenType.Comma;
     }
     bool empty()
     {
@@ -54,6 +55,21 @@ class Lexical
                     num = num * 10 + (c - '0');
                 }
                 token = Token(TokenType.Integer, Value(num));
+                break;
+            }
+            if(c.isAlpha())
+            {
+                wstring iden;
+                for(;i < code.length;i++)
+                {
+                    c = code[i];
+                    if(!c.isAlpha())
+                    {
+                        break;
+                    }
+                    iden ~= c;
+                }
+                token = Token(TokenType.Iden, Value(iden));
                 break;
             }
             if(table[cast(char)c] == TokenType.Unknown)
@@ -173,6 +189,22 @@ class Parser
                     }
                 }
                 break;
+            case NodeType.Variable:
+                return 100;
+            case NodeType.CallFunction:
+                {
+                    auto func = cast(CallFunction)exp;
+                    int result = 100;
+                    if(func.name == "ADD")
+                    {
+                        result = 0;
+                        foreach(Expression i ; func.args)
+                        {
+                            result += calc(i);
+                        }
+                    }
+                    return result;
+                }
             default:
                 return - - -1;
         }
@@ -223,6 +255,35 @@ class Parser
                 version(none)write(token.value.integerValue, ' ');
                 version(none)stdout.flush();
                 node = new Constant(Value(token.value.integerValue));
+                break;
+            case TokenType.Iden:
+                if(!lex.empty())
+                    lex.popFront();
+                if(lex.front().type == TokenType.LParen)
+                {
+                    auto func = new CallFunction(token.value.stringValue);
+                    node = func;
+                    //関数呼び出しだった
+                    while(true)
+                    {
+                        lex.popFront();
+                        token = lex.front();
+                        
+                        if(token.type == TokenType.Comma)
+                        {
+                            func.addArg(new VoidExpression());
+                            lex.popFront();
+                            token = lex.front();
+                        }
+                        else
+                        func.addArg(expression());
+                        if(lex.front().type == TokenType.RParen) break;
+                    }
+                }
+                else
+                {
+                    return new Variable(token.value.stringValue);
+                }
                 break;
             case TokenType.LParen:
                 lex.popFront();

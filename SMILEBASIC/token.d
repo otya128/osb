@@ -18,6 +18,8 @@ enum TokenType
     If,
     LParen,
     RParen,
+    Iden,
+    Comma,
 }
 
 struct Token

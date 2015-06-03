@@ -3,10 +3,8 @@ import otya.smilebasic.parser;
 int main(string[] argv)
 {
     writeln("Hello D-World!");
-    auto parser = new Parser("1+2*(3+4)");
+    auto parser = new Parser("ADD(ADD(1,2,3,4,5,6),2,3,4,5,6)");
     writeln(parser.calc());
-    writeln(1+2*3+4);
-    writeln(1+2*(3+4));
     readln();
     return 0;
 }
