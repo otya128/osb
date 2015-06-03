@@ -251,6 +251,41 @@ void Test(const char[] V)()
 }
 unittest
 {
+    struct Eval
+    {
+        wstring val;
+        this(wstring val)
+        {
+            this.val = val;
+        }
+        bool opAssign(int result)
+        {
+            auto parser = new Parser(val);
+            try
+            {
+                assert(parser.calc() == result);
+            }
+            catch(Exception e)
+            {
+                assert(false, e.toString());
+            }
+            return false;
+        }
+    }
+    Test!"2+(3+4)*5"();
     Test!"2+20/5*3"();
+    Test!"2-3*4-5"();
+    test("1+1", 2);//1+1は2
+    test("2*3+2", 8);//2*3+2は8
+    test("2*3+2+1", 9);//2*3+2+1は9
+    Eval("2+3*4+2") = 2+3*4+2;
+    Eval("2+3*4*5+6*7+8") = 2+3*4*5+6*7+8;
+    Eval("2+3*4*5") = 2+3*4*5;
+    Eval("(2+3)*4*5") = (2+3)*4*5;
+    Eval("(1)+(2)") = (1)+(2);
+    Test!"2+(3+4)*5"();
+    Test!"2+20/5*3"();
+    //Eval("test(2+5)") = 2+5;
+    //Eval("test(2+5, test(2, 3+5))") = 3+5;
     Test!"2-3*4-5"();
 }
