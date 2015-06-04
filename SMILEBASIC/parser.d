@@ -10,6 +10,7 @@ class Lexical
     TokenType[wstring] reserved;
     wstring code;
     int index;
+    int line;
     this(wstring input)
     {
         this.code = input;
@@ -27,12 +28,15 @@ class Lexical
         table[','] = TokenType.Comma;
         table[':'] = TokenType.Colon;
         table[';'] = TokenType.Semicolon;
+        table['\r'] = TokenType.NewLine;
+        table['\n'] = TokenType.NewLine;
         reserved["OR"] = TokenType.Or;
         reserved["AND"] = TokenType.And;
         reserved["XOR"] = TokenType.Xor;
         reserved["NOT"] = TokenType.Not;
         reserved["PRINT"] = TokenType.Print;
         reserved.rehash();
+        line = 1;
     }
     bool empty()
     {
@@ -104,6 +108,18 @@ class Lexical
             }
             token = Token(table[cast(char)c]);
             i++;
+            if(token.type == TokenType.NewLine)
+            {
+                line++;
+            if(c == '\n')
+            {
+                //CRLF
+                if(i < code.length && code[i] == '\r')
+                {
+                    i++;
+                }
+            }
+            }
             break;
         }
         index = i;
@@ -111,6 +127,10 @@ class Lexical
     Token front()
     {
         return token;
+    }
+    int getLine()
+    {
+        return line;
     }
 }
 unittest
@@ -238,15 +258,84 @@ class Parser
                 return - - -1;
         }
     }
+    void compile()
+    {
+    }
     Statements parseProgram()
     {
         auto statements = new Statements();
-        statement();
+        while(!lex.empty())
+        {
+            //if token == DEF
+            //
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
         return statements;
+    }
+    void syntaxError()
+    {
+        stderr.writeln("Syntax error", lex.getLine());
     }
     //statement
     Statement statement()
     {
+        lex.popFront();
+        auto token = lex.front();
+        switch(token.type)
+        {
+            case TokenType.Print:
+                {
+                    auto print = new Print();
+                    bool addline = true;
+                    lex.popFront();
+                    token = lex.front();
+                    while(true)
+                    {
+                        //3号から厳密になって必ずいる
+                        if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
+                        {
+                            print.addLine();
+                            break;
+                        }
+                        if(token.type == TokenType.Semicolon)
+                        {
+                            addline = false;
+                            continue;
+                        }
+                        if(token.type == TokenType.Comma) 
+                        {
+                            print.addTab();
+                            addline = false;
+                            continue;
+                        }
+                        addline = true;
+                        auto exp = expression();
+                        if(exp is null)
+                        {
+                            syntaxError();
+                            continue;
+                        }
+                        print.addArgument(exp);
+                        lex.popFront();
+                        token = lex.front();
+                        if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
+                        {
+                            syntaxError();
+                        }
+                    }
+                }
+                break;
+            case TokenType.Colon:
+            case TokenType.NewLine:
+                break;
+            default:
+                syntaxError();
+                break;
+        }
         return null;
     }
     Expression expression()

@@ -23,6 +23,7 @@ enum TokenType
     Comma,
     Colon,
     Semicolon,
+    NewLine,
 }
 
 struct Token

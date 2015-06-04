@@ -93,6 +93,7 @@ class VoidExpression : Expression
 }
 abstract class Statement : Node
 {
+    static Statement NOP = null;
 }
 class Statements : Statement
 {
