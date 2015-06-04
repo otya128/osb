@@ -7,6 +7,7 @@ import std.stdio;
 class Lexical
 {
     TokenType[] table;
+    TokenType[wstring] reserved;
     wstring code;
     int index;
     this(wstring input)
@@ -24,10 +25,22 @@ class Lexical
         table['('] = TokenType.LParen;
         table[')'] = TokenType.RParen;
         table[','] = TokenType.Comma;
+        table[':'] = TokenType.Colon;
+        table[';'] = TokenType.Semicolon;
+        reserved["OR"] = TokenType.Or;
+        reserved["AND"] = TokenType.And;
+        reserved["XOR"] = TokenType.Xor;
+        reserved["NOT"] = TokenType.Not;
+        reserved["PRINT"] = TokenType.Print;
+        reserved.rehash();
     }
     bool empty()
     {
         return index >= code.length;
+    }
+    bool isSmileBasicSuffix(wchar c)
+    {
+        return c == '$' || c == '%' || c == '#';
     }
     Token token;
     void popFront()
@@ -68,6 +81,19 @@ class Lexical
                         break;
                     }
                     iden ~= c;
+                }
+                if(isSmileBasicSuffix(c))
+                {
+                    iden ~= c;
+                    i++;
+                }
+                else//変数が予約語であることはありえない
+                {
+                    auto r = reserved.get(iden, TokenType.Unknown);
+                    if(r != TokenType.Unknown)
+                    {
+                        token = Token(r);
+                    }
                 }
                 token = Token(TokenType.Iden, Value(iden));
                 break;
@@ -156,6 +182,9 @@ class Parser
                 return 0;//TODO:エラーにすべきかは実装次第
         }
     }
+    /*
+    テスト用
+    */
     int calc()
     {
         lex.popFront();
@@ -208,6 +237,17 @@ class Parser
             default:
                 return - - -1;
         }
+    }
+    Statements parseProgram()
+    {
+        auto statements = new Statements();
+        statement();
+        return statements;
+    }
+    //statement
+    Statement statement()
+    {
+        return null;
     }
     Expression expression()
     {

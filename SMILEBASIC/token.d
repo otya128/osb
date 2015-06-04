@@ -14,12 +14,15 @@ enum TokenType
     Or,
     And,
     Xor,
+    Not,
     Print,
     If,
     LParen,
     RParen,
     Iden,
     Comma,
+    Colon,
+    Semicolon,
 }
 
 struct Token
