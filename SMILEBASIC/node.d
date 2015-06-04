@@ -100,6 +100,7 @@ class Statements : Statement
     this()
     {
         this.type = NodeType.Statements;
+        statements = new Statement[0];
     }
     void addStatement(Statement statement)
     {
@@ -110,8 +111,26 @@ class Statements : Statement
 enum PrintArgumentType
 {
     Expression,//exp
-    LF,
+    Line,
     Tab,//,
+}
+/*
+*;は基本無視
+*/
+struct PrintArgument
+{
+    PrintArgumentType type;
+    Expression expression;
+    this(PrintArgumentType type)
+    {
+        this.type = type;
+        this.expression = null;
+    }
+    this(PrintArgumentType type, Expression expression)
+    {
+        this.type = type;
+        this.expression = expression;
+    }
 }
 /*
 *PRINTは関数ではないしmkIIと違って必ず:がいる
@@ -121,14 +140,22 @@ enum PrintArgumentType
 
 class Print : Statement
 {
-    /*
-    *;は基本無視
-    */
-    struct PrintArgument
-    {
-        PrintArgumentType type;
-        Expression expression;
-    }
     PrintArgument[] args;
-    
+    this()
+    {
+        this.type = NodeType.Print;
+        args = new PrintArgument[0];
+    }
+    void addArgument(Expression expression)
+    {
+        args ~= PrintArgument(PrintArgumentType.Expression, expression);
+    }
+    void addTab()
+    {
+        args ~= PrintArgument(PrintArgumentType.Tab);
+    }
+    void addLine()
+    {
+        args ~= PrintArgument(PrintArgumentType.Line);
+    }
 }
