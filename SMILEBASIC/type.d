@@ -34,4 +34,15 @@ struct Value
         this.type = ValueType.String;
         stringValue = value;
     }
+    void castOp(ValueType type)
+    {
+        switch(type)
+        {
+            case ValueType.Double:
+                
+                break;
+            default:
+                break;
+        }
+    }
 }

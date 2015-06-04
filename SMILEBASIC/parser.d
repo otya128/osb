@@ -260,10 +260,10 @@ class Parser
                 return - - -1;
         }
     }
-    void compile()
+    auto compile()
     {
         auto compiler = new Compiler(parseProgram());
-        compiler.compile();
+        return compiler.compile();
     }
     Statements parseProgram()
     {
@@ -305,17 +305,6 @@ class Parser
                             print.addLine();
                             break;
                         }
-                        if(token.type == TokenType.Semicolon)
-                        {
-                            addline = false;
-                            continue;
-                        }
-                        if(token.type == TokenType.Comma) 
-                        {
-                            print.addTab();
-                            addline = false;
-                            continue;
-                        }
                         addline = true;
                         auto exp = expression();
                         if(exp is null)
@@ -324,12 +313,27 @@ class Parser
                             continue;
                         }
                         print.addArgument(exp);
-                        lex.popFront();
                         token = lex.front();
                         if(lex.empty()) break;
                         if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
                         {
                             syntaxError();
+                        }
+                        else
+                        {
+                            lex.popFront();
+                            if(token.type == TokenType.Semicolon)
+                            {
+                                addline = false;
+                                continue;
+                            }
+                            if(token.type == TokenType.Comma) 
+                            {
+                                print.addTab();
+                                addline = false;
+                                continue;
+                            }
+                            token = lex.front();
                         }
                     }
                     return print;
