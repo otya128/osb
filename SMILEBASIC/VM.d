@@ -1,4 +1,4 @@
-module otya.smilebasic.VM;
+module otya.smilebasic.vm;
 class VM
 {
 }

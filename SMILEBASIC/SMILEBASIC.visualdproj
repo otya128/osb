@@ -205,6 +205,7 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="SMILEBASIC">
+  <File path="compiler.d" />
   <File path="main.d" />
   <File path="node.d" />
   <File path="parser.d" />

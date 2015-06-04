@@ -2,6 +2,7 @@ module otya.smilebasic.parser;
 import otya.smilebasic.token;
 import otya.smilebasic.type;
 import otya.smilebasic.node;
+import otya.smilebasic.compiler;
 import std.ascii;
 import std.stdio;
 class Lexical
@@ -97,6 +98,7 @@ class Lexical
                     if(r != TokenType.Unknown)
                     {
                         token = Token(r);
+                        break;
                     }
                 }
                 token = Token(TokenType.Iden, Value(iden));
@@ -260,6 +262,8 @@ class Parser
     }
     void compile()
     {
+        auto compiler = new Compiler(parseProgram());
+        compiler.compile();
     }
     Statements parseProgram()
     {
@@ -278,7 +282,7 @@ class Parser
     }
     void syntaxError()
     {
-        stderr.writeln("Syntax error", lex.getLine());
+        stderr.writeln("Syntax error (", lex.getLine(), ')');
     }
     //statement
     Statement statement()
@@ -322,13 +326,14 @@ class Parser
                         print.addArgument(exp);
                         lex.popFront();
                         token = lex.front();
+                        if(lex.empty()) break;
                         if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
                         {
                             syntaxError();
                         }
                     }
+                    return print;
                 }
-                break;
             case TokenType.Colon:
             case TokenType.NewLine:
                 break;
