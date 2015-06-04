@@ -314,7 +314,11 @@ class Parser
                         }
                         print.addArgument(exp);
                         token = lex.front();
-                        if(lex.empty()) break;
+                        if(lex.empty())
+                        {
+                            print.addLine();
+                            break;
+                        }
                         if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
                         {
                             syntaxError();

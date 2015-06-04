@@ -2,6 +2,7 @@ module otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.token;
 import std.uni;
+import std.utf;
 import std.conv;
 import std.stdio;
 class VM
@@ -64,7 +65,7 @@ class PrintCode : Code
                     write(arg.integerValue);
                     break;
                 case ValueType.String:
-                    write(cast(string)arg.stringValue);
+                    write(arg.stringValue.to!string);
                     break;
                 default:
                     //type missmatch
