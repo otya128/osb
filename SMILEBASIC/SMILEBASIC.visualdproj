@@ -210,5 +210,6 @@
   <File path="parser.d" />
   <File path="token.d" />
   <File path="type.d" />
+  <File path="VM.d" />
  </Folder>
 </DProject>

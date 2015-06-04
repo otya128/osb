@@ -12,6 +12,12 @@ enum NodeType
     Variable,
     CallFunction,
     VoidExpression,
+
+    Statements,
+    FunctionBody,
+    Assign,
+    CallFunctionStatement,
+    Print,
 }
 abstract class Node
 {
@@ -84,4 +90,45 @@ class VoidExpression : Expression
     {
         this.type = NodeType.VoidExpression;
     }
+}
+abstract class Statement : Node
+{
+}
+class Statements : Statement
+{
+    Statement[] statements;
+    this()
+    {
+        this.type = NodeType.Statements;
+    }
+    void addStatement(Statement statement)
+    {
+        statements ~= statement;
+    }
+}
+
+enum PrintArgumentType
+{
+    Expression,//exp
+    LF,
+    Tab,//,
+}
+/*
+*PRINTは関数ではないしmkIIと違って必ず:がいる
+*関数と違ってFUNC(,,,)のような記述はエラー
+*と言っても3.2で上の記述もエラーになりうる
+*/
+
+class Print : Statement
+{
+    /*
+    *;は基本無視
+    */
+    struct PrintArgument
+    {
+        PrintArgumentType type;
+        Expression expression;
+    }
+    PrintArgument[] args;
+    
 }
