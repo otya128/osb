@@ -359,6 +359,11 @@ class Parser
             }
             else
             {
+                if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
+                {
+                    print.addLine();
+                    break;
+                }
                 lex.popFront();
                 if(token.type == TokenType.Semicolon)
                 {
@@ -514,4 +519,5 @@ unittest
     //Eval("test(2+5)") = 2+5;
     //Eval("test(2+5, test(2, 3+5))") = 3+5;
     Test!"2-3*4-5"();
+    Test!"1+2+3+4*5/4-5+(6+6)*7"();
 }

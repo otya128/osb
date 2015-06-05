@@ -89,6 +89,7 @@ class Compiler
                 }
                 break;
             default:
+                stderr.writeln("Compile:NotImpl ", exp.type);
                 break;
         }
     }
@@ -132,6 +133,16 @@ class Compiler
                     stderr.writeln("Compile:NotImpl ", i.type);
             }
         }
-        return new VM(code, globalIndex + 1);
+        return new VM(code, globalIndex + 1, global);
     }
+}
+
+unittest
+{
+    import otya.smilebasic.parser;
+    auto parser = new Parser("A=1+2+3+4*5/4-5+(6+6)*7");
+    auto vm = parser.compile();
+    vm.run();
+    writeln(vm.testGetGlobaVariable("A").integerValue);
+    assert(vm.testGetGlobaVariable("A").integerValue == 1+2+3+4*5/4-5+(6+6)*7);
 }

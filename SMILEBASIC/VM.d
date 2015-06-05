@@ -12,11 +12,13 @@ class VM
     int pc;
     Value[] stack;
     Value[] global;
-    this(Code[] code, int len)
+    int[wstring] debugTable;
+    this(Code[] code, int len, int[wstring] debugTable)
     {
         this.code = code;
         this.stack = new Value[1024 * 1024];
         this.global = new Value[len];
+        this.debugTable = debugTable;
     }
     void run()
     {
@@ -32,6 +34,10 @@ class VM
     void pop(out Value value)
     {
         value = stack[--stacki];
+    }
+    Value testGetGlobaVariable(wstring name)
+    {
+        return global[debugTable[name]];
     }
 }
 enum CodeType
@@ -134,8 +140,8 @@ class Operate : Code
     {
         Value l;
         Value r;
-        vm.pop(l);
         vm.pop(r);
+        vm.pop(l);
         double ld = l.integerValue;
         double rd = r.integerValue;
         //とりあえずInteger
@@ -154,6 +160,7 @@ class Operate : Code
                 ld /= rd;
                 break;
             default:
+                writeln("NotImpl: ", operator);
                 break;
         }
         l.integerValue = cast(int)ld;
