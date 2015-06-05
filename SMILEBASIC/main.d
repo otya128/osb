@@ -8,7 +8,7 @@ int main(string[] argv)
         writeln(parser.calc());
     }
 
-    auto parser = new Parser("PRINT 1+1,2+3;10-5");
+    auto parser = new Parser("PRINT 1+1,2+3;10-5,A");
     auto vm = parser.compile();
     vm.run();
     readln();

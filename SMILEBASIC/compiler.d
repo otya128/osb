@@ -14,9 +14,15 @@ class Compiler
     }
 
     Code[] code;
+    int[wstring] global;
+    int globalIndex = 0;
     void genCodeImm(Value value)
     {
         code ~= new Push(value);
+    }
+    void genCodePushGlobal(int ind)
+    {
+        code ~= new PushG(ind);
     }
     void genCodeOP(TokenType op)
     {
@@ -39,6 +45,15 @@ class Compiler
                 }
                 break;
             case NodeType.Variable:
+                auto var = cast(Variable)exp;
+                int global = this.global.get(var.name, 0);
+                if(global == 0)
+                {
+                    //local変数をあたる
+                    //それでもだめならOPTION STRICTならエラー
+                    this.global[var.name] = ++globalIndex = global;
+                }
+                genCodePushGlobal(global);
                 break;
             case NodeType.CallFunction:
                 {
@@ -89,6 +104,6 @@ class Compiler
                     stderr.writeln("Compile:NotImpl ", i.type);
             }
         }
-        return new VM(code);
+        return new VM(code, globalIndex + 1);
     }
 }

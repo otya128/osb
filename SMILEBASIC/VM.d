@@ -9,17 +9,20 @@ class VM
 {
     Code[] code;
     int stacki;
+    int pc;
     Value[] stack;
-    this(Code[] code)
+    Value[] global;
+    this(Code[] code, int len)
     {
         this.code = code;
         this.stack = new Value[1024 * 1024];
+        this.global = new Value[len];
     }
     void run()
     {
-        for(int i = 0; i < this.code.length; i++)
+        for(pc = 0; pc < this.code.length; pc++)
         {
-            code[i].execute(this);
+            code[pc].execute(this);
         }
     }
     void push(ref Value value)
@@ -34,6 +37,7 @@ class VM
 enum CodeType
 {
     Push,
+    PushG,
     Operate,
     Return,
     Goto,
@@ -65,7 +69,7 @@ class PrintCode : Code
                     write(arg.integerValue);
                     break;
                 case ValueType.String:
-                    write(arg.stringValue.to!string);
+                    write(arg.stringValue);
                     break;
                 default:
                     //type missmatch
@@ -90,6 +94,20 @@ class Push : Code
         vm.push(imm);
     }
 }
+
+class PushG : Code
+{
+    int var;
+    this(int var)
+    {
+        this.type = CodeType.PushG;
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(vm.global[var]);
+    }
+}
 class Operate : Code
 {
     TokenType operator;
@@ -111,7 +129,16 @@ class Operate : Code
 }
 class Goto : Code
 {
-
+    int address;
+    this(int addr)
+    {
+        this.type = CodeType.Goto;
+        address = addr;
+    }
+    override void execute(VM vm)
+    {
+        vm.pc = address - 1;
+    }
 }
 class Gosub : Code
 {
