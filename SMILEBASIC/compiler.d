@@ -24,9 +24,37 @@ class Compiler
     {
         code ~= new PushG(ind);
     }
+    void genCodePopGlobal(int ind)
+    {
+        code ~= new PopG(ind);
+    }
     void genCodeOP(TokenType op)
     {
         code ~= new Operate(op);
+    }
+    int defineGlobalVarIndex(wstring name)
+    {
+        int global = this.global.get(name, 0);
+        if(global == 0)
+        {
+            this.global[name] = ++globalIndex = global;
+        }
+        else
+        {
+            //error:二重定義
+        }
+        return global;
+    }
+    int getGlobalVarIndex(wstring name)
+    {
+        int global = this.global.get(name, 0);
+        if(global == 0)
+        {
+            //local変数をあたる
+            //それでもだめならOPTION STRICTならエラー
+            this.global[name] = ++globalIndex = global;
+        }
+        return global;
     }
     void compileExpression(Expression exp)
     {
@@ -46,14 +74,7 @@ class Compiler
                 break;
             case NodeType.Variable:
                 auto var = cast(Variable)exp;
-                int global = this.global.get(var.name, 0);
-                if(global == 0)
-                {
-                    //local変数をあたる
-                    //それでもだめならOPTION STRICTならエラー
-                    this.global[var.name] = ++globalIndex = global;
-                }
-                genCodePushGlobal(global);
+                genCodePushGlobal(getGlobalVarIndex(var.name));
                 break;
             case NodeType.CallFunction:
                 {
@@ -98,6 +119,13 @@ class Compiler
                             }
                         }
                         code ~= new PrintCode(print.args.length);
+                    }
+                    break;
+                case NodeType.Assign:
+                    {
+                        auto assign = cast(Assign)i;
+                        compileExpression(assign.expression);
+                        genCodePopGlobal(getGlobalVarIndex(assign.name));
                     }
                     break;
                 default:

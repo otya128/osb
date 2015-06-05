@@ -163,11 +163,11 @@ class Print : Statement
 class Assign : Statement
 {
     wstring name;
-    Expression expr;
+    Expression expression;
     this(wstring name, Expression expr)
     {
         this.type = NodeType.Assign;
         this.name = name;
-        this.expr = expr;
+        this.expression = expr;
     }
 }

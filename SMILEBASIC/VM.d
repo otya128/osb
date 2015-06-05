@@ -43,6 +43,7 @@ enum CodeType
     Goto,
     Gosub,
     Print,
+    PopG,
 }
 abstract class Code
 {
@@ -106,6 +107,19 @@ class PushG : Code
     override void execute(VM vm)
     {
         vm.push(vm.global[var]);
+    }
+}
+class PopG : Code
+{
+    int var;
+    this(int var)
+    {
+        this.type = CodeType.PopG;
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.pop(vm.global[var]);
     }
 }
 class Operate : Code
