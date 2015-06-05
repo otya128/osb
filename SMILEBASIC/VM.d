@@ -136,8 +136,27 @@ class Operate : Code
         Value r;
         vm.pop(l);
         vm.pop(r);
+        double ld = l.integerValue;
+        double rd = r.integerValue;
         //とりあえずInteger
-        l.integerValue += r.integerValue;
+        switch(operator)
+        {
+            case TokenType.Plus:
+                ld += rd;
+                break;
+            case TokenType.Minus:
+                ld -= rd;
+                break;
+            case TokenType.Mul:
+                ld *= rd;
+                break;
+            case TokenType.Div:
+                ld /= rd;
+                break;
+            default:
+                break;
+        }
+        l.integerValue = cast(int)ld;
         vm.push(l);
     }
 }
