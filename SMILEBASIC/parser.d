@@ -31,6 +31,8 @@ class Lexical
         table[';'] = TokenType.Semicolon;
         table['\r'] = TokenType.NewLine;
         table['\n'] = TokenType.NewLine;
+        table['?'] = TokenType.Print;
+        table['='] = TokenType.Assign;
         reserved["OR"] = TokenType.Or;
         reserved["AND"] = TokenType.And;
         reserved["XOR"] = TokenType.Xor;
@@ -292,56 +294,19 @@ class Parser
         switch(token.type)
         {
             case TokenType.Print:
+                return print();
+            case TokenType.Iden:
                 {
-                    auto print = new Print();
-                    bool addline = true;
+                    wstring name = token.value.stringValue;
                     lex.popFront();
                     token = lex.front();
-                    while(true)
+                    if(token.type == TokenType.Assign)
                     {
-                        //3号から厳密になって必ずいる
-                        if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
-                        {
-                            print.addLine();
-                            break;
-                        }
-                        addline = true;
-                        auto exp = expression();
-                        if(exp is null)
-                        {
-                            syntaxError();
-                            continue;
-                        }
-                        print.addArgument(exp);
-                        token = lex.front();
-                        if(lex.empty())
-                        {
-                            print.addLine();
-                            break;
-                        }
-                        if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
-                        {
-                            syntaxError();
-                        }
-                        else
-                        {
-                            lex.popFront();
-                            if(token.type == TokenType.Semicolon)
-                            {
-                                addline = false;
-                                continue;
-                            }
-                            if(token.type == TokenType.Comma) 
-                            {
-                                print.addTab();
-                                addline = false;
-                                continue;
-                            }
-                            token = lex.front();
-                        }
+                        return assign(name);
                     }
-                    return print;
+                    //命令呼び出し
                 }
+                break;
             case TokenType.Colon:
             case TokenType.NewLine:
                 break;
@@ -350,6 +315,66 @@ class Parser
                 break;
         }
         return null;
+    }
+    Assign assign(wstring name)
+    {
+        lex.popFront();
+        auto token = lex.front();//=の次
+        Expression expr = expression();
+        if(expr is null) return null;
+        auto a = new Assign(name, expr);
+        return a;
+    }
+    Print print()
+    {
+        auto print = new Print();
+        bool addline = true;
+        lex.popFront();
+        auto token = lex.front();
+        while(true)
+        {
+            //3号から厳密になって必ずいる
+            if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
+            {
+                print.addLine();
+                break;
+            }
+            addline = true;
+            auto exp = expression();
+            if(exp is null)
+            {
+                syntaxError();
+                continue;
+            }
+            print.addArgument(exp);
+            token = lex.front();
+            if(lex.empty())
+            {
+                print.addLine();
+                break;
+            }
+            if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
+            {
+                syntaxError();
+            }
+            else
+            {
+                lex.popFront();
+                if(token.type == TokenType.Semicolon)
+                {
+                    addline = false;
+                    continue;
+                }
+                if(token.type == TokenType.Comma) 
+                {
+                    print.addTab();
+                    addline = false;
+                    continue;
+                }
+                token = lex.front();
+            }
+        }
+        return print;
     }
     Expression expression()
     {

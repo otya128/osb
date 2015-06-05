@@ -160,3 +160,14 @@ class Print : Statement
         args ~= PrintArgument(PrintArgumentType.Line);
     }
 }
+class Assign : Statement
+{
+    wstring name;
+    Expression expr;
+    this(wstring name, Expression expr)
+    {
+        this.type = NodeType.Assign;
+        this.name = name;
+        this.expr = expr;
+    }
+}

@@ -24,6 +24,7 @@ enum TokenType
     Colon,
     Semicolon,
     NewLine,
+    Assign,
 }
 
 struct Token
