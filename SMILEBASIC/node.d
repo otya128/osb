@@ -204,4 +204,8 @@ class If : Statement
         this.then = t;
         this.else_ = e;
     }
+    bool hasElse()
+    {
+        return !(else_ is null) && else_.statements.length != 0;
+    }
 }

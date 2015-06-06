@@ -37,6 +37,24 @@ class Compiler
     {
         code ~= new GotoS(label);
     }
+    GotoAddr genCodeGoto()
+    {
+        auto c = new GotoAddr(-1);
+        code ~= c;
+        return c;
+    }
+    GotoTrue genCodeGotoTrue()
+    {
+        auto c = new GotoTrue(-1);
+        code ~= c;
+        return c;
+    }
+    GotoFalse genCodeGotoFalse()
+    {
+        auto c = new GotoFalse(-1);
+        code ~= c;
+        return c;
+    }
     int defineGlobalVarIndex(wstring name)
     {
         int global = this.global.get(name, 0);
@@ -98,56 +116,92 @@ class Compiler
                 break;
         }
     }
+    void compileIf(If node)
+    {
+        compileExpression(node.condition);
+        //条件式がfalseならendif or elseに飛ぶ
+        auto else_ = genCodeGotoFalse();
+        compileStatements(node.then);
+        //もしelseもあるのならば、endifに飛ぶ
+        GotoAddr then;
+        if(node.hasElse)
+        {
+            then = genCodeGoto();
+            else_.address = code.length;
+            compileStatements(node.else_);
+            then.address = code.length;
+        }
+        else
+        {
+            //endifに飛ばす
+            else_.address = code.length;
+        }
+    }
+
+    void compileStatements(Statements statements)
+    {
+        foreach(Statement s ; statements.statements)
+        {
+            compileStatement(s);
+        }
+    }
+    void compileStatement(Statement i)
+    {
+        switch(i.type)
+        {
+            case NodeType.Print:
+                {
+                    auto print = cast(Print)i;
+                    foreach_reverse(PrintArgument j ; print.args)
+                    {
+                        switch(j.type)
+                        {
+                            case PrintArgumentType.Expression:
+                                compileExpression(j.expression);
+                                break;
+                            case PrintArgumentType.Line:
+                                genCodeImm(Value("\n"));
+                                break;
+                            case PrintArgumentType.Tab:
+                                genCodeImm(Value("\t"));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    code ~= new PrintCode(print.args.length);
+                }
+                break;
+            case NodeType.Assign:
+                {
+                    auto assign = cast(Assign)i;
+                    compileExpression(assign.expression);
+                    genCodePopGlobal(getGlobalVarIndex(assign.name));
+                }
+                break;
+            case NodeType.Label:
+                {
+                    auto label = cast(Label)i;
+                    globalLabel[label.label] = code.length;
+                }
+                break;
+            case NodeType.Goto:
+                {
+                    genCodeGoto((cast(Goto)i).label);
+                }
+                break;
+            case NodeType.If:
+                compileIf(cast(If)i);
+                break;
+            default:
+                stderr.writeln("Compile:NotImpl ", i.type);
+        }
+    }
     VM compile()
     {
         foreach(Statement i ; statements.statements)
         {
-            switch(i.type)
-            {
-                case NodeType.Print:
-                    {
-                        auto print = cast(Print)i;
-                        foreach_reverse(PrintArgument j ; print.args)
-                        {
-                            switch(j.type)
-                            {
-                                case PrintArgumentType.Expression:
-                                    compileExpression(j.expression);
-                                    break;
-                                case PrintArgumentType.Line:
-                                    genCodeImm(Value("\n"));
-                                    break;
-                                case PrintArgumentType.Tab:
-                                    genCodeImm(Value("\t"));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                        code ~= new PrintCode(print.args.length);
-                    }
-                    break;
-                case NodeType.Assign:
-                    {
-                        auto assign = cast(Assign)i;
-                        compileExpression(assign.expression);
-                        genCodePopGlobal(getGlobalVarIndex(assign.name));
-                    }
-                    break;
-                case NodeType.Label:
-                    {
-                        auto label = cast(Label)i;
-                        globalLabel[label.label] = code.length;
-                    }
-                    break;
-                case NodeType.Goto:
-                    {
-                        genCodeGoto((cast(Goto)i).label);
-                    }
-                    break;
-                default:
-                    stderr.writeln("Compile:NotImpl ", i.type);
-            }
+            compileStatement(i);
         }
         foreach(int i, Code c; code)
         {
