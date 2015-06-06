@@ -18,6 +18,8 @@ enum NodeType
     Assign,
     CallFunctionStatement,
     Print,
+    Label,
+    Goto,
 }
 abstract class Node
 {
@@ -169,5 +171,23 @@ class Assign : Statement
         this.type = NodeType.Assign;
         this.name = name;
         this.expression = expr;
+    }
+}
+class Label : Statement
+{
+    wstring label;
+    this(wstring name)
+    {
+        this.type = NodeType.Label;
+        this.label = name;
+    }
+}
+class Goto : Statement
+{
+    wstring label;
+    this(wstring name)
+    {
+        this.type = NodeType.Goto;
+        this.label = name;
     }
 }

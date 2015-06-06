@@ -38,6 +38,7 @@ class Lexical
         reserved["XOR"] = TokenType.Xor;
         reserved["NOT"] = TokenType.Not;
         reserved["PRINT"] = TokenType.Print;
+        reserved["GOTO"] = TokenType.Goto;
         reserved.rehash();
         line = 1;
     }
@@ -106,6 +107,25 @@ class Lexical
                 token = Token(TokenType.Iden, Value(iden));
                 break;
             }
+            if(c == '@')
+            {
+                //ラベル(もしくは文字列)
+                wstring iden;
+                iden ~= c;
+                i++;
+                for(;i < code.length;i++)
+                {
+                    c = code[i];
+                    if(!c.isAlpha())
+                    {
+                        break;
+                    }
+                    iden ~= c;
+                }
+                token = Token(TokenType.Label, Value(iden));
+                break;
+            }
+
             if(table[cast(char)c] == TokenType.Unknown)
             {
                 //error
@@ -310,6 +330,12 @@ class Parser
             case TokenType.Colon:
             case TokenType.NewLine:
                 break;
+            case TokenType.Label:
+                return new Label(token.value.stringValue);
+            case TokenType.Goto:
+                lex.popFront();
+                token = lex.front();
+                return new Goto(token.value.stringValue);
             default:
                 syntaxError();
                 break;
@@ -464,6 +490,10 @@ class Parser
                 if(token.type != TokenType.RParen)
                     //error
                 {}
+                break;
+            case TokenType.Label://3.1
+                //文字列リテラル
+
                 break;
             default:
                 return node;

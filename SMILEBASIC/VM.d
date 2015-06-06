@@ -50,6 +50,7 @@ enum CodeType
     Gosub,
     Print,
     PopG,
+    GotoS,
 }
 abstract class Code
 {
@@ -167,7 +168,7 @@ class Operate : Code
         vm.push(l);
     }
 }
-class Goto : Code
+class GotoAddr : Code
 {
     int address;
     this(int addr)
@@ -178,6 +179,19 @@ class Goto : Code
     override void execute(VM vm)
     {
         vm.pc = address - 1;
+    }
+}
+class GotoS : Code
+{
+    wstring label;
+    this(wstring label)
+    {
+        this.type = CodeType.GotoS;
+        this.label = label;
+    }
+    override void execute(VM vm)
+    {
+        stderr.writeln("can't execute");
     }
 }
 class Gosub : Code

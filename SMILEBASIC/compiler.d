@@ -15,6 +15,7 @@ class Compiler
 
     Code[] code;
     int[wstring] global;
+    int[wstring] globalLabel;
     int globalIndex = 0;
     void genCodeImm(Value value)
     {
@@ -31,6 +32,10 @@ class Compiler
     void genCodeOP(TokenType op)
     {
         code ~= new Operate(op);
+    }
+    void genCodeGoto(wstring label)
+    {
+        code ~= new GotoS(label);
     }
     int defineGlobalVarIndex(wstring name)
     {
@@ -129,8 +134,26 @@ class Compiler
                         genCodePopGlobal(getGlobalVarIndex(assign.name));
                     }
                     break;
+                case NodeType.Label:
+                    {
+                        auto label = cast(Label)i;
+                        globalLabel[label.label] = code.length;
+                    }
+                    break;
+                case NodeType.Goto:
+                    {
+                        genCodeGoto((cast(Goto)i).label);
+                    }
+                    break;
                 default:
                     stderr.writeln("Compile:NotImpl ", i.type);
+            }
+        }
+        foreach(int i, Code c; code)
+        {
+            if(c.type == CodeType.GotoS)
+            {
+                code[i] = new GotoAddr(globalLabel[(cast(GotoS)c).label]);
             }
         }
         return new VM(code, globalIndex + 1, global);
