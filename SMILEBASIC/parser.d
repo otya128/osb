@@ -307,13 +307,29 @@ class Parser
         }
         return statements;
     }
-    Statements ifstatements()
+    Statements ifStatements()
     {
         auto statements = new Statements();
         while(!lex.empty())
         {
             auto type = lex.front().type;
             if(type == TokenType.NewLine) break;
+            if(type == TokenType.Else) break;
+            if(type == TokenType.Endif) break;
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        return statements;
+    }
+    Statements multilineIfStatements()
+    {
+        auto statements = new Statements();
+        while(!lex.empty())
+        {
+            auto type = lex.front().type;
             if(type == TokenType.Else) break;
             if(type == TokenType.Endif) break;
             auto statement = statement();
@@ -397,13 +413,18 @@ class Parser
             lex.popFront();
             token = lex.front();
         }
+        Statements then;
+        bool multiline = false;
         if(token.type == TokenType.NewLine)
         {
-            writeln("NotImpl: Multi line if");
-            syntaxError();
-            return null;
+            multiline = true;
+            lex.popFront();
+            then = multilineIfStatements();
         }
-        auto then = ifstatements();
+        else
+        {
+            then = ifStatements();
+        }
         token = lex.front();
         lex.popFront();
         Statements else_;
@@ -414,7 +435,14 @@ class Parser
                 //3.1現在だとエラー
                 syntaxError();
             }
-            else_ = ifstatements();
+            if(multiline)
+            {
+                else_ = multilineIfStatements();
+            }
+            else
+            {
+                else_ = ifStatements();
+            }
         }
         auto if_ = new If(expr, then, else_);
         return if_;
