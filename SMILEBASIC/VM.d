@@ -51,6 +51,8 @@ enum CodeType
     Print,
     PopG,
     GotoS,
+    GotoFalse,
+    GotoTrue,
 }
 abstract class Code
 {
@@ -192,6 +194,38 @@ class GotoS : Code
     override void execute(VM vm)
     {
         stderr.writeln("can't execute");
+    }
+}
+class GotoTrue : Code
+{
+    int address;
+    this(int addr)
+    {
+        this.type = CodeType.GotoTrue;
+        address = addr;
+    }
+    override void execute(VM vm)
+    {
+        Value cond;
+        vm.pop(cond);
+        if(cond.boolValue)
+            vm.pc = address - 1;
+    }
+}
+class GotoFalse : Code
+{
+    int address;
+    this(int addr)
+    {
+        this.type = CodeType.GotoFalse;
+        address = addr;
+    }
+    override void execute(VM vm)
+    {
+        Value cond;
+        vm.pop(cond);
+        if(!cond.boolValue)
+            vm.pc = address - 1;
     }
 }
 class Gosub : Code

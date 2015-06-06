@@ -8,7 +8,11 @@ int main(string[] argv)
         writeln(parser.calc());
     }
 
-    auto parser = new Parser("@A\nA=1+2+3+4\nPRINT 1+1,2+3;10-5,A:A=A*2:PRINT A:GOTO@A");
+    auto parser = new Parser(
+"@A\nA=1+2+3+4\nPRINT 1+1,2+3;10-5,A:A=A*2:PRINT A
+IF 1 THEN PRINT 2
+IF 3 THEN PRINT 4 ELSE PRINT 5
+");
     auto vm = parser.compile();
     vm.run();
     readln();

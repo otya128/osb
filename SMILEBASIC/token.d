@@ -27,6 +27,9 @@ enum TokenType
     Assign,
     Label,
     Goto,
+    Then,
+    Else,
+    Endif,
 }
 
 struct Token

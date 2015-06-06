@@ -39,6 +39,10 @@ class Lexical
         reserved["NOT"] = TokenType.Not;
         reserved["PRINT"] = TokenType.Print;
         reserved["GOTO"] = TokenType.Goto;
+        reserved["IF"] = TokenType.If;
+        reserved["THEN"] = TokenType.Then;
+        reserved["ELSE"] = TokenType.Else;
+        reserved["ENDIF"] = TokenType.Endif;
         reserved.rehash();
         line = 1;
     }
@@ -289,6 +293,7 @@ class Parser
     }
     Statements parseProgram()
     {
+        lex.popFront();
         auto statements = new Statements();
         while(!lex.empty())
         {
@@ -302,19 +307,37 @@ class Parser
         }
         return statements;
     }
+    Statements ifstatements()
+    {
+        auto statements = new Statements();
+        while(!lex.empty())
+        {
+            auto type = lex.front().type;
+            if(type == TokenType.NewLine) break;
+            if(type == TokenType.Else) break;
+            if(type == TokenType.Endif) break;
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        return statements;
+    }
     void syntaxError()
     {
-        stderr.writeln("Syntax error (", lex.getLine(), ')');
+        stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
     }
     //statement
     Statement statement()
     {
-        lex.popFront();
         auto token = lex.front();
+        Statement node = null;
         switch(token.type)
         {
             case TokenType.Print:
-                return print();
+                node = print();
+                return node;
             case TokenType.Iden:
                 {
                     wstring name = token.value.stringValue;
@@ -322,7 +345,8 @@ class Parser
                     token = lex.front();
                     if(token.type == TokenType.Assign)
                     {
-                        return assign(name);
+                        node = assign(name);
+                        break;
                     }
                     //命令呼び出し
                 }
@@ -331,16 +355,69 @@ class Parser
             case TokenType.NewLine:
                 break;
             case TokenType.Label:
-                return new Label(token.value.stringValue);
+                node = new Label(token.value.stringValue);
+                break;
             case TokenType.Goto:
                 lex.popFront();
                 token = lex.front();
-                return new Goto(token.value.stringValue);
+                node = new Goto(token.value.stringValue);
+                break;
+            case TokenType.If:
+                node = if_();
+                return node;
             default:
                 syntaxError();
                 break;
         }
-        return null;
+        lex.popFront();
+        return node;
+    }
+    If if_()
+    {
+        lex.popFront();
+        auto token = lex.front();
+        auto expr = expression();
+        if(expr is null)
+        {
+            syntaxError();
+            return null;
+        }
+        token = lex.front();
+        if(token.type != TokenType.Then)
+        {
+            if(token.type != TokenType.Goto)
+            {
+                //IF expr GOSUBは不可
+                syntaxError();
+                return null;
+            }
+        }
+        if(token.type != TokenType.Goto)
+        {
+            lex.popFront();
+            token = lex.front();
+        }
+        if(token.type == TokenType.NewLine)
+        {
+            writeln("NotImpl: Multi line if");
+            syntaxError();
+            return null;
+        }
+        auto then = ifstatements();
+        token = lex.front();
+        lex.popFront();
+        Statements else_;
+        if(token.type == TokenType.Else)
+        {
+            if(lex.front().type == TokenType.NewLine)
+            {
+                //3.1現在だとエラー
+                syntaxError();
+            }
+            else_ = ifstatements();
+        }
+        auto if_ = new If(expr, then, else_);
+        return if_;
     }
     Assign assign(wstring name)
     {
@@ -379,13 +456,16 @@ class Parser
                 print.addLine();
                 break;
             }
-            if(token.type != TokenType.Colon && token.type != TokenType.NewLine && token.type != TokenType.Semicolon && token.type != TokenType.Comma)
+            if(token.type != TokenType.Colon && token.type != TokenType.NewLine && 
+               token.type != TokenType.Semicolon && token.type != TokenType.Comma &&
+               token.type != TokenType.Else && token.type != TokenType.Endif)
             {
                 syntaxError();
             }
             else
             {
-                if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
+                if(token.type == TokenType.Colon || token.type == TokenType.NewLine ||
+                   token.type == TokenType.Else || token.type == TokenType.Endif)
                 {
                     print.addLine();
                     break;

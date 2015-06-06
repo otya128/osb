@@ -45,4 +45,19 @@ struct Value
                 break;
         }
     }
+    bool boolValue()
+    {
+        switch(type)
+        {
+            case ValueType.Double:
+                return this.doubleValue != 0;
+            case ValueType.Integer:
+                return this.integerValue != 0;
+            case ValueType.String:
+                return true;//3.1現在では文字列はtrue(ただし!"A"などは動かない)
+            default:
+                //配列はtype missmatch
+                return false;
+        }
+    }
 }

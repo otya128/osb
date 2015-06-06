@@ -20,6 +20,7 @@ enum NodeType
     Print,
     Label,
     Goto,
+    If,
 }
 abstract class Node
 {
@@ -189,5 +190,18 @@ class Goto : Statement
     {
         this.type = NodeType.Goto;
         this.label = name;
+    }
+}
+class If : Statement
+{
+    Expression condition;
+    Statements then;
+    Statements else_;
+    this(Expression condition, Statements t, Statements e)
+    {
+        this.type = NodeType.If;
+        this.condition = condition;
+        this.then = t;
+        this.else_ = e;
     }
 }
