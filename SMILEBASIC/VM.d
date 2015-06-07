@@ -115,6 +115,7 @@ class PrintCode : Code
                     throw new TypeMismatch();
             }
         }
+        stdout.flush();
     }
 }
 /*
@@ -197,6 +198,7 @@ class Operate : Code
         vm.pop(r);
         int ri = r.integerValue;
         double rd = r.integerValue;
+        bool numf = r.type == ValueType.Double || r.type == ValueType.Integer; 
         if(r.type == ValueType.Double)
         {
             ri = cast(int)r.doubleValue;
@@ -206,10 +208,16 @@ class Operate : Code
         {
             //単項演算子
             case TokenType.Not:
-                vm.push(Value(~ri));
+                if(numf)
+                    vm.push(Value(~ri));
+                else
+                    throw new TypeMismatch();
                 return;
             case TokenType.LogicalNot:
-                vm.push(Value(!ri));
+                if(numf)
+                    vm.push(Value(!ri));
+                else
+                    throw new TypeMismatch();
                 return;
             default:
                 break;
@@ -256,7 +264,7 @@ class Operate : Code
                     //数値 * 文字列だとエラー
                     case TokenType.Mul:
                         {
-                            wstring delegate(wstring x, wstring y, int num) mul;
+                            wstring delegate(wstring, wstring, int) mul;
                             mul = (x, y, z) => z > 0 ? x ~ mul(x , y, z - 1) : "";
                             vm.push(Value(mul(ls, ls, cast(int)rd)));
                         }

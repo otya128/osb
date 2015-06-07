@@ -12,6 +12,7 @@ enum NodeType
     Variable,
     CallFunction,
     VoidExpression,
+    UnaryOperator,
 
     Statements,
     FunctionBody,
@@ -62,6 +63,17 @@ class BinaryOperator : Expression
         this.item1 = i1;
         this.operator = o;
         this.item2 = i2;
+    }
+}
+class UnaryOperator : Expression
+{
+    TokenType operator;
+    Expression item;
+    this(TokenType o, Expression i)
+    {
+        this.type = NodeType.UnaryOperator;
+        this.operator = o;
+        this.item = i;
     }
 }
 class Variable : Expression

@@ -44,10 +44,7 @@ FOR I=0 TO 100
   ENDIF
  ENDIF
 NEXT
-A$=\"A\"
-?A$
-A$=2
-?A$
+?NOT 1,!!\"a\"
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
     auto vm = parser.compile();

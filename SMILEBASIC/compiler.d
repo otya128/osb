@@ -107,6 +107,13 @@ class Compiler
                     genCodeOP(binop.operator);
                 }
                 break;
+            case NodeType.UnaryOperator:
+                {
+                    auto una = cast(UnaryOperator)exp;
+                    compileExpression(una.item);
+                    genCodeOP(una.operator);
+                }
+                break;
             case NodeType.Variable:
                 auto var = cast(Variable)exp;
                 genCodePushGlobal(getGlobalVarIndex(var.name));

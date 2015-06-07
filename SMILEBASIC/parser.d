@@ -747,7 +747,12 @@ class Parser
                 //TODO:UnaryOperatorの実装
                 //とりあえず0-exprを作成
                 lex.popFront();
-                node = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, expression());
+                node = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, factor());
+                return node;
+            case TokenType.LogicalNot:
+            case TokenType.Not:
+                lex.popFront();
+                node = new UnaryOperator(token.type, factor());
                 return node;
             default:
                 return node;
