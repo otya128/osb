@@ -35,4 +35,11 @@ class DuplicateVariable : SmileBasicError
         super("Duplicate variable");
     }
 }
-
+class ReturnWithoutGosub : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 30;
+        super("RETURN without GOSUB");
+    }
+}

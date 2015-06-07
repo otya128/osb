@@ -14,6 +14,7 @@ class VM
     Value[] stack;
     Value[] global;
     int[wstring] globalTable;
+    int bp;
     ValueType getType(wstring name)
     {
         wchar s = name[name.length - 1];
@@ -42,6 +43,7 @@ class VM
     }
     void run()
     {
+        bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)
         for(pc = 0; pc < this.code.length; pc++)
         {
             code[pc].execute(this);
@@ -55,9 +57,13 @@ class VM
     {
         stack[stacki++] = value;
     }
+    bool canPop()
+    {
+        return stacki > bp;
+    }
     void pop(out Value value)
     {
-        if(stacki <= 0)
+        if(stacki <= bp)
         {
             writeln("Stack underflow");
             readln();
@@ -462,6 +468,10 @@ class ReturnSubroutine : Code
     override void execute(VM vm)
     {
         Value pc;
+        if(!vm.canPop())
+        {
+            throw new ReturnWithoutGosub();
+        }
         vm.pop(pc);
         if(pc.type != ValueType.Integer || pc.integerValue < 0 || pc.integerValue >= vm.code.length)
         {
