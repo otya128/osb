@@ -1,0 +1,3 @@
+# otyaSMILEBASIC
+SMILEBASIC 3.x互換BASIC
+FizzBuzzが動く程度
