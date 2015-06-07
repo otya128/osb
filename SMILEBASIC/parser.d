@@ -49,6 +49,9 @@ class Lexical
         reserved["FOR"] = TokenType.For;
         reserved["NEXT"] = TokenType.Next;
         reserved["MOD"] = TokenType.Mod;
+        reserved["GOSUB"] = TokenType.Gosub;
+        reserved["RETURN"] = TokenType.Return;
+        reserved["END"] = TokenType.End;
         reserved.rehash();
         line = 1;
     }
@@ -472,13 +475,37 @@ class Parser
             case TokenType.Goto:
                 lex.popFront();
                 token = lex.front();
-                node = new Goto(token.value.stringValue);
+                if(token.type == TokenType.Label)
+                    node = new Goto(token.value.stringValue);
+                else
+                {
+                    writeln("NotImpl");
+                    syntaxError();
+                }
+                break;
+            case TokenType.Gosub:
+                lex.popFront();
+                token = lex.front();
+                if(token.type == TokenType.Label)
+                    node = new Gosub(token.value.stringValue);
+                else
+                {
+                    writeln("NotImpl");
+                    syntaxError();
+                }
                 break;
             case TokenType.If:
                 node = if_();
                 return node;
             case TokenType.For:
                 node = forStatement();
+                break;
+            case TokenType.Return:
+                lex.popFront();
+                node = new Return(expression());
+                return node;
+            case TokenType.End:
+                node = new End();
                 break;
             default:
                 syntaxError();
@@ -741,7 +768,7 @@ class Parser
                 break;
             case TokenType.Label://3.1
                 //文字列リテラル
-
+                node = new Constant(token.value);
                 break;
             case TokenType.Minus:
                 //TODO:UnaryOperatorの実装

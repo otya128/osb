@@ -44,7 +44,12 @@ FOR I=0 TO 100
   ENDIF
  ENDIF
 NEXT
-?NOT 1,!!\"a\"
+?@HELLOWORLD
+GOSUB @A
+END
+@A
+?\"SUBROUTINE TEST\"
+RETURN
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
     auto vm = parser.compile();

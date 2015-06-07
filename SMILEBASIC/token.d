@@ -44,6 +44,9 @@ enum TokenType
     LogicalAnd,//&&
     LogicalOr,//||
     IntDiv,//DIV
+    Gosub,
+    Return,
+    End,
 }
 
 struct Token

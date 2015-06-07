@@ -32,7 +32,7 @@ class VM
     this(Code[] code, int len, int[wstring] globalTable)
     {
         this.code = code;
-        this.stack = new Value[1024 * 1024];
+        this.stack = new Value[16384];
         this.global = new Value[len];
         this.globalTable = globalTable;
         foreach(wstring k, int v ; globalTable)
@@ -68,6 +68,10 @@ class VM
     {
         return global[globalTable[name]];
     }
+    void end()
+    {
+        pc = code.length;
+    }
 }
 enum CodeType
 {
@@ -82,6 +86,8 @@ enum CodeType
     GotoS,
     GotoFalse,
     GotoTrue,
+    GosubS,
+    ReturnSubroutine,
 }
 abstract class Code
 {
@@ -420,7 +426,60 @@ class GotoFalse : Code
             vm.pc = address - 1;
     }
 }
-class Gosub : Code
+class GosubAddr : Code
 {
-
+    int address;
+    this(int addr)
+    {
+        this.type = CodeType.Gosub;
+        address = addr;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(Value(vm.pc));
+        vm.pc = address - 1;
+    }
 }
+class GosubS : Code
+{
+    wstring label;
+    this(wstring label)
+    {
+        this.type = CodeType.GosubS;
+        this.label = label;
+    }
+    override void execute(VM vm)
+    {
+        stderr.writeln("can't execute");
+    }
+}
+class ReturnSubroutine : Code
+{
+    this()
+    {
+        this.type = CodeType.ReturnSubroutine;
+    }
+    override void execute(VM vm)
+    {
+        Value pc;
+        vm.pop(pc);
+        if(pc.type != ValueType.Integer || pc.integerValue < 0 || pc.integerValue >= vm.code.length)
+        {
+            stderr.writeln("Internal error:Compiler bug?");
+            readln();
+            return;
+        }
+        vm.pc = pc.integerValue;
+    }
+}
+class EndVM : Code
+{
+    this()
+    {
+    }
+    override void execute(VM vm)
+    {
+        vm.end();
+    }
+}    
+

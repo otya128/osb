@@ -42,6 +42,10 @@ class Compiler
     {
         code ~= new GotoS(label);
     }
+    void genCodeGosub(wstring label)
+    {
+        code ~= new GosubS(label);
+    }
     GotoAddr genCodeGoto()
     {
         auto c = new GotoAddr(-1);
@@ -258,6 +262,26 @@ class Compiler
             case NodeType.For:
                 compileFor(cast(For)i);
                 break;
+            case NodeType.Gosub:
+                {
+                    auto gosub = cast(Gosub)i;
+                    genCodeGosub(gosub.label);
+                }
+                break;
+            case NodeType.Return:
+                {
+                    auto ret = cast(Return)i;
+                    if(ret.expression is null)
+                        genCode(new ReturnSubroutine());
+                    else
+                    {
+                        //関数未実装:error
+                    }
+                }
+                break;
+            case NodeType.End:
+                genCode(new EndVM());
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
@@ -273,6 +297,10 @@ class Compiler
             if(c.type == CodeType.GotoS)
             {
                 code[i] = new GotoAddr(globalLabel[(cast(GotoS)c).label]);
+            }
+            if(c.type == CodeType.GosubS)
+            {
+                code[i] = new GosubAddr(globalLabel[(cast(GosubS)c).label]);
             }
         }
         return new VM(code, globalIndex + 1, global);

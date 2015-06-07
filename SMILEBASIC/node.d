@@ -23,6 +23,9 @@ enum NodeType
     Goto,
     If,
     For,
+    Gosub,
+    Return,
+    End,
 }
 abstract class Node
 {
@@ -245,3 +248,29 @@ class For : Statement
         this.statements = statements;
     }
 }
+class Gosub : Statement
+{
+    wstring label;
+    this(wstring name)
+    {
+        this.type = NodeType.Gosub;
+        this.label = name;
+    }
+}
+class Return : Statement
+{
+    Expression expression;
+    this(Expression expression)
+    {
+        this.type = NodeType.Return;
+        this.expression = expression;
+    }
+}
+class End : Statement
+{
+    this()
+    {
+        this.type = NodeType.End;
+    }
+}
+
