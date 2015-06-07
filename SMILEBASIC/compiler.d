@@ -70,7 +70,7 @@ class Compiler
         int global = this.global.get(name, 0);
         if(global == 0)
         {
-            this.global[name] = ++globalIndex = global;
+            this.global[name] = global = ++globalIndex;
         }
         else
         {
@@ -85,7 +85,7 @@ class Compiler
         {
             //local変数をあたる
             //それでもだめならOPTION STRICTならエラー
-            this.global[name] = ++globalIndex = global;
+            this.global[name] = global = ++globalIndex;
         }
         return global;
     }
@@ -276,6 +276,6 @@ unittest
     auto parser = new Parser("A=1+2+3+4*5/4-5+(6+6)*7");
     auto vm = parser.compile();
     vm.run();
-    writeln(vm.testGetGlobaVariable("A").integerValue);
-    assert(vm.testGetGlobaVariable("A").integerValue == 1+2+3+4*5/4-5+(6+6)*7);
+    writeln(vm.testGetGlobalVariable("A").integerValue);
+    assert(vm.testGetGlobalVariable("A").integerValue == 1+2+3+4*5/4-5+(6+6)*7);
 }

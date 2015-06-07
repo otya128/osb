@@ -3,6 +3,7 @@ import std.utf;
 import std.conv;
 import std.file;
 import otya.smilebasic.parser;
+import otya.smilebasic.error;
 int main(string[] argv)
 {
     version(none)
@@ -11,8 +12,7 @@ int main(string[] argv)
         writeln(parser.calc());
     }
 
-    version(none)
-    {
+    
     auto parser = new Parser(
 //"@A\nA=1+2+3+4\nPRINT 1+1,2+3;10-5,A:A=A*2 PRINT A
 "IF 1 THEN PRINT 2
@@ -44,11 +44,21 @@ FOR I=0 TO 100
   ENDIF
  ENDIF
 NEXT
+A$=\"A\"
+?A$
+A$=2
+?A$
 ");
-    }
-    auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
+    version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
     auto vm = parser.compile();
-    vm.run();
+    try
+    {
+        vm.run();
+    }
+    catch(SmileBasicError sbe)
+    {
+        writeln(sbe);
+    }
     readln();
     return 0;
 }

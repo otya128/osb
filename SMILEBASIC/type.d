@@ -1,6 +1,7 @@
 module otya.smilebasic.type;
 enum ValueType : byte
 {
+    Void,//DEF A()ENDの返り値とか未初期化の変数とか
     Integer,
     Double,
     String,
@@ -33,6 +34,14 @@ struct Value
     {
         this.type = ValueType.String;
         stringValue = value;
+    }
+    this(ValueType type)
+    {
+        this.type = type;
+        if(type == ValueType.String)
+        {
+            stringValue = "";
+        }
     }
     void castOp(ValueType type)
     {

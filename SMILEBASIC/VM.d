@@ -1,6 +1,7 @@
 module otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.token;
+import otya.smilebasic.error;
 import std.uni;
 import std.utf;
 import std.conv;
@@ -12,13 +13,32 @@ class VM
     int pc;
     Value[] stack;
     Value[] global;
-    int[wstring] debugTable;
-    this(Code[] code, int len, int[wstring] debugTable)
+    int[wstring] globalTable;
+    ValueType getType(wstring name)
+    {
+        wchar s = name[name.length - 1];
+        switch(s)
+        {
+            case '$':
+                return ValueType.String;
+            case '#':
+                return ValueType.Double;
+            case '%':
+                return ValueType.Integer;
+            default:
+                return ValueType.Integer;//DEFINT時
+        }
+    }
+    this(Code[] code, int len, int[wstring] globalTable)
     {
         this.code = code;
         this.stack = new Value[1024 * 1024];
         this.global = new Value[len];
-        this.debugTable = debugTable;
+        this.globalTable = globalTable;
+        foreach(wstring k, int v ; globalTable)
+        {
+            this.global[v] = Value(getType(k));
+        }
     }
     void run()
     {
@@ -44,9 +64,9 @@ class VM
         }
         value = stack[--stacki];
     }
-    Value testGetGlobaVariable(wstring name)
+    Value testGetGlobalVariable(wstring name)
     {
-        return global[debugTable[name]];
+        return global[globalTable[name]];
     }
 }
 enum CodeType
@@ -137,7 +157,29 @@ class PopG : Code
     }
     override void execute(VM vm)
     {
-        vm.pop(vm.global[var]);
+        Value v;
+        Value g = vm.global[var];
+        vm.pop(v);
+        if(v.type == ValueType.Integer && g.type == ValueType.Double)
+        {
+            vm.global[var] = Value(cast(double)v.integerValue);
+            return;
+        }
+        if(g.type == ValueType.Integer && v.type == ValueType.Double)
+        {
+            vm.global[var] = Value(cast(int)v.doubleValue);
+            return;
+        }
+        if(v.type == ValueType.Void)
+        {
+            vm.global[var] = v;
+            return;
+        }
+        if(v.type != g.type)
+        {
+            throw new TypeMismatch();
+        }
+        vm.global[var] = v;
     }
 }
 class Operate : Code
@@ -185,8 +227,7 @@ class Operate : Code
                         return;
                     default:
                         //type mismatch
-                        stderr.writeln("Type mismatch");
-                        return;
+                        throw new TypeMismatch();
                 }
             }
             if(r.type == ValueType.Integer || r.type == ValueType.Double)
@@ -214,8 +255,7 @@ class Operate : Code
                         return;
                     default:
                         //type mismatch
-                        stderr.writeln("Type mismatch");
-                        return;
+                        throw new TypeMismatch();
                 }
             }
         }
