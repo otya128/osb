@@ -23,6 +23,7 @@ FOR I=-2 TO -9 STEP -2
 NEXT
 ?I
 ?\"Hello, World!!\"
+?\"A\"*4
 ");
     auto vm = parser.compile();
     vm.run();

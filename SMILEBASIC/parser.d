@@ -47,6 +47,7 @@ class Lexical
         reserved["ENDIF"] = TokenType.Endif;
         reserved["FOR"] = TokenType.For;
         reserved["NEXT"] = TokenType.Next;
+        reserved["MOD"] = TokenType.Mod;
         reserved.rehash();
         line = 1;
     }
@@ -258,8 +259,13 @@ class Parser
             case TokenType.Or:
             case TokenType.Xor:
             return 7;//AND,OR,XOR
-            
-//            return 6;//==,!=,<,<=,>,>=
+            case TokenType.Equal:
+            case TokenType.NotEqual:
+            case TokenType.Less:
+            case TokenType.LessEqual:
+            case TokenType.Greater:
+            case TokenType.GreaterEqual:
+            return 6;//==,!=,<,<=,>,>=
 
 //            return 5;//<<,>>
             case TokenType.Plus:
@@ -267,6 +273,7 @@ class Parser
             return 4;//+,-(bin)
             case TokenType.Mul:
             case TokenType.Div:
+            case TokenType.Mod:
             return 3;//*,/,DIV,MOD
 //            return 2;//-,NOT,!
 //            return 1;//()

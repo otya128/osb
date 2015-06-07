@@ -31,6 +31,10 @@ class VM
     {
         stack[stacki++] = value;
     }
+    void push(Value value)
+    {
+        stack[stacki++] = value;
+    }
     void pop(out Value value)
     {
         if(stacki <= 0)
@@ -150,6 +154,73 @@ class Operate : Code
         Value r;
         vm.pop(r);
         vm.pop(l);
+        if(l.type == ValueType.String)
+        {
+            wstring ls = l.stringValue;
+            if(r.type == ValueType.String)
+            {
+                wstring rs = r.stringValue;
+                switch(operator)
+                {
+                    case TokenType.Plus:
+                        vm.push(Value(ls ~ rs));
+                        return;
+                    case TokenType.Equal:
+                        vm.push(Value(ls == rs));
+                        return;
+                    case TokenType.NotEqual:
+                        vm.push(Value(ls != rs));
+                        return;
+                    case TokenType.Less:
+                        vm.push(Value(ls < rs));
+                        return;
+                    case TokenType.LessEqual:
+                        vm.push(Value(ls <= rs));
+                        return;
+                    case TokenType.Greater:
+                        vm.push(Value(ls > rs));
+                        return;
+                    case TokenType.GreaterEqual:
+                        vm.push(Value(ls >= rs));
+                        return;
+                    default:
+                        //type missmatch
+                        stderr.writeln("Type missmatch");
+                        return;
+                }
+            }
+            if(r.type == ValueType.Integer || r.type == ValueType.Double)
+            {
+                double rd = r.integerValue;
+                switch(operator)
+                {
+                    //数値 * 文字列だとエラー
+                    case TokenType.Mul:
+                        {
+                            wstring delegate(wstring x, wstring y, int num) mul;
+                            mul = (x, y, z) => z > 0 ? x ~ mul(x , y, z - 1) : "";
+                            vm.push(Value(mul(ls, ls, cast(int)rd)));
+                        }
+                        return;
+                    //3.1から?文字列と数値を比較すると3を返す
+                    //(数値 compare 文字列だとエラー)
+                    case TokenType.Equal:
+                    case TokenType.NotEqual:
+                    case TokenType.Less:
+                    case TokenType.LessEqual:
+                    case TokenType.Greater:
+                    case TokenType.GreaterEqual:
+                        vm.push(Value(3));
+                        return;
+                    default:
+                        //type missmatch
+                        stderr.writeln("Type missmatch");
+                        return;
+                }
+            }
+        }
+        int li = l.integerValue;
+        int ri = r.integerValue;
         double ld = l.integerValue;
         double rd = r.integerValue;
         //とりあえずInteger
@@ -166,6 +237,18 @@ class Operate : Code
                 break;
             case TokenType.Div:
                 ld /= rd;
+                break;
+            case TokenType.Mod:
+                ld %= rd;
+                break;
+            case TokenType.And:
+                ld = li & ri;
+                break;
+            case TokenType.Or:
+                ld = li | ri;
+                break;
+            case TokenType.Xor:
+                ld = li ^ ri;
                 break;
             case TokenType.Equal:
                 ld = ld == rd;
