@@ -24,6 +24,21 @@ NEXT
 ?I
 ?\"Hello, World!!\"
 ?\"A\"*4
+FOR I=0 TO 100
+ IF I MOD 3==0 AND I MOD 5==0 THEN
+  ?\"FIZZBUZZ\"
+ ELSE
+  IF I MOD 3==0 THEN
+   ?\"FIZZ\"
+  ELSE
+   IF I MOD 5==0 THEN
+    ?\"BUZZ\"
+   ELSE
+    ?I
+   ENDIF
+  ENDIF
+ ENDIF
+NEXT
 ");
     auto vm = parser.compile();
     vm.run();
