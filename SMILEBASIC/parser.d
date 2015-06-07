@@ -122,13 +122,15 @@ class Lexical
                 for(;i < code.length;i++)
                 {
                     c = code[i];
-                    if(c == '"')//"を閉じない文も許容
+                    if(c == '"' || c == '\r' || c == '\n')//"を閉じない文も許容
                     {
                         i++;
                         break;
                     }
                     str ~= c;
                 }
+                token = Token(TokenType.String, Value(str));
+                break;
             }
             if(c == '@')
             {
@@ -658,10 +660,11 @@ class Parser
         Expression node = null;
         switch(token.type)
         {
+            case TokenType.String:
             case TokenType.Integer:
                 version(none)write(token.value.integerValue, ' ');
                 version(none)stdout.flush();
-                node = new Constant(Value(token.value.integerValue));
+                node = new Constant(token.value);
                 break;
             case TokenType.Iden:
                 if(!lex.empty())

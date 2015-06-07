@@ -22,6 +22,7 @@ FOR I=-2 TO -9 STEP -2
  PRINT I
 NEXT
 ?I
+?\"Hello, World!!\"
 ");
     auto vm = parser.compile();
     vm.run();

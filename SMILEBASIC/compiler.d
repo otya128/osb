@@ -164,14 +164,6 @@ class Compiler
         //FOR I=0 TO -1 STEP -1
         //-1>0 false
         //1>0 true
-/*
-        genCodeImm(Value("Helloneg\n"));
-        compileExpression(node.toExpression);
-        genCodeImm(Value("\nTo\n"));
-        compileExpression(node.stepExpression);
-        genCodeImm(Value("Step\n"));
-        */
-        //code ~= new PrintCode(5);
         compileExpression(node.toExpression);
         genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
         genCodeOP(TokenType.Greater);
@@ -184,13 +176,6 @@ class Compiler
         //0<0 false
         //1<0 false
         //0<1 true break
-        /*
-        genCodeImm(Value("HelloPositive\n"));
-        compileExpression(node.toExpression);
-        genCodeImm(Value("\nTo\n"));
-        compileExpression(node.stepExpression);
-        genCodeImm(Value("Step\n"));
-        code ~= new PrintCode(5);*/
         compileExpression(node.toExpression);
         genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
         genCodeOP(TokenType.Less);
