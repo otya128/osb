@@ -17,6 +17,10 @@ class Compiler
     int[wstring] global;
     int[wstring] globalLabel;
     int globalIndex = 0;
+    void genCode(Code c)
+    {
+        code ~= c;
+    }
     void genCodeImm(Value value)
     {
         code ~= new Push(value);
@@ -40,6 +44,12 @@ class Compiler
     GotoAddr genCodeGoto()
     {
         auto c = new GotoAddr(-1);
+        code ~= c;
+        return c;
+    }
+    GotoAddr genCodeGoto(int addr)
+    {
+        auto c = new GotoAddr(addr);
         code ~= c;
         return c;
     }
@@ -137,6 +147,64 @@ class Compiler
             else_.address = code.length;
         }
     }
+    void compileFor(For node)
+    {
+        compileStatement(node.initExpression);
+        auto forstart = code.length;
+        compileExpression(node.stepExpression);
+        genCodeImm(Value(0));
+        //step>=0
+        genCodeOP(TokenType.GreaterEqual);
+        auto positiveZero = genCodeGotoTrue();//正の値または0
+        //stepが負の値の時の処理
+        //toよりcounterが小さい場合はBREAK
+        //to==counterの時はBREAKしない
+        //t c
+        //0>0 false
+        //FOR I=0 TO -1 STEP -1
+        //-1>0 false
+        //1>0 true
+/*
+        genCodeImm(Value("Helloneg\n"));
+        compileExpression(node.toExpression);
+        genCodeImm(Value("\nTo\n"));
+        compileExpression(node.stepExpression);
+        genCodeImm(Value("Step\n"));
+        */
+        //code ~= new PrintCode(5);
+        compileExpression(node.toExpression);
+        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
+        genCodeOP(TokenType.Greater);
+        auto breakAddr = genCodeGotoTrue();
+        auto forAddr = genCodeGoto();
+        positiveZero.address = code.length;
+        //stepが正の値の時の処理
+        //toよりcounterが大きい場合はBREAK
+        //t c
+        //0<0 false
+        //1<0 false
+        //0<1 true break
+        /*
+        genCodeImm(Value("HelloPositive\n"));
+        compileExpression(node.toExpression);
+        genCodeImm(Value("\nTo\n"));
+        compileExpression(node.stepExpression);
+        genCodeImm(Value("Step\n"));
+        code ~= new PrintCode(5);*/
+        compileExpression(node.toExpression);
+        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
+        genCodeOP(TokenType.Less);
+        genCode(breakAddr);
+        forAddr.address = code.length;
+        compileStatements(node.statements);
+        //counterに加算する
+        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
+        compileExpression(node.stepExpression);
+        genCodeOP(TokenType.Plus);
+        genCodePopGlobal(getGlobalVarIndex(node.initExpression.name));
+        genCodeGoto(forstart);
+        breakAddr.address = code.length;
+    }
 
     void compileStatements(Statements statements)
     {
@@ -192,6 +260,9 @@ class Compiler
                 break;
             case NodeType.If:
                 compileIf(cast(If)i);
+                break;
+            case NodeType.For:
+                compileFor(cast(For)i);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

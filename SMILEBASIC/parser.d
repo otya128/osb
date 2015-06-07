@@ -33,6 +33,8 @@ class Lexical
         table['\n'] = TokenType.NewLine;
         table['?'] = TokenType.Print;
         table['='] = TokenType.Assign;
+        table['<'] = TokenType.Less;
+        table['>'] = TokenType.Greater;
         reserved["OR"] = TokenType.Or;
         reserved["AND"] = TokenType.And;
         reserved["XOR"] = TokenType.Xor;
@@ -43,6 +45,8 @@ class Lexical
         reserved["THEN"] = TokenType.Then;
         reserved["ELSE"] = TokenType.Else;
         reserved["ENDIF"] = TokenType.Endif;
+        reserved["FOR"] = TokenType.For;
+        reserved["NEXT"] = TokenType.Next;
         reserved.rehash();
         line = 1;
     }
@@ -111,6 +115,21 @@ class Lexical
                 token = Token(TokenType.Iden, Value(iden));
                 break;
             }
+            if(c == '"')
+            {
+                i++;
+                wstring str;
+                for(;i < code.length;i++)
+                {
+                    c = code[i];
+                    if(c == '"')//"を閉じない文も許容
+                    {
+                        i++;
+                        break;
+                    }
+                    str ~= c;
+                }
+            }
             if(c == '@')
             {
                 //ラベル(もしくは文字列)
@@ -129,7 +148,30 @@ class Lexical
                 token = Token(TokenType.Label, Value(iden));
                 break;
             }
-
+            if(c == '=' && i + 1 < code.length && code[i + 1] == '=')
+            {
+                token = Token(TokenType.Equal);
+                i += 2;
+                break;
+            }
+            if(c == '!' && i + 1 < code.length && code[i + 1] == '=')
+            {
+                token = Token(TokenType.NotEqual);
+                i += 2;
+                break;
+            }
+            if(c == '<' && i + 1 < code.length && code[i + 1] == '=')
+            {
+                token = Token(TokenType.LessEqual);
+                i += 2;
+                break;
+            }
+            if(c == '>' && i + 1 < code.length && code[i + 1] == '=')
+            {
+                token = Token(TokenType.GreaterEqual);
+                i += 2;
+                break;
+            }
             if(table[cast(char)c] == TokenType.Unknown)
             {
                 //error
@@ -340,6 +382,22 @@ class Parser
         }
         return statements;
     }
+    Statements forStatements()
+    {
+        auto statements = new Statements();
+        while(!lex.empty())
+        {
+            auto type = lex.front().type;
+            if(type == TokenType.Next) break;
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        lex.popFront();
+        return statements;
+    }
     void syntaxError()
     {
         stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
@@ -362,7 +420,7 @@ class Parser
                     if(token.type == TokenType.Assign)
                     {
                         node = assign(name);
-                        break;
+                        return node;
                     }
                     //命令呼び出し
                 }
@@ -381,11 +439,53 @@ class Parser
             case TokenType.If:
                 node = if_();
                 return node;
+            case TokenType.For:
+                node = forStatement();
+                break;
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
+        return node;
+    }
+    For forStatement()
+    {
+        For node;
+        lex.popFront();
+        Statement initStatement = statement();
+        if(initStatement.type != NodeType.Assign)
+        {
+            syntaxError();
+            return null;
+        }
+        Assign init = cast(Assign)initStatement;
+
+        auto token = lex.front();
+        //TO,STEPは予約語ではない
+        if(token.type != TokenType.Iden || token.value.stringValue != "TO")
+        {
+            syntaxError();
+            return null;
+        }
+        lex.popFront();
+        Expression to = expression();
+        token = lex.front();
+        Expression step;
+        //TO,STEPは予約語ではない
+        if(token.type == TokenType.Iden && token.value.stringValue == "STEP")
+        {
+            lex.popFront();
+            step = expression();
+        }
+        else
+        {
+            //とりあえず
+            step = new Constant(Value(1));
+        }
+        token = lex.front();
+        Statements statements = forStatements();
+        node = new For(init, to, step, statements);
         return node;
     }
     If if_()
@@ -430,7 +530,7 @@ class Parser
         Statements else_;
         if(token.type == TokenType.Else)
         {
-            if(lex.front().type == TokenType.NewLine)
+            if(!multiline && lex.front().type == TokenType.NewLine)
             {
                 //3.1現在だとエラー
                 syntaxError();
@@ -438,6 +538,7 @@ class Parser
             if(multiline)
             {
                 else_ = multilineIfStatements();
+                lex.popFront();
             }
             else
             {
@@ -603,6 +704,12 @@ class Parser
                 //文字列リテラル
 
                 break;
+            case TokenType.Minus:
+                //TODO:UnaryOperatorの実装
+                //とりあえず0-exprを作成
+                lex.popFront();
+                node = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, expression());
+                return node;
             default:
                 return node;
         }

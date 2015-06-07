@@ -21,6 +21,7 @@ enum NodeType
     Label,
     Goto,
     If,
+    For,
 }
 abstract class Node
 {
@@ -207,5 +208,28 @@ class If : Statement
     bool hasElse()
     {
         return !(else_ is null) && else_.statements.length != 0;
+    }
+}
+class For : Statement
+{
+    Assign initExpression;
+    Expression toExpression;
+    Expression stepExpression;
+    Statements statements;
+    this(Assign assign, Expression toExpression, Expression stepExpression, Statements statements)
+    {
+        this.type = NodeType.For;
+        this.initExpression = assign;
+        this.toExpression = toExpression;
+        this.stepExpression = stepExpression;
+        this.statements = statements;
+    }
+    this(Assign assign, Expression toExpression, Statements statements)
+    {
+        this.type = NodeType.For;
+        this.initExpression = assign;
+        this.toExpression = toExpression;
+        this.stepExpression = null;
+        this.statements = statements;
     }
 }

@@ -30,6 +30,14 @@ enum TokenType
     Then,
     Else,
     Endif,
+    For,
+    Next,
+    Equal,
+    NotEqual,
+    Less,//<
+    Greater,//>
+    LessEqual,
+    GreaterEqual,
 }
 
 struct Token

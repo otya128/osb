@@ -33,6 +33,11 @@ class VM
     }
     void pop(out Value value)
     {
+        if(stacki <= 0)
+        {
+            writeln("Stack underflow");
+            readln();
+        }
         value = stack[--stacki];
     }
     Value testGetGlobaVariable(wstring name)
@@ -161,6 +166,24 @@ class Operate : Code
                 break;
             case TokenType.Div:
                 ld /= rd;
+                break;
+            case TokenType.Equal:
+                ld = ld == rd;
+                break;
+            case TokenType.NotEqual:
+                ld = ld != rd;
+                break;
+            case TokenType.Less:
+                ld = ld < rd;
+                break;
+            case TokenType.LessEqual:
+                ld = ld <= rd;
+                break;
+            case TokenType.Greater:
+                ld = ld > rd;
+                break;
+            case TokenType.GreaterEqual:
+                ld = ld >= rd;
                 break;
             default:
                 writeln("NotImpl: ", operator);
