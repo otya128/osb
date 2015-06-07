@@ -112,7 +112,7 @@ class PrintCode : Code
                     break;
                 default:
                     //type mismatch
-                    break;
+                    throw new TypeMismatch();
             }
         }
     }
@@ -195,6 +195,25 @@ class Operate : Code
         Value l;
         Value r;
         vm.pop(r);
+        int ri = r.integerValue;
+        double rd = r.integerValue;
+        if(r.type == ValueType.Double)
+        {
+            ri = cast(int)r.doubleValue;
+            rd = r.doubleValue;
+        }
+        switch(operator)
+        {
+            //単項演算子
+            case TokenType.Not:
+                vm.push(Value(~ri));
+                return;
+            case TokenType.LogicalNot:
+                vm.push(Value(!ri));
+                return;
+            default:
+                break;
+        }
         vm.pop(l);
         if(l.type == ValueType.String)
         {
@@ -232,7 +251,6 @@ class Operate : Code
             }
             if(r.type == ValueType.Integer || r.type == ValueType.Double)
             {
-                double rd = r.integerValue;
                 switch(operator)
                 {
                     //数値 * 文字列だとエラー
@@ -260,9 +278,12 @@ class Operate : Code
             }
         }
         int li = l.integerValue;
-        int ri = r.integerValue;
         double ld = l.integerValue;
-        double rd = r.integerValue;
+        if(l.type == ValueType.Double)
+        {
+            li = cast(int)l.doubleValue;
+            ld = l.doubleValue;
+        }
         //とりあえずInteger
         switch(operator)
         {
@@ -278,41 +299,58 @@ class Operate : Code
             case TokenType.Div:
                 ld /= rd;
                 break;
+            case TokenType.IntDiv:
+                //TODO:範囲外だとOverflow
+                vm.push(Value(cast(int)(ld / rd)));
+                return;
             case TokenType.Mod:
                 ld %= rd;
                 break;
             case TokenType.And:
-                ld = li & ri;
-                break;
+                vm.push(Value(li & ri));
+                return;
             case TokenType.Or:
-                ld = li | ri;
-                break;
+                vm.push(Value(li | ri));
+                return;
+            case TokenType.LogicalAnd:
+                vm.push(Value(li && ri));
+                return;
+            case TokenType.LogicalOr:
+                vm.push(Value(li || ri));
+                return;
             case TokenType.Xor:
-                ld = li ^ ri;
-                break;
+                vm.push(Value(li ^ ri));
+                return;
             case TokenType.Equal:
-                ld = ld == rd;
-                break;
+                vm.push(Value(li == ri));
+                return;
             case TokenType.NotEqual:
-                ld = ld != rd;
-                break;
+                vm.push(Value(li != ri));
+                return;
             case TokenType.Less:
-                ld = ld < rd;
-                break;
+                vm.push(Value(li < ri));
+                return;
             case TokenType.LessEqual:
-                ld = ld <= rd;
-                break;
+                vm.push(Value(li <= ri));
+                return;
             case TokenType.Greater:
-                ld = ld > rd;
-                break;
+                vm.push(Value(li > ri));
+                return;
             case TokenType.GreaterEqual:
-                ld = ld >= rd;
-                break;
+                vm.push(Value(li >= ri));
+                return;
+            case TokenType.LeftShift:
+                vm.push(Value(li << ri));
+                return;
+            case TokenType.RightShift:
+                vm.push(Value(li >> ri));
+                return;
             default:
                 writeln("NotImpl: ", operator);
                 break;
         }
-        l.integerValue = cast(int)ld;
+        l.type = ValueType.Double;
+        l.doubleValue = ld;
         vm.push(l);
     }
 }

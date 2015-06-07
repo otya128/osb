@@ -3,6 +3,7 @@ import otya.smilebasic.node;
 import otya.smilebasic.token;
 import otya.smilebasic.vm;
 import otya.smilebasic.type;
+import otya.smilebasic.error;
 import std.stdio;
 class Compiler
 {
@@ -75,6 +76,7 @@ class Compiler
         else
         {
             //error:二重定義
+            throw new DuplicateVariable();
         }
         return global;
     }

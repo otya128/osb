@@ -38,6 +38,12 @@ enum TokenType
     Greater,//>
     LessEqual,
     GreaterEqual,
+    LeftShift,//<<
+    RightShift,//>>
+    LogicalNot,//!
+    LogicalAnd,//&&
+    LogicalOr,//||
+    IntDiv,//DIV
 }
 
 struct Token

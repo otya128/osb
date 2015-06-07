@@ -35,6 +35,7 @@ class Lexical
         table['='] = TokenType.Assign;
         table['<'] = TokenType.Less;
         table['>'] = TokenType.Greater;
+        table['!'] = TokenType.LogicalNot;
         reserved["OR"] = TokenType.Or;
         reserved["AND"] = TokenType.And;
         reserved["XOR"] = TokenType.Xor;
@@ -175,6 +176,30 @@ class Lexical
                 i += 2;
                 break;
             }
+            if(c == '<' && i + 1 < code.length && code[i + 1] == '<')
+            {
+                token = Token(TokenType.LeftShift);
+                i += 2;
+                break;
+            }
+            if(c == '>' && i + 1 < code.length && code[i + 1] == '>')
+            {
+                token = Token(TokenType.RightShift);
+                i += 2;
+                break;
+            }
+            if(c == '&' && i + 1 < code.length && code[i + 1] == '&')
+            {
+                token = Token(TokenType.LogicalAnd);
+                i += 2;
+                break;
+            }
+            if(c == '|' && i + 1 < code.length && code[i + 1] == '|')
+            {
+                token = Token(TokenType.LogicalOr);
+                i += 2;
+                break;
+            }
             if(table[cast(char)c] == TokenType.Unknown)
             {
                 //error
@@ -254,7 +279,9 @@ class Parser
     {
         switch(type)
         {
-//            return 8;//&&,||
+            case TokenType.LogicalAnd:
+            case TokenType.LogicalOr:
+            return 8;//&&,||
             case TokenType.And:
             case TokenType.Or:
             case TokenType.Xor:
@@ -266,13 +293,15 @@ class Parser
             case TokenType.Greater:
             case TokenType.GreaterEqual:
             return 6;//==,!=,<,<=,>,>=
-
-//            return 5;//<<,>>
+            case TokenType.LeftShift:
+            case TokenType.RightShift:
+            return 5;//<<,>>
             case TokenType.Plus:
             case TokenType.Minus:
             return 4;//+,-(bin)
             case TokenType.Mul:
             case TokenType.Div:
+            case TokenType.IntDiv:
             case TokenType.Mod:
             return 3;//*,/,DIV,MOD
 //            return 2;//-,NOT,!
