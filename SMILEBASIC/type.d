@@ -56,7 +56,7 @@ struct Value
             case ValueType.String:
                 return true;//3.1現在では文字列はtrue(ただし!"A"などは動かない)
             default:
-                //配列はtype missmatch
+                //配列はtype mismatch
                 return false;
         }
     }

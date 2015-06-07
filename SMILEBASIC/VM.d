@@ -91,7 +91,7 @@ class PrintCode : Code
                     write(arg.stringValue);
                     break;
                 default:
-                    //type missmatch
+                    //type mismatch
                     break;
             }
         }
@@ -184,8 +184,8 @@ class Operate : Code
                         vm.push(Value(ls >= rs));
                         return;
                     default:
-                        //type missmatch
-                        stderr.writeln("Type missmatch");
+                        //type mismatch
+                        stderr.writeln("Type mismatch");
                         return;
                 }
             }
@@ -213,8 +213,8 @@ class Operate : Code
                         vm.push(Value(3));
                         return;
                     default:
-                        //type missmatch
-                        stderr.writeln("Type missmatch");
+                        //type mismatch
+                        stderr.writeln("Type mismatch");
                         return;
                 }
             }
