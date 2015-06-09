@@ -278,10 +278,13 @@ class Parser
         this.code = input;
         lex = new Lexical(input);
     }
+    const int opMax = 11;
     int getOPRank(TokenType type)
     {
         switch(type)
         {
+            version(none)
+            {
             case TokenType.LogicalAnd:
             case TokenType.LogicalOr:
             return 8;//&&,||
@@ -289,6 +292,17 @@ class Parser
             case TokenType.Or:
             case TokenType.Xor:
             return 7;//AND,OR,XOR
+            }
+            case TokenType.LogicalAnd:
+                return 10;//&&,||
+            case TokenType.LogicalOr:
+                return 11;//&&,||
+            case TokenType.And:
+                return 7;//AND,OR,XOR
+            case TokenType.Or:
+                return 9-1;//AND,OR,XOR
+            case TokenType.Xor:
+                return 9;//AND,OR,XOR
             case TokenType.Equal:
             case TokenType.NotEqual:
             case TokenType.Less:
@@ -684,7 +698,7 @@ class Parser
     Expression expression()
     {
         Expression node = null;
-        return term(8, node);
+        return term(opMax, node);
     }
     Expression term(int order, Expression node)
     {
