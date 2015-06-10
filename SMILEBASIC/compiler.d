@@ -5,6 +5,19 @@ import otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.error;
 import std.stdio;
+class Scope
+{
+    GotoAddr breakAddr;
+    GotoAddr continueAddr;
+    this()
+    {
+    }
+    this(GotoAddr breakAddr, GotoAddr continueAddr)
+    {
+        this.breakAddr =  breakAddr;
+        this.continueAddr = continueAddr;
+    }
+}
 class Compiler
 {
     Statements statements;
@@ -139,19 +152,19 @@ class Compiler
                 break;
         }
     }
-    void compileIf(If node)
+    void compileIf(If node, Scope sc)
     {
         compileExpression(node.condition);
         //条件式がfalseならendif or elseに飛ぶ
         auto else_ = genCodeGotoFalse();
-        compileStatements(node.then);
+        compileStatements(node.then, sc);
         //もしelseもあるのならば、endifに飛ぶ
         GotoAddr then;
         if(node.hasElse)
         {
             then = genCodeGoto();
             else_.address = code.length;
-            compileStatements(node.else_);
+            compileStatements(node.else_, sc);
             then.address = code.length;
         }
         else
@@ -160,9 +173,9 @@ class Compiler
             else_.address = code.length;
         }
     }
-    void compileFor(For node)
+    void compileFor(For node, Scope s)
     {
-        compileStatement(node.initExpression);
+        compileStatement(node.initExpression, s);
         auto forstart = code.length;
         compileExpression(node.stepExpression);
         genCodeImm(Value(0));
@@ -194,7 +207,9 @@ class Compiler
         genCodeOP(TokenType.Less);
         genCode(breakAddr);
         forAddr.address = code.length;
-        compileStatements(node.statements);
+        s = new Scope(new GotoAddr(-1), new GotoAddr(-1));
+        compileStatements(node.statements, s);
+        s.continueAddr.address = code.length;
         //counterに加算する
         genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
         compileExpression(node.stepExpression);
@@ -202,16 +217,17 @@ class Compiler
         genCodePopGlobal(getGlobalVarIndex(node.initExpression.name));
         genCodeGoto(forstart);
         breakAddr.address = code.length;
+        s.breakAddr.address = code.length;
     }
 
-    void compileStatements(Statements statements)
+    void compileStatements(Statements statements, Scope sc)
     {
         foreach(Statement s ; statements.statements)
         {
-            compileStatement(s);
+            compileStatement(s, sc);
         }
     }
-    void compileStatement(Statement i)
+    void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
         {
@@ -257,10 +273,10 @@ class Compiler
                 }
                 break;
             case NodeType.If:
-                compileIf(cast(If)i);
+                compileIf(cast(If)i, s);
                 break;
             case NodeType.For:
-                compileFor(cast(For)i);
+                compileFor(cast(For)i, s);
                 break;
             case NodeType.Gosub:
                 {
@@ -282,15 +298,32 @@ class Compiler
             case NodeType.End:
                 genCode(new EndVM());
                 break;
+            case NodeType.Break:
+                if(s.breakAddr is null)
+                {
+                    //syntax-error
+                    break;
+                }
+                genCode(s.breakAddr);
+                break;
+            case NodeType.Continue:
+                if(s.continueAddr is null)
+                {
+                    //syntax-error
+                    break;
+                }
+                genCode(s.continueAddr);
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
     }
     VM compile()
     {
+        Scope s = new Scope();
         foreach(Statement i ; statements.statements)
         {
-            compileStatement(i);
+            compileStatement(i, s);
         }
         foreach(int i, Code c; code)
         {

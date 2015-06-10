@@ -26,6 +26,10 @@ enum NodeType
     Gosub,
     Return,
     End,
+    Break,
+    Continue,
+    DefineVariable,
+    DefineArray,
 }
 abstract class Node
 {
@@ -273,4 +277,39 @@ class End : Statement
         this.type = NodeType.End;
     }
 }
-
+class Break : Statement
+{
+    this()
+    {
+        this.type = NodeType.Break;
+    }
+}
+class Continue : Statement
+{
+    this()
+    {
+        this.type = NodeType.Continue;
+    }
+}
+class DefineVariable : Statement
+{
+    wstring name;
+    Expression expression;
+    this(wstring name, Expression expr)
+    {
+        this.type = NodeType.DefineVariable;
+        this.name = name;
+        this.expression = expr;
+    }
+}
+class DefineArray : Statement
+{
+    wstring name;
+    int[] dim;
+    this(wstring name, int[] dim)
+    {
+        this.type = NodeType.DefineArray;
+        this.name = name;
+        this.dim = dim;
+    }
+}

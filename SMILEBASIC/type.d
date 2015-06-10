@@ -18,7 +18,7 @@ struct Value
         int integerValue;
         double doubleValue;
         wstring stringValue;
-        int[] intArray;
+        Array!int intArray;
     }
     this(int value)
     {
@@ -69,4 +69,48 @@ struct Value
                 return false;
         }
     }
+}
+class Array(T)
+{
+    T[] array;
+    //最大要素数2^^31
+    //4次元配列
+    int[4] dim;
+    int dimCount;
+    this(int len)
+    {
+        dim[0] = len;
+        dim[1] = 0;
+        dim[2] = 0;
+        dim[3] = 0;
+        array = new T[len];
+        dimCount = 1;
+    }
+    this(int[] dim)
+    {
+        int len = 1;
+        foreach(int i; dim)
+        {
+            len *= i;
+        }
+        array = new T[len];
+        dimCount = dim.length;
+    }
+    T opIndex(int i1)
+    {
+        return array[i1];
+    }
+    T opIndex(int i1, int i2)
+    {
+        return array[i1 * dim[0] + i2];
+    }
+    T opIndex(int i1, int i2, int i3)
+    {
+        return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3];
+    }
+    T opIndex(int i1, int i2, int i3, int i4)
+    {
+        return array[i1];//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3];
+    }
+
 }

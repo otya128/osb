@@ -47,6 +47,9 @@ enum TokenType
     Gosub,
     Return,
     End,
+    Break,
+    Continue,
+    Var,
 }
 
 struct Token

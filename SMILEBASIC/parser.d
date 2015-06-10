@@ -52,6 +52,10 @@ class Lexical
         reserved["GOSUB"] = TokenType.Gosub;
         reserved["RETURN"] = TokenType.Return;
         reserved["END"] = TokenType.End;
+        reserved["BREAK"] = TokenType.Break;
+        reserved["CONTINUE"] = TokenType.Continue;
+        reserved["VAR"] = TokenType.Var;
+        reserved["DIM"] = TokenType.Var;
         reserved.rehash();
         line = 1;
     }
@@ -521,11 +525,49 @@ class Parser
             case TokenType.End:
                 node = new End();
                 break;
+            case TokenType.Break:
+                node = new Break();
+                break;
+            case TokenType.Continue:
+                node = new Continue();
+                break;
+            case TokenType.Var:
+                lex.popFront();
+                node = var();
+                break;
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
+        return node;
+    }
+    Statement var()
+    {
+        Token token = lex.front();
+        if(token.type != TokenType.Iden)
+        {
+            //TODO:VAR("A")の実装
+            syntaxError();
+            return null;
+        }
+        wstring name = token.value.stringValue;
+        lex.popFront();
+        token = lex.front();
+        Expression expr;
+        //VAR iden=expr
+        if(token.type == TokenType.Equal)
+        {
+            lex.popFront();
+            expr = expression();
+        }
+        DefineVariable node = new DefineVariable(name, expr);
+        //VARの評価順は順番通り
+        //VAR iden[=expr],
+        if(token.type == TokenType.Comma)
+        {
+            lex.popFront();
+        }
         return node;
     }
     For forStatement()
