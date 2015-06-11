@@ -36,6 +36,8 @@ class Lexical
         table['<'] = TokenType.Less;
         table['>'] = TokenType.Greater;
         table['!'] = TokenType.LogicalNot;
+        table['['] = TokenType.LBracket;
+        table[']'] = TokenType.RBracket;
         reserved["OR"] = TokenType.Or;
         reserved["AND"] = TokenType.And;
         reserved["XOR"] = TokenType.Xor;
@@ -534,7 +536,7 @@ class Parser
             case TokenType.Var:
                 lex.popFront();
                 node = var();
-                break;
+                return node;
             default:
                 syntaxError();
                 break;
@@ -544,30 +546,59 @@ class Parser
     }
     Statement var()
     {
-        Token token = lex.front();
-        if(token.type != TokenType.Iden)
+        Var var = new Var();
+        Token token;
+        while(true)
         {
-            //TODO:VAR("A")の実装
-            syntaxError();
-            return null;
+            token = lex.front();
+            if(token.type != TokenType.Iden)
+            {
+                //TODO:VAR("A")の実装
+                syntaxError();
+                return null;
+            }
+            auto v = defineVar();
+            var.addDefineVar(cast(DefineVariable)v);
+            //VARの評価順は順番通り
+            //VAR iden[=expr],
+            if(token.type == TokenType.Comma)
+            {
+                lex.popFront();
+                writeln("NOTIMPL");
+                syntaxError();
+            }
+            else
+            {
+                break;
+            }
         }
+        return var;
+    }
+    Statement defineVar()
+    {
+        Token token = lex.front();
         wstring name = token.value.stringValue;
         lex.popFront();
         token = lex.front();
         Expression expr;
+        //VAR iden[
+        if(token.type == TokenType.LBracket)
+        {
+            lex.popFront();
+            while(true)
+            {
+                expr = expression();
+                token = lex.front();
+            }
+        }
         //VAR iden=expr
         if(token.type == TokenType.Equal)
         {
             lex.popFront();
             expr = expression();
+            token = lex.front();
         }
         DefineVariable node = new DefineVariable(name, expr);
-        //VARの評価順は順番通り
-        //VAR iden[=expr],
-        if(token.type == TokenType.Comma)
-        {
-            lex.popFront();
-        }
         return node;
     }
     For forStatement()

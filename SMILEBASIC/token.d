@@ -50,6 +50,8 @@ enum TokenType
     Break,
     Continue,
     Var,
+    LBracket,//[
+    RBracket,//]
 }
 
 struct Token

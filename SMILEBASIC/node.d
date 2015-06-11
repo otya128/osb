@@ -28,6 +28,7 @@ enum NodeType
     End,
     Break,
     Continue,
+    Var,
     DefineVariable,
     DefineArray,
 }
@@ -289,6 +290,23 @@ class Continue : Statement
     this()
     {
         this.type = NodeType.Continue;
+    }
+}
+class Var : Statement
+{
+    Statement[] define;
+    this()
+    {
+        this.type = NodeType.Var;
+        this.define = new Statement[0];
+    }
+    void addDefineVar(DefineVariable dv)
+    {
+        this.define ~= dv;
+    }
+    void addDefineArray(DefineArray da)
+    {
+        this.define ~= da;
     }
 }
 class DefineVariable : Statement
