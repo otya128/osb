@@ -109,9 +109,10 @@ class Array(T)
     this(int[] dim)
     {
         int len = 1;
-        foreach(int i; dim)
+        foreach(int i, j; dim)
         {
-            len *= i;
+            len *= j;
+            this.dim[i] = dim[i];
         }
         array = new T[len];
         dimCount = dim.length;

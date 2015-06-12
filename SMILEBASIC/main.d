@@ -54,8 +54,8 @@ FOR I=0 TO 10
  ?I
 NEXT
 VAR V[10]
-V[0]=12
-?V[0]
+V[0,1]=12
+?V[1]
 ?\"ABC\"[1][0]
 GOSUB @A
 END

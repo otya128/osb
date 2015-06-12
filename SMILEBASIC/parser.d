@@ -868,12 +868,16 @@ class Parser
                 auto tt = token.type;
                 op.operator = token.type;
                 lex.popFront();
-                op.item2 = term(order - 1, node);
                 if(tt == TokenType.LBracket)
                 {
+                    op.item2 = indexExpressions();
                     //[演算子
                     if(lex.front().type != TokenType.RBracket) syntaxError();
                     lex.popFront();
+                }
+                else
+                {
+                    op.item2 = term(order - 1, node);
                 }
                 token = lex.front();
                 version(none)

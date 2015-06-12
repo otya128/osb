@@ -136,6 +136,19 @@ class Compiler
                     auto binop = cast(BinaryOperator)exp;
                     compileExpression(binop.item1);
                     compileExpression(binop.item2);
+                    if(binop.operator == TokenType.LBracket)
+                    {
+                        IndexExpressions ie = cast(IndexExpressions)binop.item2;
+                        if(ie)
+                        {
+                            genCode(new PushArray(ie.expressions.length));
+                        }
+                        else
+                        {
+                            genCode(new PushArray(1));
+                        }
+                        break;
+                    }
                     genCodeOP(binop.operator);
                 }
                 break;

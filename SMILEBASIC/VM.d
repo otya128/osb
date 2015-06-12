@@ -545,10 +545,78 @@ class NewArray : Code
                 vm.global[index].type = ValueType.IntegerArray;
                 vm.global[index].integerArray = new Array!int(dim);
                 break;
+            case ValueType.Double:
+                vm.global[index].type = ValueType.DoubleArray;
+                vm.global[index].doubleArray = new Array!double(dim);
+                break;
+            case ValueType.String:
+                vm.global[index].type = ValueType.StringArray;
+                vm.global[index].stringArray = new Array!wstring(dim);
+                break;
             default:
                 throw new TypeMismatch();
                 break;
         }
+    }
+}
+class PushArray : Code
+{
+    int dim;
+    this(int dim)
+    {
+        this.dim = dim;
+    }
+    override void execute(VM vm)
+    {
+        int[4] index;
+        for(int i = dim - 1; i >= 0; i--)
+        {
+            Value v;
+            vm.pop(v);
+            if(v.type == ValueType.Integer)
+            {
+                index[i] = v.integerValue;
+                continue;
+            }
+            if(v.type == ValueType.Double)
+            {
+                index[i] = cast(int)v.doubleValue;
+                continue;
+            }
+            throw new TypeMismatch();
+        }
+        Value array;
+        vm.pop(array);
+        if(!array.isArray)
+        {
+            throw new TypeMismatch();
+        }
+        if(array.type == ValueType.IntegerArray)
+        {
+            vm.push(Value(array.integerArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.DoubleArray)
+        {
+            vm.push(Value(array.doubleArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.StringArray)
+        {
+            vm.push(Value(array.stringArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.String)
+        {
+            if(dim != 1)
+            {
+                //TODO:syntaxError
+                throw new TypeMismatch();
+            }
+            vm.push(Value(array.stringValue[index[0]].to!wstring));
+            return;
+        }
+        throw new TypeMismatch();
     }
 }
 class PopGArray : Code
@@ -568,7 +636,7 @@ class PopGArray : Code
             throw new TypeMismatch();
         }
         int[4] index;
-        for(int i = dim - 1; i >= 0; i--)
+        for(int i = 0; i < dim; i++)//for(int i = dim - 1; i >= 0; i--)
         {
             Value v;
             vm.pop(v);
