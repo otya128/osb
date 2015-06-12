@@ -53,9 +53,9 @@ FOR I=0 TO 10
  IF I==1 THEN CONTINUE
  ?I
 NEXT
-VAR V[10]
+VAR V[10,10]
 V[0,1]=12
-?V[1]
+?V[0,1]
 ?\"ABC\"[1][0]
 GOSUB @A
 END

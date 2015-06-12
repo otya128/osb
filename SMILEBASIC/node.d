@@ -325,8 +325,8 @@ class DefineVariable : Statement
 class DefineArray : Statement
 {
     wstring name;
-    Expression[] dim;
-    this(wstring name, Expression[] dim)
+    IndexExpressions dim;
+    this(wstring name, IndexExpressions dim)
     {
         this.type = NodeType.DefineArray;
         this.name = name;

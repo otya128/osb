@@ -569,7 +569,7 @@ class PushArray : Code
     override void execute(VM vm)
     {
         int[4] index;
-        for(int i = dim - 1; i >= 0; i--)
+        for(int i = 0; i < dim; i++)
         {
             Value v;
             vm.pop(v);
@@ -636,7 +636,7 @@ class PopGArray : Code
             throw new TypeMismatch();
         }
         int[4] index;
-        for(int i = 0; i < dim; i++)//for(int i = dim - 1; i >= 0; i--)
+        for(int i = 0; i < dim; i++)
         {
             Value v;
             vm.pop(v);

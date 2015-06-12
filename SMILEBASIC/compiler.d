@@ -274,14 +274,14 @@ class Compiler
             {
                 DefineArray var = cast(DefineArray)v;
                 int siz = 0;
-                foreach_reverse(Expression expr; var.dim)
+                foreach_reverse(Expression expr; var.dim.expressions)
                 {
                     compileExpression(expr);
                     siz++;
                     if(siz == 4)
                         break;//4次元まで(パーサーで除去するけど万が一に備えて
                 }
-                genCode(new NewArray(getType(var.name), var.dim.length, defineGlobalVarIndex(var.name)));
+                genCode(new NewArray(getType(var.name), var.dim.expressions.length, defineGlobalVarIndex(var.name)));
                 continue;
             }
         }

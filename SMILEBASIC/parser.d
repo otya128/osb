@@ -649,20 +649,11 @@ class Parser
         if(token.type == TokenType.LBracket)
         {
             lex.popFront();
-            Expression[] dim = new Expression[0];
-            while(true)
-            {
-                expr = expression();
-                token = lex.front();
-                if(token.type != TokenType.RBracket)
-                {
-                    syntaxError();
-                    break;
-                }
-                dim ~= expr;
-                lex.popFront();
-                break;
-            }
+            auto dim = indexExpressions();
+            token = lex.front();
+            if(token.type != TokenType.RBracket)
+                return null;
+            lex.popFront();
             DefineArray ary = new DefineArray(name, dim);
             return ary;
         }
@@ -872,7 +863,7 @@ class Parser
                 {
                     op.item2 = indexExpressions();
                     //[演算子
-                    if(lex.front().type != TokenType.RBracket) syntaxError();
+                    if(lex.front().type != TokenType.RBracket) return null;
                     lex.popFront();
                 }
                 else
