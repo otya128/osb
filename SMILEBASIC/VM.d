@@ -119,6 +119,9 @@ class PrintCode : Code
                 case ValueType.Integer:
                     write(arg.integerValue);
                     break;
+                case ValueType.Double:
+                    write(arg.doubleValue);
+                    break;
                 case ValueType.String:
                     write(arg.stringValue);
                     break;
@@ -235,6 +238,16 @@ class Operate : Code
                 break;
         }
         vm.pop(l);
+        if(l.type == ValueType.IntegerArray)
+            //l.type == ValueType.StringArray || l.type == ValueType.DoubleArray)
+        {
+            if(operator != TokenType.LBracket)
+            {
+                throw new TypeMismatch();
+            }
+            vm.push(Value(l.integerArray[ri]));
+            return;
+        }
         if(l.type == ValueType.String)
         {
             wstring ls = l.stringValue;
@@ -290,6 +303,9 @@ class Operate : Code
                     case TokenType.Greater:
                     case TokenType.GreaterEqual:
                         vm.push(Value(3));
+                        return;
+                    case TokenType.LBracket:
+                        vm.push(Value(ls[ri].to!wstring));
                         return;
                     default:
                         //type mismatch
@@ -491,5 +507,47 @@ class EndVM : Code
     {
         vm.end();
     }
-}    
-
+}
+class NewArray : Code
+{
+    ValueType type;
+    int index;
+    int size;
+    int[] dim;
+    this(ValueType type, int size, int index)
+    {
+        dim = new int[size];
+        this.size = size;
+        this.type = type;
+        this.index = index;
+    }
+    override void execute(VM vm)
+    {
+        for(int i = size - 1; i >= 0; i--)
+        {
+            Value v;
+            vm.pop(v);
+            if(v.type == ValueType.Double)
+            {
+                dim[i] = cast(int)v.doubleValue;
+                continue;
+            }
+            if(v.type == ValueType.Integer)
+            {
+                dim[i] = v.integerValue;
+                continue;
+            }
+            throw new TypeMismatch();
+        }
+        switch(type)
+        {
+            case ValueType.Integer:
+                vm.global[index].type = ValueType.IntegerArray;
+                vm.global[index].integerArray = new Array!int(dim);
+                break;
+            default:
+                throw new TypeMismatch();
+                break;
+        }
+    }
+}

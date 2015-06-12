@@ -306,7 +306,7 @@ class Parser
             case TokenType.And:
                 return 7;//AND,OR,XOR
             case TokenType.Or:
-                return 9-1;//AND,OR,XOR
+                return 9;//AND,OR,XOR
             case TokenType.Xor:
                 return 9;//AND,OR,XOR
             case TokenType.Equal:
@@ -327,6 +327,8 @@ class Parser
             case TokenType.IntDiv:
             case TokenType.Mod:
             return 3;//*,/,DIV,MOD
+            case TokenType.LBracket:
+                return 2;//合ってるか不明
 //            return 2;//-,NOT,!
 //            return 1;//()
             default:
@@ -483,6 +485,11 @@ class Parser
                         node = assign(name);
                         return node;
                     }
+                    if(token.type == TokenType.LBracket)//配列代入
+                    {
+                        node = arrayAssign(name);
+                        return node;
+                    }
                     //命令呼び出し
                 }
                 break;
@@ -544,6 +551,48 @@ class Parser
         lex.popFront();
         return node;
     }
+    IndexExpressions indexExpressions()
+    {
+        IndexExpressions ie = new IndexExpressions();
+        while(true)
+        {
+            ie.addExpression(expression());
+            auto token = lex.front();
+            if(token.type == TokenType.Comma)
+            {
+                lex.popFront();
+                continue;
+            }
+            if(token.type == TokenType.RBracket)
+            {
+                break;
+            }
+            syntaxError();
+            break;
+        }
+        return ie;
+    }
+    ArrayAssign arrayAssign(wstring name)
+    {
+        lex.popFront();
+        auto ie = indexExpressions();
+        auto token = lex.front();
+        if(token.type != TokenType.RBracket)
+        {
+            return null;
+        }
+        lex.popFront();
+        token = lex.front();
+        if(token.type != TokenType.Assign)
+        {
+            //=が欲しい
+            syntaxError();
+            return null;
+        }
+        auto expr = expression();
+        auto node = new ArrayAssign(name, ie, expr);
+        return node;
+    }
     Statement var()
     {
         Var var = new Var();
@@ -558,7 +607,14 @@ class Parser
                 return null;
             }
             auto v = defineVar();
-            var.addDefineVar(cast(DefineVariable)v);
+            if(v.type == NodeType.DefineVariable)
+            {
+                var.addDefineVar(cast(DefineVariable)v);
+            }
+            if(v.type == NodeType.DefineArray)
+            {
+                var.addDefineArray(cast(DefineArray)v);
+            }
             //VARの評価順は順番通り
             //VAR iden[=expr],
             if(token.type == TokenType.Comma)
@@ -585,18 +641,32 @@ class Parser
         if(token.type == TokenType.LBracket)
         {
             lex.popFront();
+            Expression[] dim = new Expression[0];
             while(true)
             {
                 expr = expression();
                 token = lex.front();
+                if(token.type != TokenType.RBracket)
+                {
+                    syntaxError();
+                    break;
+                }
+                dim ~= expr;
+                lex.popFront();
+                break;
             }
+            DefineArray ary = new DefineArray(name, dim);
+            return ary;
         }
-        //VAR iden=expr
-        if(token.type == TokenType.Equal)
+        else
         {
-            lex.popFront();
-            expr = expression();
-            token = lex.front();
+            //VAR iden=expr
+            if(token.type == TokenType.Equal)
+            {
+                lex.popFront();
+                expr = expression();
+                token = lex.front();
+            }
         }
         DefineVariable node = new DefineVariable(name, expr);
         return node;
@@ -727,6 +797,7 @@ class Parser
             auto exp = expression();
             if(exp is null)
             {
+                lex.popFront();
                 syntaxError();
                 continue;
             }
@@ -790,6 +861,12 @@ class Parser
                 op.operator = token.type;
                 lex.popFront();
                 op.item2 = term(order - 1, node);
+                if(tt == TokenType.LBracket)
+                {
+                    //[演算子
+                    if(lex.front().type != TokenType.RBracket) syntaxError();
+                    lex.popFront();
+                }
                 token = lex.front();
                 version(none)
                     write(tt, " ");

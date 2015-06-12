@@ -13,6 +13,7 @@ enum NodeType
     CallFunction,
     VoidExpression,
     UnaryOperator,
+    IndexExpressions,
 
     Statements,
     FunctionBody,
@@ -31,6 +32,7 @@ enum NodeType
     Var,
     DefineVariable,
     DefineArray,
+    ArrayAssign,
 }
 abstract class Node
 {
@@ -323,11 +325,37 @@ class DefineVariable : Statement
 class DefineArray : Statement
 {
     wstring name;
-    int[] dim;
-    this(wstring name, int[] dim)
+    Expression[] dim;
+    this(wstring name, Expression[] dim)
     {
         this.type = NodeType.DefineArray;
         this.name = name;
         this.dim = dim;
+    }
+}
+class IndexExpressions : Expression
+{
+    Expression[] expressions;
+    this()
+    {
+        this.type = NodeType.IndexExpressions;
+        this.expressions = new Expression[0];
+    }
+    void addExpression(Expression expr)
+    {
+        this.expressions ~= expr;
+    }
+}
+class ArrayAssign : Statement
+{
+    wstring name;
+    IndexExpressions indexExpression;
+    Expression assignExpression;
+    this(wstring name, IndexExpressions expr, Expression assign)
+    {
+        this.type = NodeType.ArrayAssign;
+        this.name = name;
+        this.indexExpression = expr;
+        this.assignExpression = assign;
     }
 }

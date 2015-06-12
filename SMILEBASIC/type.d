@@ -18,7 +18,9 @@ struct Value
         int integerValue;
         double doubleValue;
         wstring stringValue;
-        Array!int intArray;
+        Array!int integerArray;
+        Array!double doubleArray;
+        Array!wstring stringArray;
     }
     this(int value)
     {

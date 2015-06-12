@@ -53,7 +53,9 @@ FOR I=0 TO 10
  IF I==1 THEN CONTINUE
  ?I
 NEXT
-VAR V
+VAR V[10]
+?V[0]
+?\"ABC\"[1][0]
 GOSUB @A
 END
 @A

@@ -20,6 +20,21 @@ class Scope
 }
 class Compiler
 {
+    ValueType getType(wstring name)
+    {
+        wchar s = name[name.length - 1];
+        switch(s)
+        {
+            case '$':
+                return ValueType.String;
+            case '#':
+                return ValueType.Double;
+            case '%':
+                return ValueType.Integer;
+            default:
+                return ValueType.Integer;//DEFINT時
+        }
+    }
     Statements statements;
     this(Statements statements)
     {
@@ -219,7 +234,33 @@ class Compiler
         breakAddr.address = code.length;
         s.breakAddr.address = code.length;
     }
-
+    void compileVar(Var node, Scope sc)
+    {
+        foreach(Statement v ; node.define)
+        {
+            if(v.type == NodeType.DefineVariable)
+            {
+                DefineVariable var = cast(DefineVariable)v;
+                //TODO:local variable
+                defineGlobalVarIndex(var.name);
+                continue;
+            }
+            if(v.type == NodeType.DefineArray)
+            {
+                DefineArray var = cast(DefineArray)v;
+                int siz = 0;
+                foreach_reverse(Expression expr; var.dim)
+                {
+                    compileExpression(expr);
+                    siz++;
+                    if(siz == 4)
+                        break;//4次元まで(パーサーで除去するけど万が一に備えて
+                }
+                genCode(new NewArray(getType(var.name), var.dim.length, defineGlobalVarIndex(var.name)));
+                continue;
+            }
+        }
+    }
     void compileStatements(Statements statements, Scope sc)
     {
         foreach(Statement s ; statements.statements)
@@ -313,6 +354,9 @@ class Compiler
                     break;
                 }
                 genCode(s.continueAddr);
+                break;
+            case NodeType.Var:
+                compileVar(cast(Var)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
