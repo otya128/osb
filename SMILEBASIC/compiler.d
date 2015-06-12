@@ -390,6 +390,7 @@ class Compiler
                     compileExpression(assign.indexExpression);
                     genCode(new PopGArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length));
                 }
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
@@ -422,6 +423,6 @@ unittest
     auto parser = new Parser("A=1+2+3+4*5/4-5+(6+6)*7");
     auto vm = parser.compile();
     vm.run();
-    writeln(vm.testGetGlobalVariable("A").integerValue);
-    assert(vm.testGetGlobalVariable("A").integerValue == 1+2+3+4*5/4-5+(6+6)*7);
+    writeln(vm.testGetGlobalVariable("A").castDouble);
+    assert(vm.testGetGlobalVariable("A").castDouble == 1+2+3+4*5/4-5+(6+6)*7);
 }

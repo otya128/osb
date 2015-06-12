@@ -27,7 +27,7 @@ class VM
             case '%':
                 return ValueType.Integer;
             default:
-                return ValueType.Integer;//DEFINT時
+                return ValueType.Double;//DEFINT時
         }
     }
     this(Code[] code, int len, int[wstring] globalTable)
