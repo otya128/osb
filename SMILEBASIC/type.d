@@ -17,6 +17,7 @@ struct Value
     {
         int integerValue;
         double doubleValue;
+        //TODO:Array!wchar stringValue;にしたい
         wstring stringValue;
         Array!int integerArray;
         Array!double doubleArray;
@@ -71,6 +72,23 @@ struct Value
                 return false;
         }
     }
+    bool isArray()
+    {
+        return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray ||
+            this.type == ValueType.StringArray || this.type == ValueType.String;
+    }
+    bool isNumber()
+    {
+        return this.type == ValueType.Integer || this.type == ValueType.Double;
+    }
+    int castInteger()
+    {
+        return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? cast(int)this.doubleValue : 0);
+    }
+    double castDouble()
+    {
+        return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? this.doubleValue : 0);
+    }
 }
 class Array(T)
 {
@@ -98,6 +116,40 @@ class Array(T)
         array = new T[len];
         dimCount = dim.length;
     }
+    T opIndexAssign(T v, int[] dim)
+    {
+        import core.exception;
+        switch(dim.length)
+        {
+            case 1:
+                 return this[dim[0]] = v;
+            case 2:
+                return this[dim[0], dim[1]] = v;
+            case 3:
+                return this[dim[0], dim[1], dim[2]] = v;
+            case 4:
+                return this[dim[0], dim[1], dim[2], dim[3]] = v;
+            default:
+                throw new RangeError();
+        }
+    }
+    T opIndex(int[] dim)
+    {
+        import core.exception;
+        switch(dim.length)
+        {
+            case 1:
+                return this[dim[0]];
+            case 2:
+                return this[dim[0], dim[1]];
+            case 3:
+                return this[dim[0], dim[1], dim[2]];
+            case 4:
+                return this[dim[0], dim[1], dim[2], dim[3]];
+            default:
+                throw new RangeError();
+        }
+    }
     T opIndex(int i1)
     {
         return array[i1];
@@ -113,6 +165,22 @@ class Array(T)
     T opIndex(int i1, int i2, int i3, int i4)
     {
         return array[i1];//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3];
+    }
+    T opIndexAssign(T v, int i1)
+    {
+        return array[i1] = v;
+    }
+    T opIndexAssign(T v, int i1, int i2)
+    {
+        return array[i1 * dim[0] + i2] = v;
+    }
+    T opIndexAssign(T v, int i1, int i2, int i3)
+    {
+        return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3] = v;
+    }
+    T opIndexAssign(T v, int i1, int i2, int i3, int i4)
+    {
+        return array[i1] = v;//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3] = v;
     }
 
 }

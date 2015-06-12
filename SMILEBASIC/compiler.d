@@ -162,6 +162,18 @@ class Compiler
                     }
                 }
                 break;
+            case NodeType.IndexExpressions://[expr,expr,expr,expr]用
+                {
+                    auto index = cast(IndexExpressions)exp;
+                    int count = 0;
+                    foreach_reverse(Expression i; index.expressions)
+                    {
+                        compileExpression(i);
+                        count++;
+                        if(count >= 4) break;//念のため
+                    }
+                }
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", exp.type);
                 break;
@@ -358,6 +370,13 @@ class Compiler
             case NodeType.Var:
                 compileVar(cast(Var)i, s);
                 break;
+            case NodeType.ArrayAssign:
+                {
+                    auto assign = cast(ArrayAssign)i;
+                    compileExpression(assign.assignExpression);
+                    compileExpression(assign.indexExpression);
+                    genCode(new PopGArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length));
+                }
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }

@@ -554,13 +554,19 @@ class Parser
     IndexExpressions indexExpressions()
     {
         IndexExpressions ie = new IndexExpressions();
+        int count = 0;
         while(true)
         {
             ie.addExpression(expression());
+            count++;
             auto token = lex.front();
             if(token.type == TokenType.Comma)
             {
                 lex.popFront();
+                if(count >= 4)
+                {
+                    syntaxError();
+                }
                 continue;
             }
             if(token.type == TokenType.RBracket)
@@ -589,7 +595,9 @@ class Parser
             syntaxError();
             return null;
         }
+        lex.popFront();
         auto expr = expression();
+        token = lex.front();
         auto node = new ArrayAssign(name, ie, expr);
         return node;
     }

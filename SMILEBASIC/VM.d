@@ -551,3 +551,68 @@ class NewArray : Code
         }
     }
 }
+class PopGArray : Code
+{
+    int var;
+    int dim;
+    this(int var, int dim)
+    {
+        this.var = var;
+        this.dim = dim;
+    }
+    override void execute(VM vm)
+    {
+        Value array = vm.global[var];
+        if(!array.isArray)
+        {
+            throw new TypeMismatch();
+        }
+        int[4] index;
+        for(int i = dim - 1; i >= 0; i--)
+        {
+            Value v;
+            vm.pop(v);
+            if(v.type == ValueType.Integer)
+            {
+                index[i] = v.integerValue;
+                continue;
+            }
+            if(v.type == ValueType.Double)
+            {
+                index[i] = cast(int)v.doubleValue;
+                continue;
+            }
+            throw new TypeMismatch();
+        }
+        Value assign;
+        vm.pop(assign);
+        if(array.type == ValueType.IntegerArray && assign.isNumber)
+        {
+            array.integerArray[index[0..dim]] = assign.castInteger();
+            return;
+        }
+        if(array.type == ValueType.DoubleArray && assign.isNumber)
+        {
+            array.doubleArray[index[0..dim]] = assign.castDouble();
+            return;
+        }
+        if(array.type == ValueType.StringArray && assign.type == ValueType.String)
+        {
+            array.stringArray[index[0..dim]] = assign.stringValue;
+            return;
+        }
+        if(array.type == ValueType.String && assign.type == ValueType.String)
+        {
+            if(dim != 1)
+            {
+                //TODO:syntaxError
+                throw new TypeMismatch();
+            }
+            //TODO:文字列の挙動
+            throw new TypeMismatch();
+            //array.stringValue[index[0]] = assign.stringValue[0];
+            return;
+        }
+        throw new TypeMismatch();
+    }
+}
