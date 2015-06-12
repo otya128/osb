@@ -19,6 +19,14 @@ class SmileBasicError : Exception
         super(message);
     }
 }
+class SyntaxError : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 3;
+        super("Syntax error");
+    }
+}
 class TypeMismatch : SmileBasicError
 {
     this()
@@ -43,3 +51,12 @@ class ReturnWithoutGosub : SmileBasicError
         super("RETURN without GOSUB");
     }
 }
+class SubscriptOutOfRange : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 31;
+        super("Subscript out of range");
+    }
+}
+

@@ -1,4 +1,5 @@
 module otya.smilebasic.type;
+import otya.smilebasic.error;
 enum ValueType : byte
 {
     Void,//DEF A()ENDの返り値とか未初期化の変数とか
@@ -153,34 +154,50 @@ class Array(T)
     }
     T opIndex(int i1)
     {
+        if(dimCount != 1) throw new SyntaxError();
+        if(i1 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1];
     }
     T opIndex(int i1, int i2)
     {
+        if(dimCount != 2) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] + i2];
     }
     T opIndex(int i1, int i2, int i3)
     {
+        if(dimCount != 3) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3];
     }
     T opIndex(int i1, int i2, int i3, int i4)
     {
+        if(dimCount != 4) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();
         return array[i1];//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3];
     }
     T opIndexAssign(T v, int i1)
     {
+        if(dimCount != 1) throw new SyntaxError();
+        if(i1 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1] = v;
     }
     T opIndexAssign(T v, int i1, int i2)
     {
+        if(dimCount != 2) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] + i2] = v;
     }
     T opIndexAssign(T v, int i1, int i2, int i3)
     {
+        if(dimCount != 3) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3] = v;
     }
     T opIndexAssign(T v, int i1, int i2, int i3, int i4)
     {
+        if(dimCount != 4) throw new SyntaxError();
+        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();
         return array[i1] = v;//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3] = v;
     }
 
