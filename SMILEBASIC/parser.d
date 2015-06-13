@@ -420,6 +420,7 @@ class Parser
         }
         return statements;
     }
+    bool isFunc = false;
     wstring getFunctionArgument()
     {
         auto token = lex.front();
@@ -455,6 +456,7 @@ class Parser
         token = lex.front();
         if(token.type == TokenType.LParen)
         {
+            node.returnExpr = true;
             lex.popFront();
             //MEMO:引数に[]を付けようが扱いは同一
             while(true)
@@ -488,12 +490,15 @@ class Parser
         }
         else
         {
+            node.returnExpr = false;
             //void関数にRETURN核とsyntaxerror
             writeln("NOTIMPL:DEF VOID");
             syntaxError();
             return null;
         }
+        isFunc = true;//面倒くさい
         node.functionBody = functionStatements();
+        isFunc = false;
         return node;
     }
     Statements functionStatements()
@@ -634,7 +639,15 @@ class Parser
                 break;
             case TokenType.Return:
                 lex.popFront();
-                node = new Return(expression());
+                if(isFunc)
+                {
+                    node = new Return(expression());
+                    lex.popFront();
+                }
+                else
+                {
+                    node = new Return(null);
+                }
                 return node;
             case TokenType.End:
                 node = new End();
@@ -1013,7 +1026,8 @@ class Parser
                     {
                         lex.popFront();
                         token = lex.front();
-                        
+
+                        if(token.type == TokenType.RParen) break;
                         if(token.type == TokenType.Comma)
                         {
                             func.addArg(new VoidExpression());
@@ -1021,7 +1035,7 @@ class Parser
                             token = lex.front();
                         }
                         else
-                        func.addArg(expression());
+                            func.addArg(expression());
                         if(lex.front().type == TokenType.RParen) break;
                     }
                 }

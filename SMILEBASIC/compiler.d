@@ -9,6 +9,7 @@ class Scope
 {
     GotoAddr breakAddr;
     GotoAddr continueAddr;
+    Function func;
     this()
     {
     }
@@ -17,19 +18,28 @@ class Scope
         this.breakAddr =  breakAddr;
         this.continueAddr = continueAddr;
     }
+    this(Function func)
+    {
+        this.func = func;
+    }
 }
 class Function
 {
     int address;
     wstring name;
+    int argCount;
     int argumentIndex;
     int variableIndex;
     int[wstring] variable;
     int[wstring] label;
-    this(int address, wstring name)
+    bool returnExpr;
+    this(int address, wstring name, bool returnExpr, int argCount)
     {
         this.address = address;
         this.name = name;
+        this.returnExpr = returnExpr;
+        this.argCount = argCount;
+        this.variableIndex = 1;//0,bp,1,pc
     }
     int getLocalVarIndex(wstring name)
     {
@@ -53,6 +63,20 @@ class Function
         {
             //error:二重定義
             throw new DuplicateVariable();
+        }
+        return var;
+    }
+    int defineArgumentIndex(wstring name)
+    {
+        int var = this.variable.get(name, 0);
+        if(var == 0)
+        {
+            this.variable[name] = var = ++variableIndex;
+        }
+        else
+        {
+            //error:二重定義
+            //TODO:3.1ではエラーにならない
         }
         return var;
     }
@@ -165,7 +189,11 @@ class Compiler
     }
     void compileExpression(Expression exp)
     {
-
+        if(!exp)
+        {
+            genCodeImm(Value(ValueType.Void));
+            return;
+        }
         switch(exp.type)
         {
             case NodeType.Constant:
@@ -206,13 +234,11 @@ class Compiler
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
-                    if(func.name == "ADD")
+                    foreach_reverse(Expression i ; func.args)
                     {
-                        foreach_reverse(Expression i ; func.args)
-                        {
-                            compileExpression(i);
-                        }
+                        compileExpression(i);
                     }
+                    genCode(new CallFunctionCode(func.name, func.args.length));
                 }
                 break;
             case NodeType.IndexExpressions://[expr,expr,expr,expr]用
@@ -333,6 +359,19 @@ class Compiler
             compileStatement(s, sc);
         }
     }
+    void compileDefineFunction(DefineFunction node)
+    {
+        auto skip = genCodeGoto();
+        Function func = new Function(this.code.length, node.name, node.returnExpr, node.arguments.length);
+        Scope sc = new Scope(func);
+        foreach(wstring arg; node.arguments)
+        {
+            func.defineArgumentIndex(arg);
+        }
+        compileStatements(node.functionBody, sc);
+        skip.address = this.code.length;
+        this.functions[func.name] = func;
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -393,11 +432,26 @@ class Compiler
             case NodeType.Return:
                 {
                     auto ret = cast(Return)i;
-                    if(ret.expression is null)
-                        genCode(new ReturnSubroutine());
+                    if(s.func is null)
+                    {
+                        if(ret.expression is null)
+                            genCode(new ReturnSubroutine());
+                        else
+                            throw new SyntaxError();
+                    }
                     else
                     {
-                        //関数未実装:error
+                        //値を返せる関数
+                        if(s.func.returnExpr)
+                        {
+                            compileExpression(ret.expression);
+                            genCode(new ReturnFunction(s.func));
+                        }
+                        else
+                        {
+                            //TODO:実装中
+                            throw new SyntaxError();
+                        }
                     }
                 }
                 break;
@@ -440,6 +494,11 @@ class Compiler
         Scope s = new Scope();
         foreach(Statement i ; statements.statements)
         {
+            if(i.type == NodeType.DefineFunction)
+            {
+                compileDefineFunction(cast(DefineFunction)i);
+                continue;
+            }
             compileStatement(i, s);
         }
         foreach(int i, Code c; code)
@@ -453,7 +512,7 @@ class Compiler
                 code[i] = new GosubAddr(globalLabel[(cast(GosubS)c).label]);
             }
         }
-        return new VM(code, globalIndex + 1, global);
+        return new VM(code, globalIndex + 1, global, functions);
     }
 }
 

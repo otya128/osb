@@ -2,6 +2,7 @@ module otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.token;
 import otya.smilebasic.error;
+import otya.smilebasic.compiler;
 import std.uni;
 import std.utf;
 import std.conv;
@@ -14,6 +15,7 @@ class VM
     Value[] stack;
     Value[] global;
     int[wstring] globalTable;
+    Function[wstring] functions;
     int bp;
     ValueType getType(wstring name)
     {
@@ -30,7 +32,7 @@ class VM
                 return ValueType.Double;//DEFINT時
         }
     }
-    this(Code[] code, int len, int[wstring] globalTable)
+    this(Code[] code, int len, int[wstring] globalTable, Function[wstring] functions)
     {
         this.code = code;
         this.stack = new Value[16384];
@@ -40,6 +42,7 @@ class VM
         {
             this.global[v] = Value(getType(k));
         }
+        this.functions = functions;
     }
     void run()
     {
@@ -682,5 +685,51 @@ class PopGArray : Code
             return;
         }
         throw new TypeMismatch();
+    }
+}
+class ReturnFunction : Code
+{
+    Function func;
+    this(Function func)
+    {
+        this.func = func;
+    }
+    override void execute(VM vm)
+    {
+        int oldstacki = vm.stacki;
+        vm.stacki = vm.bp + 2;
+        Value bp, pc;
+        vm.pop(pc);
+        vm.pop(bp);
+        vm.push(Value(235));
+        vm.pc = pc.integerValue;
+        vm.bp = bp.integerValue;
+    }
+}
+class CallFunctionCode : Code
+{
+    wstring name;
+    int argCount;
+    this(wstring name, int argCount)
+    {
+        this.name = name;
+        this.argCount = argCount;
+    }
+    override void execute(VM vm)
+    {
+        Function func = vm.functions[name];
+        if(!func)
+        {
+            throw new SyntaxError();
+        }
+        if(func.argCount != this.argCount)
+        {
+            throw new IllegalFunctionCall();
+        }
+        //TODO:args
+        vm.push(Value(vm.bp));
+        vm.push(Value(vm.pc));
+        vm.bp = vm.stacki - 2;
+        vm.pc = func.address - 1;
     }
 }

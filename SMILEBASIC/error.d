@@ -27,6 +27,14 @@ class SyntaxError : SmileBasicError
         super("Syntax error");
     }
 }
+class IllegalFunctionCall : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 4;
+        super("Illegal function call");
+    }
+}
 class TypeMismatch : SmileBasicError
 {
     this()

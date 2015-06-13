@@ -366,10 +366,18 @@ class DefineFunction : Statement
     wstring[] outArguments;
     wstring name;
     Statements functionBody;
+    bool returnExpr;
+    this(wstring name, bool returnExpr)
+    {
+        this.type = NodeType.DefineFunction;
+        this.name = name;
+        this.returnExpr = returnExpr;
+    }
     this(wstring name)
     {
         this.type = NodeType.DefineFunction;
         this.name = name;
+        this.returnExpr = false;
     }
     void addArgument(wstring name)
     {

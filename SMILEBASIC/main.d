@@ -59,15 +59,18 @@ V[0,1]=12
 ?\"ABC\"[1][0]
 ?1/2
 GOSUB @A
+?A()
 END
 @A
 ?\"SUBROUTINE TEST\"
 RETURN
 DEF A()
  ?\"FUNCTION A\"
+ RETURN 1
 END
 DEF B(A,B[],C)
  ?\"FUNCTION B\"
+ RETURN 0
 END
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
@@ -79,6 +82,10 @@ END
     catch(SmileBasicError sbe)
     {
         writeln(sbe);
+    }
+    catch(Throwable t)
+    {
+        writeln(t);
     }
     readln();
     return 0;
