@@ -58,6 +58,7 @@ class Lexical
         reserved["CONTINUE"] = TokenType.Continue;
         reserved["VAR"] = TokenType.Var;
         reserved["DIM"] = TokenType.Var;
+        reserved["DEF"] = TokenType.Def;
         reserved.rehash();
         line = 1;
     }
@@ -402,8 +403,112 @@ class Parser
         auto statements = new Statements();
         while(!lex.empty())
         {
-            //if token == DEF
-            //
+            auto token = lex.front();
+            Statement statement;
+            if(token.type == TokenType.Def)
+            {
+                statement = defineFunction();
+            }
+            else
+            {
+                statement = this.statement();
+            }
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        return statements;
+    }
+    wstring getFunctionArgument()
+    {
+        auto token = lex.front();
+        if(token.type != TokenType.Iden)
+        {
+            syntaxError();
+            return "";
+        }
+        lex.popFront();
+        if(lex.front().type == TokenType.LBracket)
+        {
+            lex.popFront();
+            if(lex.front().type != TokenType.RBracket)
+            {
+                syntaxError();
+                return "";
+            }
+            lex.popFront();
+        }
+        return token.value.stringValue;
+    }
+    DefineFunction defineFunction()
+    {
+        lex.popFront();
+        auto token = lex.front();
+        if(token.type != TokenType.Iden)
+        {
+            syntaxError();
+            return null;
+        }
+        DefineFunction node = new DefineFunction(token.value.stringValue);
+        lex.popFront();
+        token = lex.front();
+        if(token.type == TokenType.LParen)
+        {
+            lex.popFront();
+            //MEMO:引数に[]を付けようが扱いは同一
+            while(true)
+            {
+                if(lex.front().type == TokenType.RParen)
+                {
+                    lex.popFront();
+                    break;
+                }
+                wstring arg = getFunctionArgument();
+                if(arg.length == 0)
+                {
+                    return null;
+                }
+                node.addArgument(arg);
+                token = lex.front();
+                if(token.type == TokenType.Comma)
+                {
+                    lex.popFront();
+                    continue;
+                }
+                //MEMO:引数に[]を付けようが扱いは同一
+                if(token.type == TokenType.RParen)
+                {
+                    lex.popFront();
+                    break;
+                }
+                syntaxError();
+                return null;
+            }
+        }
+        else
+        {
+            //void関数にRETURN核とsyntaxerror
+            writeln("NOTIMPL:DEF VOID");
+            syntaxError();
+            return null;
+        }
+        node.functionBody = functionStatements();
+        return node;
+    }
+    Statements functionStatements()
+    {
+        auto statements = new Statements();
+        while(true)
+        {
+            auto type = lex.front().type;
+            if(type == TokenType.End) break;
+            if(lex.empty())
+            {
+                //TODO:DEF without edn
+                syntaxError();
+                break;
+            }
             auto statement = statement();
             if(statement != Statement.NOP)
             {

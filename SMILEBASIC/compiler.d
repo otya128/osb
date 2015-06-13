@@ -18,6 +18,45 @@ class Scope
         this.continueAddr = continueAddr;
     }
 }
+class Function
+{
+    int address;
+    wstring name;
+    int argumentIndex;
+    int variableIndex;
+    int[wstring] variable;
+    int[wstring] label;
+    this(int address, wstring name)
+    {
+        this.address = address;
+        this.name = name;
+    }
+    int getLocalVarIndex(wstring name)
+    {
+        int var = this.variable.get(name, 0);
+        if(var == 0)
+        {
+            //local変数をあたる
+            //それでもだめならOPTION STRICTならエラー
+            this.variable[name] = var = ++variableIndex;
+        }
+        return var;
+    }
+    int defineLocalVarIndex(wstring name)
+    {
+        int var = this.variable.get(name, 0);
+        if(var == 0)
+        {
+            this.variable[name] = var = ++variableIndex;
+        }
+        else
+        {
+            //error:二重定義
+            throw new DuplicateVariable();
+        }
+        return var;
+    }
+}
 class Compiler
 {
     ValueType getType(wstring name)
@@ -45,6 +84,7 @@ class Compiler
     Code[] code;
     int[wstring] global;
     int[wstring] globalLabel;
+    Function[wstring] functions;
     int globalIndex = 0;
     void genCode(Code c)
     {

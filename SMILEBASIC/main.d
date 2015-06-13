@@ -63,6 +63,12 @@ END
 @A
 ?\"SUBROUTINE TEST\"
 RETURN
+DEF A()
+ ?\"FUNCTION A\"
+END
+DEF B(A,B[],C)
+ ?\"FUNCTION B\"
+END
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
     auto vm = parser.compile();

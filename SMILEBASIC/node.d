@@ -33,6 +33,7 @@ enum NodeType
     DefineVariable,
     DefineArray,
     ArrayAssign,
+    DefineFunction,
 }
 abstract class Node
 {
@@ -357,5 +358,25 @@ class ArrayAssign : Statement
         this.name = name;
         this.indexExpression = expr;
         this.assignExpression = assign;
+    }
+}
+class DefineFunction : Statement
+{
+    wstring[] arguments;
+    wstring[] outArguments;
+    wstring name;
+    Statements functionBody;
+    this(wstring name)
+    {
+        this.type = NodeType.DefineFunction;
+        this.name = name;
+    }
+    void addArgument(wstring name)
+    {
+        this.arguments ~= name;
+    }
+    void addOutArgument(wstring name)
+    {
+        this.outArguments ~= name;
     }
 }
