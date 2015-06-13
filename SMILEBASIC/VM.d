@@ -7,6 +7,16 @@ import std.uni;
 import std.utf;
 import std.conv;
 import std.stdio;
+struct VMVariable
+{
+    int index;
+    ValueType type;
+    this(int index, ValueType type)
+    {
+        this.index = index;
+        this.type = type;
+    }
+}
 class VM
 {
     Code[] code;
@@ -14,33 +24,18 @@ class VM
     int pc;
     Value[] stack;
     Value[] global;
-    int[wstring] globalTable;
+    VMVariable[wstring] globalTable;
     Function[wstring] functions;
     int bp;
-    ValueType getType(wstring name)
-    {
-        wchar s = name[name.length - 1];
-        switch(s)
-        {
-            case '$':
-                return ValueType.String;
-            case '#':
-                return ValueType.Double;
-            case '%':
-                return ValueType.Integer;
-            default:
-                return ValueType.Double;//DEFINT時
-        }
-    }
-    this(Code[] code, int len, int[wstring] globalTable, Function[wstring] functions)
+    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions)
     {
         this.code = code;
         this.stack = new Value[16384];
         this.global = new Value[len];
         this.globalTable = globalTable;
-        foreach(wstring k, int v ; globalTable)
+        foreach(wstring k, VMVariable v ; globalTable)
         {
-            this.global[v] = Value(getType(k));
+            this.global[v.index] = Value(v.type);
         }
         this.functions = functions;
     }
@@ -79,7 +74,7 @@ class VM
     }
     Value testGetGlobalVariable(wstring name)
     {
-        return global[globalTable[name]];
+        return global[globalTable[name].index];
     }
     void end()
     {
@@ -90,12 +85,14 @@ enum CodeType
 {
     Push,
     PushG,
+    PushL,
     Operate,
     Return,
     Goto,
     Gosub,
     Print,
     PopG,
+    PopL,
     GotoS,
     GotoFalse,
     GotoTrue,
@@ -193,7 +190,7 @@ class PopG : Code
             vm.global[var] = Value(cast(int)v.doubleValue);
             return;
         }
-        if(v.type == ValueType.Void)
+        if(g.type == ValueType.Void)
         {
             vm.global[var] = v;
             return;
@@ -203,6 +200,54 @@ class PopG : Code
             throw new TypeMismatch();
         }
         vm.global[var] = v;
+    }
+}
+class PushL : Code
+{
+    int var;
+    this(int var)
+    {
+        this.type = CodeType.PushL;
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(vm.stack[vm.bp + var]);
+    }
+}
+class PopL : Code
+{
+    int var;
+    this(int var)
+    {
+        this.type = CodeType.PopL;
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        Value v;
+        Value g = vm.stack[vm.bp + var];
+        vm.pop(v);
+        if(v.type == ValueType.Integer && g.type == ValueType.Double)
+        {
+            vm.stack[vm.bp + var] = Value(cast(double)v.integerValue);
+            return;
+        }
+        if(g.type == ValueType.Integer && v.type == ValueType.Double)
+        {
+            vm.stack[vm.bp + var] = Value(cast(int)v.doubleValue);
+            return;
+        }
+        if(g.type == ValueType.Void)
+        {
+            vm.stack[vm.bp + var] = v;
+            return;
+        }
+        if(v.type != g.type)
+        {
+            throw new TypeMismatch();
+        }
+        vm.stack[vm.bp + var] = v;
     }
 }
 class Operate : Code
@@ -518,15 +563,13 @@ class EndVM : Code
 class NewArray : Code
 {
     ValueType type;
-    int index;
     int size;
     int[] dim;
-    this(ValueType type, int size, int index)
+    this(ValueType type, int size)
     {
         dim = new int[size];
         this.size = size;
         this.type = type;
-        this.index = index;
     }
     override void execute(VM vm)
     {
@@ -546,24 +589,26 @@ class NewArray : Code
             }
             throw new TypeMismatch();
         }
+        Value array;
         switch(type)
         {
             case ValueType.Integer:
-                vm.global[index].type = ValueType.IntegerArray;
-                vm.global[index].integerArray = new Array!int(dim);
+                array.type = ValueType.IntegerArray;
+                array.integerArray = new Array!int(dim);
                 break;
             case ValueType.Double:
-                vm.global[index].type = ValueType.DoubleArray;
-                vm.global[index].doubleArray = new Array!double(dim);
+                array.type = ValueType.DoubleArray;
+                array.doubleArray = new Array!double(dim);
                 break;
             case ValueType.String:
-                vm.global[index].type = ValueType.StringArray;
-                vm.global[index].stringArray = new Array!wstring(dim);
+                array.type = ValueType.StringArray;
+                array.stringArray = new Array!wstring(dim);
                 break;
             default:
                 throw new TypeMismatch();
                 break;
         }
+        vm.push(array);
     }
 }
 class PushArray : Code
@@ -626,18 +671,28 @@ class PushArray : Code
         throw new TypeMismatch();
     }
 }
-class PopGArray : Code
+class PopArray : Code
 {
     int var;
     int dim;
-    this(int var, int dim)
+    bool local;
+    this(int var, int dim, bool local)
     {
         this.var = var;
         this.dim = dim;
+        this.local = local;
     }
     override void execute(VM vm)
     {
-        Value array = vm.global[var];
+        Value array;
+        if(local)
+        {
+            array = vm.stack[vm.bp + var];
+        }
+        else
+        {
+            array = vm.global[var];
+        }
         if(!array.isArray)
         {
             throw new TypeMismatch();
@@ -745,5 +800,13 @@ class CallFunctionCode : Code
         vm.push(Value(vm.pc));
         vm.bp = bp;
         vm.pc = func.address - 1;
+        vm.stacki += func.variableIndex - 1;
+        foreach(wstring k, VMVariable v ; func.variable)
+        {
+            if(v.index > 0)
+            {
+                vm.stack[bp + v.index] = Value(v.type);
+            }
+        }
     }
 }

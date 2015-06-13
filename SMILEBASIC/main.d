@@ -70,7 +70,9 @@ DEF A()
  RETURN 1
 END
 DEF B(A,B[],C)
- ?\"FUNCTION B\"
+ LOCAL=123
+ ?\"FUNCTION B\",A,B,C
+ ?LOCAL
  RETURN -1
 END
 ");

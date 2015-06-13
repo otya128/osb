@@ -13,10 +13,11 @@ class Scope
     this()
     {
     }
-    this(GotoAddr breakAddr, GotoAddr continueAddr)
+    this(GotoAddr breakAddr, GotoAddr continueAddr, Scope parent)
     {
         this.breakAddr =  breakAddr;
         this.continueAddr = continueAddr;
+        this.func = parent.func;
     }
     this(Function func)
     {
@@ -30,7 +31,7 @@ class Function
     int argCount;
     int argumentIndex;
     int variableIndex;
-    int[wstring] variable;
+    VMVariable[wstring] variable;
     int[wstring] label;
     bool returnExpr;
     this(int address, wstring name, bool returnExpr, int argCount)
@@ -41,23 +42,28 @@ class Function
         this.argCount = argCount;
         this.variableIndex = 1;//0,bp,1,pc
     }
-    int getLocalVarIndex(wstring name)
+    int getLocalVarIndex(wstring name, Compiler c)
     {
-        int var = this.variable.get(name, 0);
+        int var = this.variable.get(name, VMVariable()).index;
         if(var == 0)
         {
             //local変数をあたる
             //それでもだめならOPTION STRICTならエラー
-            this.variable[name] = var = ++variableIndex;
+            this.variable[name] = VMVariable(var = ++variableIndex, c.getType(name));
         }
         return var;
     }
-    int defineLocalVarIndex(wstring name)
+    int hasLocalVarIndex(wstring name)
     {
-        int var = this.variable.get(name, 0);
+        int var = this.variable.get(name, VMVariable()).index;
+        return var;
+    }
+    int defineLocalVarIndex(wstring name, Compiler c)
+    {
+        int var = this.variable.get(name, VMVariable()).index;
         if(var == 0)
         {
-            this.variable[name] = var = ++variableIndex;
+            this.variable[name] = VMVariable(var = ++variableIndex, c.getType(name));
         }
         else
         {
@@ -66,12 +72,12 @@ class Function
         }
         return var;
     }
-    int defineArgumentIndex(wstring name)
+    int defineArgumentIndex(wstring name, Compiler c)
     {
-        int var = this.variable.get(name, 0);
+        int var = this.variable.get(name, VMVariable()).index;
         if(var == 0)
         {
-            this.variable[name] = var = --argumentIndex;
+            this.variable[name] = VMVariable(var = --argumentIndex, c.getType(name));
         }
         else
         {
@@ -106,7 +112,7 @@ class Compiler
     }
 
     Code[] code;
-    int[wstring] global;
+    VMVariable[wstring] global;
     int[wstring] globalLabel;
     Function[wstring] functions;
     int globalIndex = 0;
@@ -125,6 +131,36 @@ class Compiler
     void genCodePopGlobal(int ind)
     {
         code ~= new PopG(ind);
+    }
+    void genCodePushVar(wstring name, Scope sc)
+    {
+        auto global = hasGlobalVarIndex(name);
+        if(global)
+        {
+            code ~= new PushG(global);
+            return;
+        }
+        if(sc.func)
+        {
+            code ~= new PushL(sc.func.getLocalVarIndex(name, this));
+            return;
+        }
+        code ~= new PushG(getGlobalVarIndex(name));
+    }
+    void genCodePopVar(wstring name, Scope sc)
+    {
+        auto global = hasGlobalVarIndex(name);
+        if(global)
+        {
+            code ~= new PopG(global);
+            return;
+        }
+        if(sc.func)
+        {
+            code ~= new PopL(sc.func.getLocalVarIndex(name, this));
+            return;
+        }
+        code ~= new PopG(getGlobalVarIndex(name));
     }
     void genCodeOP(TokenType op)
     {
@@ -164,10 +200,36 @@ class Compiler
     }
     int defineGlobalVarIndex(wstring name)
     {
-        int global = this.global.get(name, 0);
+        int global = this.global.get(name, VMVariable()).index;
         if(global == 0)
         {
-            this.global[name] = global = ++globalIndex;
+            this.global[name] = VMVariable(global = ++globalIndex, getType(name));
+        }
+        else
+        {
+            //error:二重定義
+            throw new DuplicateVariable();
+        }
+        return global;
+    }
+    int defineVarIndex(wstring name, Scope sc)
+    {
+        if(sc.func)
+        {
+            return sc.func.defineLocalVarIndex(name, this);
+        }
+        return defineGlobalVarIndex(name);
+    }
+    int defineVarIndexVoid(wstring name, Scope sc)
+    {
+        if(sc.func)
+        {
+            return sc.func.defineLocalVarIndex(name, this);
+        }
+        int global = this.global.get(name, VMVariable()).index;
+        if(global == 0)
+        {
+            this.global[name] = VMVariable(global = ++globalIndex, ValueType.Void);
         }
         else
         {
@@ -178,16 +240,32 @@ class Compiler
     }
     int getGlobalVarIndex(wstring name)
     {
-        int global = this.global.get(name, 0);
+        int global = this.global.get(name, VMVariable()).index;
         if(global == 0)
         {
             //local変数をあたる
             //それでもだめならOPTION STRICTならエラー
-            this.global[name] = global = ++globalIndex;
+            this.global[name] = VMVariable(global = ++globalIndex, getType(name));
         }
         return global;
     }
-    void compileExpression(Expression exp)
+    int hasGlobalVarIndex(wstring name)
+    {
+        int global = this.global.get(name, VMVariable()).index;
+        return global;
+    }
+    int getLocalVarIndex(wstring name, Scope sc)
+    {
+        if(sc.func)
+        {
+            int global = hasGlobalVarIndex(name);
+            if(global) return global;
+            int local = sc.func.getLocalVarIndex(name, this);
+            return local;
+        }
+        return 0;
+    }
+    void compileExpression(Expression exp, Scope sc)
     {
         if(!exp)
         {
@@ -202,8 +280,8 @@ class Compiler
             case NodeType.BinaryOperator:
                 {
                     auto binop = cast(BinaryOperator)exp;
-                    compileExpression(binop.item1);
-                    compileExpression(binop.item2);
+                    compileExpression(binop.item1, sc);
+                    compileExpression(binop.item2, sc);
                     if(binop.operator == TokenType.LBracket)
                     {
                         IndexExpressions ie = cast(IndexExpressions)binop.item2;
@@ -223,20 +301,20 @@ class Compiler
             case NodeType.UnaryOperator:
                 {
                     auto una = cast(UnaryOperator)exp;
-                    compileExpression(una.item);
+                    compileExpression(una.item, sc);
                     genCodeOP(una.operator);
                 }
                 break;
             case NodeType.Variable:
                 auto var = cast(Variable)exp;
-                genCodePushGlobal(getGlobalVarIndex(var.name));
+                genCodePushVar(var.name, sc);
                 break;
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
                     foreach_reverse(Expression i ; func.args)
                     {
-                        compileExpression(i);
+                        compileExpression(i, sc);
                     }
                     genCode(new CallFunctionCode(func.name, func.args.length));
                 }
@@ -247,7 +325,7 @@ class Compiler
                     int count = 0;
                     foreach_reverse(Expression i; index.expressions)
                     {
-                        compileExpression(i);
+                        compileExpression(i, sc);
                         count++;
                         if(count >= 4) break;//念のため
                     }
@@ -260,7 +338,7 @@ class Compiler
     }
     void compileIf(If node, Scope sc)
     {
-        compileExpression(node.condition);
+        compileExpression(node.condition, sc);
         //条件式がfalseならendif or elseに飛ぶ
         auto else_ = genCodeGotoFalse();
         compileStatements(node.then, sc);
@@ -283,7 +361,7 @@ class Compiler
     {
         compileStatement(node.initExpression, s);
         auto forstart = code.length;
-        compileExpression(node.stepExpression);
+        compileExpression(node.stepExpression, s);
         genCodeImm(Value(0));
         //step>=0
         genCodeOP(TokenType.GreaterEqual);
@@ -296,8 +374,8 @@ class Compiler
         //FOR I=0 TO -1 STEP -1
         //-1>0 false
         //1>0 true
-        compileExpression(node.toExpression);
-        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
+        compileExpression(node.toExpression, s);
+        genCodePushVar(node.initExpression.name, s);
         genCodeOP(TokenType.Greater);
         auto breakAddr = genCodeGotoTrue();
         auto forAddr = genCodeGoto();
@@ -308,19 +386,19 @@ class Compiler
         //0<0 false
         //1<0 false
         //0<1 true break
-        compileExpression(node.toExpression);
-        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
+        compileExpression(node.toExpression, s);
+        genCodePushVar(node.initExpression.name, s);
         genCodeOP(TokenType.Less);
         genCode(breakAddr);
         forAddr.address = code.length;
-        s = new Scope(new GotoAddr(-1), new GotoAddr(-1));
+        s = new Scope(new GotoAddr(-1), new GotoAddr(-1), s);
         compileStatements(node.statements, s);
         s.continueAddr.address = code.length;
         //counterに加算する
-        genCodePushGlobal(getGlobalVarIndex(node.initExpression.name));
-        compileExpression(node.stepExpression);
+        genCodePushVar(node.initExpression.name, s);
+        compileExpression(node.stepExpression, s);
         genCodeOP(TokenType.Plus);
-        genCodePopGlobal(getGlobalVarIndex(node.initExpression.name));
+        genCodePopVar(node.initExpression.name, s);
         genCodeGoto(forstart);
         breakAddr.address = code.length;
         s.breakAddr.address = code.length;
@@ -332,8 +410,7 @@ class Compiler
             if(v.type == NodeType.DefineVariable)
             {
                 DefineVariable var = cast(DefineVariable)v;
-                //TODO:local variable
-                defineGlobalVarIndex(var.name);
+                defineVarIndex(var.name, sc);
                 continue;
             }
             if(v.type == NodeType.DefineArray)
@@ -342,12 +419,14 @@ class Compiler
                 int siz = 0;
                 foreach_reverse(Expression expr; var.dim.expressions)
                 {
-                    compileExpression(expr);
+                    compileExpression(expr, sc);
                     siz++;
                     if(siz == 4)
                         break;//4次元まで(パーサーで除去するけど万が一に備えて
                 }
-                genCode(new NewArray(getType(var.name), var.dim.expressions.length, defineGlobalVarIndex(var.name)));
+                defineVarIndexVoid(var.name, sc);
+                genCode(new NewArray(getType(var.name), var.dim.expressions.length));
+                genCodePopVar(var.name, sc);
                 continue;
             }
         }
@@ -366,7 +445,7 @@ class Compiler
         Scope sc = new Scope(func);
         foreach(wstring arg; node.arguments)
         {
-            func.defineArgumentIndex(arg);
+            func.defineArgumentIndex(arg, this);
         }
         compileStatements(node.functionBody, sc);
         skip.address = this.code.length;
@@ -384,7 +463,7 @@ class Compiler
                         switch(j.type)
                         {
                             case PrintArgumentType.Expression:
-                                compileExpression(j.expression);
+                                compileExpression(j.expression, s);
                                 break;
                             case PrintArgumentType.Line:
                                 genCodeImm(Value("\n"));
@@ -402,8 +481,8 @@ class Compiler
             case NodeType.Assign:
                 {
                     auto assign = cast(Assign)i;
-                    compileExpression(assign.expression);
-                    genCodePopGlobal(getGlobalVarIndex(assign.name));
+                    compileExpression(assign.expression, s);
+                    genCodePopVar(assign.name, s);
                 }
                 break;
             case NodeType.Label:
@@ -444,7 +523,7 @@ class Compiler
                         //値を返せる関数
                         if(s.func.returnExpr)
                         {
-                            compileExpression(ret.expression);
+                            compileExpression(ret.expression, s);
                             genCode(new ReturnFunction(s.func));
                         }
                         else
@@ -480,9 +559,9 @@ class Compiler
             case NodeType.ArrayAssign:
                 {
                     auto assign = cast(ArrayAssign)i;
-                    compileExpression(assign.assignExpression);
-                    compileExpression(assign.indexExpression);
-                    genCode(new PopGArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length));
+                    compileExpression(assign.assignExpression, s);
+                    compileExpression(assign.indexExpression, s);
+                    genCode(new PopArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length, !(s.func is null)));
                 }
                 break;
             default:
