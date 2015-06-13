@@ -60,6 +60,7 @@ V[0,1]=12
 ?1/2
 GOSUB @A
 ?A()
+?B(1,2,3)
 END
 @A
 ?\"SUBROUTINE TEST\"
@@ -70,7 +71,7 @@ DEF A()
 END
 DEF B(A,B[],C)
  ?\"FUNCTION B\"
- RETURN 0
+ RETURN -1
 END
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);

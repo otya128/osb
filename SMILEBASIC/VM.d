@@ -710,6 +710,7 @@ class ReturnFunction : Code
         Value bp, pc;
         vm.pop(pc);
         vm.pop(bp);
+        vm.stacki -= func.argCount;
         if(func.returnExpr)
         {
             vm.push(retexpr);
@@ -739,9 +740,10 @@ class CallFunctionCode : Code
             throw new IllegalFunctionCall();
         }
         //TODO:args
+        auto bp = vm.stacki;
         vm.push(Value(vm.bp));
         vm.push(Value(vm.pc));
-        vm.bp = vm.stacki - 2;
+        vm.bp = bp;
         vm.pc = func.address - 1;
     }
 }

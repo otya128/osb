@@ -71,7 +71,7 @@ class Function
         int var = this.variable.get(name, 0);
         if(var == 0)
         {
-            this.variable[name] = var = ++variableIndex;
+            this.variable[name] = var = --argumentIndex;
         }
         else
         {
