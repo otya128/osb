@@ -51,6 +51,10 @@ class VM
         {
             code[pc].execute(this);
         }
+        if(stacki != 0)
+        {
+            stderr.writeln("CompilerBug?:stack");
+        }
     }
     void push(ref Value value)
     {
@@ -697,11 +701,19 @@ class ReturnFunction : Code
     override void execute(VM vm)
     {
         int oldstacki = vm.stacki;
+        Value retexpr;
+        if(func.returnExpr)
+        {
+            vm.pop(retexpr);
+        }
         vm.stacki = vm.bp + 2;
         Value bp, pc;
         vm.pop(pc);
         vm.pop(bp);
-        vm.push(Value(235));
+        if(func.returnExpr)
+        {
+            vm.push(retexpr);
+        }
         vm.pc = pc.integerValue;
         vm.bp = bp.integerValue;
     }
