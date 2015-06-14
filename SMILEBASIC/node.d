@@ -388,3 +388,23 @@ class DefineFunction : Statement
         this.outArguments ~= name;
     }
 }
+class CallFunctionStatement : Statement
+{
+    wstring name;
+    Expression[] args;
+    wstring[] outVariable;
+    this(wstring n)
+    {
+        this.type = NodeType.CallFunctionStatement;
+        this.name = n;
+        args = new Expression[0];
+    }
+    void addArg(Expression arg)
+    {
+        args ~= arg;
+    }
+    void addOut(wstring var)
+    {
+        outVariable ~= var;
+    }
+}

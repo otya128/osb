@@ -59,6 +59,7 @@ class Lexical
         reserved["VAR"] = TokenType.Var;
         reserved["DIM"] = TokenType.Var;
         reserved["DEF"] = TokenType.Def;
+        reserved["OUT"] = TokenType.Out;
         reserved.rehash();
         line = 1;
     }
@@ -104,7 +105,7 @@ class Lexical
                 for(;i < code.length;i++)
                 {
                     c = code[i];
-                    if(!c.isAlpha())
+                    if(!c.isAlpha() && !c.isDigit() && c != '_')
                     {
                         break;
                     }
@@ -420,7 +421,7 @@ class Parser
         }
         return statements;
     }
-    bool isFunc = false;
+    bool isFuncReturnExpr = false;
     wstring getFunctionArgument()
     {
         auto token = lex.front();
@@ -490,15 +491,49 @@ class Parser
         }
         else
         {
+            //MEMO:引数に[]を付けようが扱いは同一
+            while(true)
+            {
+                wstring arg = getFunctionArgument();
+                if(arg.length == 0)
+                {
+                    return null;
+                }
+                node.addArgument(arg);
+                token = lex.front();
+                if(token.type == TokenType.Comma)
+                {
+                    lex.popFront();
+                    continue;
+                }
+                break;
+            }
+            if(token.type == TokenType.Out)
+            {
+                lex.popFront();
+                while(true)
+                {
+                    wstring arg = getFunctionArgument();
+                    if(arg.length == 0)
+                    {
+                        return null;
+                    }
+                    node.addOutArgument(arg);
+                    token = lex.front();
+                    if(token.type == TokenType.Comma)
+                    {
+                        lex.popFront();
+                        continue;
+                    }
+                    break;
+                }
+            }
             node.returnExpr = false;
             //void関数にRETURN核とsyntaxerror
-            writeln("NOTIMPL:DEF VOID");
-            syntaxError();
-            return null;
         }
-        isFunc = true;//面倒くさい
+        isFuncReturnExpr = node.returnExpr;//面倒くさい
         node.functionBody = functionStatements();
-        isFunc = false;
+        isFuncReturnExpr = false;
         return node;
     }
     Statements functionStatements()
@@ -601,6 +636,45 @@ class Parser
                         return node;
                     }
                     //命令呼び出し
+                    auto func = new CallFunctionStatement(name);
+                    node = func;
+                    while(true)
+                    {
+                        token = lex.front();
+
+                        if(token.type == TokenType.Comma)
+                        {
+                            func.addArg(new VoidExpression());
+                            lex.popFront();
+                            token = lex.front();
+                        }
+                        else
+                            func.addArg(expression());
+                        if(lex.front().type != TokenType.Comma) break;
+                        lex.popFront();
+                    }
+                    if(lex.front().type == TokenType.Out)
+                    {
+                        lex.popFront();
+                        while(true)
+                        {
+                            token = lex.front();
+                            if(token.type != TokenType.Iden)
+                            {
+                                return null;
+                            }
+                            wstring arg = token.value.stringValue;
+                            func.addOut(arg);
+                            lex.popFront();
+                            token = lex.front();
+                            if(token.type == TokenType.Comma)
+                            {
+                                lex.popFront();
+                                continue;
+                            }
+                            break;
+                        }
+                    }
                 }
                 break;
             case TokenType.Colon:
@@ -639,10 +713,9 @@ class Parser
                 break;
             case TokenType.Return:
                 lex.popFront();
-                if(isFunc)
+                if(isFuncReturnExpr)
                 {
                     node = new Return(expression());
-                    lex.popFront();
                 }
                 else
                 {

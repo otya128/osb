@@ -53,6 +53,7 @@ enum TokenType
     LBracket,//[
     RBracket,//]
     Def,
+    Out,
 }
 
 struct Token

@@ -34,6 +34,7 @@ class Function
     VMVariable[wstring] variable;
     int[wstring] label;
     bool returnExpr;
+    int outArgCount;
     this(int address, wstring name, bool returnExpr, int argCount)
     {
         this.address = address;
@@ -41,6 +42,10 @@ class Function
         this.returnExpr = returnExpr;
         this.argCount = argCount;
         this.variableIndex = 1;//0,bp,1,pc
+        if(returnExpr)
+        {
+            outArgCount = 1;
+        }
     }
     int getLocalVarIndex(wstring name, Compiler c)
     {
@@ -64,6 +69,20 @@ class Function
         if(var == 0)
         {
             this.variable[name] = VMVariable(var = ++variableIndex, c.getType(name));
+        }
+        else
+        {
+            //error:二重定義
+            throw new DuplicateVariable();
+        }
+        return var;
+    }
+    int defineLocalVarIndexVoid(wstring name, Compiler c)
+    {
+        int var = this.variable.get(name, VMVariable()).index;
+        if(var == 0)
+        {
+            this.variable[name] = VMVariable(var = ++variableIndex, ValueType.Void);
         }
         else
         {
@@ -224,7 +243,7 @@ class Compiler
     {
         if(sc.func)
         {
-            return sc.func.defineLocalVarIndex(name, this);
+            return sc.func.defineLocalVarIndexVoid(name, this);
         }
         int global = this.global.get(name, VMVariable()).index;
         if(global == 0)
@@ -447,7 +466,16 @@ class Compiler
         {
             func.defineArgumentIndex(arg, this);
         }
+        foreach(wstring arg; node.outArguments)
+        {
+            func.defineLocalVarIndexVoid(arg, this);
+        }
+        if(!func.returnExpr)
+            func.outArgCount = node.outArguments.length;
         compileStatements(node.functionBody, sc);
+        if(func.returnExpr)
+            genCodeImm(Value(ValueType.Void));
+        genCode(new ReturnFunction(func));
         skip.address = this.code.length;
         this.functions[func.name] = func;
     }
@@ -528,8 +556,7 @@ class Compiler
                         }
                         else
                         {
-                            //TODO:実装中
-                            throw new SyntaxError();
+                            genCode(new ReturnFunction(s.func));
                         }
                     }
                 }
@@ -562,6 +589,21 @@ class Compiler
                     compileExpression(assign.assignExpression, s);
                     compileExpression(assign.indexExpression, s);
                     genCode(new PopArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length, !(s.func is null)));
+                }
+                break;
+            case NodeType.CallFunctionStatement:
+                {
+                    auto func = cast(CallFunctionStatement)i;
+                    foreach_reverse(Expression j ; func.args)
+                    {
+                        compileExpression(j, s);
+                    }
+                    genCode(new CallFunctionCode(func.name, func.args.length, func.outVariable.length));
+                    //TODO:OUT
+                    foreach_reverse(wstring var; func.outVariable)
+                    {
+                        genCodePopVar(var, s);
+                    }
                 }
                 break;
             default:

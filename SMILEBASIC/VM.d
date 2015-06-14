@@ -770,6 +770,14 @@ class ReturnFunction : Code
         {
             vm.push(retexpr);
         }
+        else
+        {
+            //OUTの実装
+            for(int i = 0; i < func.outArgCount; i++)
+            {
+                vm.push(vm.stack[vm.bp + i + 2]);
+            }
+        }
         vm.pc = pc.integerValue;
         vm.bp = bp.integerValue;
     }
@@ -778,10 +786,18 @@ class CallFunctionCode : Code
 {
     wstring name;
     int argCount;
+    int outArgCount;
     this(wstring name, int argCount)
     {
         this.name = name;
         this.argCount = argCount;
+        this.outArgCount = 1;
+    }
+    this(wstring name, int argCount, int outArgCount)
+    {
+        this.name = name;
+        this.argCount = argCount;
+        this.outArgCount = outArgCount;
     }
     override void execute(VM vm)
     {
@@ -791,6 +807,10 @@ class CallFunctionCode : Code
             throw new SyntaxError();
         }
         if(func.argCount != this.argCount)
+        {
+            throw new IllegalFunctionCall();
+        }
+        if(func.outArgCount != this.outArgCount)
         {
             throw new IllegalFunctionCall();
         }

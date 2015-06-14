@@ -61,6 +61,12 @@ V[0,1]=12
 GOSUB @A
 ?A()
 ?B(1,2,3)
+FOR I=0 TO 10
+ ?I;\"!\",\"=\",FACT(I)
+NEXT
+TEST \"HELLO\",\",\",\"WORLD\"
+TEST2 6,7,8 OUT K,L,M
+?K,L,M
 END
 @A
 ?\"SUBROUTINE TEST\"
@@ -74,6 +80,19 @@ DEF B(A,B[],C)
  ?\"FUNCTION B\",A,B,C
  ?LOCAL
  RETURN -1
+END
+DEF FACT(N)
+ IF N<=1 THEN RETURN 1
+ RETURN N*FACT(N-1)
+END
+DEF TEST A,B,C
+ ?\"TEST\",A,B,C
+END
+DEF TEST2 A,B,C OUT D,E,F
+ ?\"TEST\",A,B,C
+ D=A
+ E=B
+ F=C
 END
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
