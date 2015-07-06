@@ -4,6 +4,7 @@ import std.conv;
 import std.file;
 import otya.smilebasic.parser;
 import otya.smilebasic.error;
+import otya.smilebasic.petitcomputer;
 int main(string[] argv)
 {
     version(none)
@@ -119,6 +120,8 @@ END
     {
         writeln(t);
     }
+    auto pc = new PetitComputer();
+    pc.run();
     readln();
     return 0;
 }
