@@ -154,14 +154,14 @@ class Compiler
     void genCodePushVar(wstring name, Scope sc)
     {
         auto global = hasGlobalVarIndex(name);
-        if(global)
-        {
-            code ~= new PushG(global);
-            return;
-        }
         if(sc.func)
         {
             code ~= new PushL(sc.func.getLocalVarIndex(name, this));
+            return;
+        }
+        if(global)
+        {
+            code ~= new PushG(global);
             return;
         }
         code ~= new PushG(getGlobalVarIndex(name));
@@ -169,14 +169,14 @@ class Compiler
     void genCodePopVar(wstring name, Scope sc)
     {
         auto global = hasGlobalVarIndex(name);
-        if(global)
-        {
-            code ~= new PopG(global);
-            return;
-        }
         if(sc.func)
         {
             code ~= new PopL(sc.func.getLocalVarIndex(name, this));
+            return;
+        }
+        if(global)
+        {
+            code ~= new PopG(global);
             return;
         }
         code ~= new PopG(getGlobalVarIndex(name));

@@ -15,7 +15,10 @@ int main(string[] argv)
     
     auto parser = new Parser(
 //"@A\nA=1+2+3+4\nPRINT 1+1,2+3;10-5,A:A=A*2 PRINT A
-"IF 1 THEN PRINT 2
+"
+TEST2 6,7,8 OUT K,L,M
+?K,L,M
+IF 1 THEN PRINT 2
 IF 0 THEN PRINT 4 ELSE PRINT 5
 IF 0 THEN
  PRINT 111
@@ -67,6 +70,8 @@ NEXT
 TEST \"HELLO\",\",\",\"WORLD\"
 TEST2 6,7,8 OUT K,L,M
 ?K,L,M
+FACT 10 OUT F
+?F
 END
 @A
 ?\"SUBROUTINE TEST\"
@@ -87,12 +92,17 @@ DEF FACT(N)
 END
 DEF TEST A,B,C
  ?\"TEST\",A,B,C
+ RETURN
 END
+?\"CHECK\"
 DEF TEST2 A,B,C OUT D,E,F
- ?\"TEST\",A,B,C
+ ?\"TEST2\",A,B,C
+ F=C
+ F=C
  D=A
  E=B
- F=C
+ ?F
+ RETURN
 END
 ");
     version(none) auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);

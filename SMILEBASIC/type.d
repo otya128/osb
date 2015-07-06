@@ -90,6 +90,21 @@ struct Value
     {
         return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? this.doubleValue : 0);
     }
+    string toString()
+    {
+        import std.conv;
+        switch(this.type)
+        {
+            case ValueType.Void:
+                return "void";
+            case ValueType.Integer:
+                return this.integerValue.to!string;
+            case ValueType.String:
+                return this.stringValue.to!string;
+            default:
+                return "default";
+        }
+    }
 }
 class Array(T)
 {
