@@ -120,8 +120,15 @@ END
     {
         writeln(t);
     }
-    auto pc = new PetitComputer();
-    pc.run();
-    readln();
+    try
+    {
+        auto pc = new PetitComputer();
+        pc.run();
+    }
+    catch(Throwable t)
+    {
+        writeln(std.windows.charset.toMBSz(t.to!string).to!string);
+        readln();
+    }
     return 0;
 }
