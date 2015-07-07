@@ -174,11 +174,11 @@ class PetitComputer
                                               SDL_WINDOW_SHOWN);
         renderer = SDL_CreateRenderer(window, -1, 0);
         GRPF.createTexture(renderer);
-        console[1][0] = 'A';
+        printConsole("Hello, World!!v('ω')v");
         while (true)
         {
             SDL_Event event;
-            SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
             renderConsole;
             SDL_RenderPresent(renderer);
@@ -186,7 +186,7 @@ class PetitComputer
             {
                 switch (event.type)
                 {
-                    case SDL_KEYDOWN,SDL_QUIT:
+                    case SDL_QUIT:
                         SDL_DestroyWindow(window);
                         SDL_Quit();
                         return;
@@ -210,5 +210,21 @@ class PetitComputer
                 SDL_Rect rect = SDL_Rect(x * 8, y * 8, 8, 8);
                 SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x]], &rect);
             }
+    }
+    void printConsole(wstring text)
+    {
+        foreach(wchar c; text)
+        {
+            if(c != '\r' && c != '\n')
+            {
+                console[CSRY][CSRX] = c;
+            }
+            CSRX++;
+            if(CSRX >= consoleWidth || c == '\n' || c == '\r')
+            {
+                CSRX = 0;
+                CSRY++;
+            }
+        }
     }
 }
