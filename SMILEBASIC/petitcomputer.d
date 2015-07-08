@@ -24,6 +24,7 @@ class PetitComputer
 {
     this()
     {
+        new Test();
     }
     static const string resourceDirName = "resources";
     static const string resourcePath = "./resources";
@@ -226,5 +227,81 @@ class PetitComputer
                 CSRY++;
             }
         }
+    }
+}
+import std.typecons;
+import std.typetuple;
+import std.traits;
+import otya.smilebasic.error;
+import otya.smilebasic.type;
+static string func;
+class Test
+{
+    import otya.smilebasic.type;
+    int a;/*
+    static Value abs(Value[] a)
+    {
+        return Value((a[0].castDouble < 0 ? -a[0].castDouble : a[0].castDouble));
+    }*/
+    static double ABS(double a)
+    {
+        return a < 0 ? -a : a;
+    }
+    wstring[] ah;
+    void*[] ahe;
+    alias void function(Value[], Value[]) BuiltinFunc;
+    BuiltinFunc[] builtinFunctions;
+    this()
+    {
+        foreach(name; __traits(derivedMembers, Test))
+        {
+            //writeln(name);
+            ah ~= name;
+            // foreach (t; __traits(getVirtualFunctions, Test, name))
+            {
+                static if(__traits(isStaticFunction, __traits(getMember, Test, name)))
+                {
+                    ahe ~= cast(void*)&__traits(getMember, Test, name);
+                    writeln(name);
+                    auto m = typeid(typeof(__traits(getMember, Test, name)));
+                    writeln(m);
+                    writeln(AddFunc!(Test,name));
+                    builtinFunctions ~= mixin(AddFunc!(Test,name));
+                }
+            }
+        }
+    }
+
+}
+template AddFunc(T, string N)
+{
+    static if(is(ReturnType!(__traits(getMember, T, N)) == double))
+    {
+       const string AddFunc = "function void(Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall();}ret[0] = Value(" ~ N ~ "(" ~
+           AddFuncArg!(Tuple!(ParameterTypeTuple!(__traits(getMember, T, N))), 0) ~ "));}";
+    }
+    else
+    {
+        const string AddFunc = "";
+    }
+}
+template AddFuncArg(P, int N = 0)
+{
+    static if(is(typeof(P[N]) == double))
+    {
+        const string arg = "arg[" ~ N.to!string ~ "].castDouble";
+    }
+    else
+    {
+        const string arg = "";
+        static assert(false, "Invalid type");
+    }
+    static if(N + 1 == P.length)
+    {
+        const string AddFuncArg = arg;
+    }
+    else
+    {
+        const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(P, N + 1);
     }
 }
