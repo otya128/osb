@@ -193,6 +193,7 @@ class PetitComputer
                 }
                 catch(SmileBasicError sbe)
                 {
+                    running = false;
                     try
                     {
                         printConsole(sbe.to!string);
@@ -203,6 +204,7 @@ class PetitComputer
                 }
                 catch(Throwable t)
                 {
+                    running = false;
                     try
                     {
                         printConsole(t.to!string);
