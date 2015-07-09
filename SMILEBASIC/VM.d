@@ -3,6 +3,7 @@ import otya.smilebasic.type;
 import otya.smilebasic.token;
 import otya.smilebasic.error;
 import otya.smilebasic.compiler;
+import otya.smilebasic.petitcomputer;
 import std.uni;
 import std.utf;
 import std.conv;
@@ -27,6 +28,7 @@ class VM
     VMVariable[wstring] globalTable;
     Function[wstring] functions;
     int bp;
+    PetitComputer petitcomputer;
     this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions)
     {
         this.code = code;
@@ -41,7 +43,7 @@ class VM
     }
     void run()
     {
-        bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)
+        bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
         for(pc = 0; pc < this.code.length; pc++)
         {
             code[pc].execute(this);
@@ -50,6 +52,21 @@ class VM
         {
             stderr.writeln("CompilerBug?:stack");
         }
+    }
+    void init(PetitComputer petitcomputer)
+    {
+        this.petitcomputer = petitcomputer;
+        bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
+    }
+    bool runStep()
+    {
+        if(pc < this.code.length)
+        {
+            code[pc].execute(this);
+            pc++;
+            return true;
+        }
+        return false;
     }
     void push(ref Value value)
     {
@@ -122,12 +139,18 @@ class PrintCode : Code
             {
                 case ValueType.Integer:
                     write(arg.integerValue);
+                    if(vm.petitcomputer)
+                        vm.petitcomputer.printConsole(arg.integerValue);
                     break;
                 case ValueType.Double:
                     write(arg.doubleValue);
+                    if(vm.petitcomputer)
+                        vm.petitcomputer.printConsole(arg.doubleValue);
                     break;
                 case ValueType.String:
                     write(arg.stringValue);
+                    if(vm.petitcomputer)
+                        vm.petitcomputer.printConsole(arg.stringValue);
                     break;
                 default:
                     //type mismatch

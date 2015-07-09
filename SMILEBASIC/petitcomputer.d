@@ -7,6 +7,7 @@ import std.stdio;
 import std.conv;
 import std.string;
 import std.c.stdio;
+import otya.smilebasic.parser;
 class GraphicPage
 {
     SDL_Surface* surface;
@@ -175,9 +176,43 @@ class PetitComputer
                                               SDL_WINDOW_SHOWN);
         renderer = SDL_CreateRenderer(window, -1, 0);
         GRPF.createTexture(renderer);
-        printConsole("Hello, World!!v('ω')v");
+        //とりあえず
+        auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
+        auto vm = parser.compile();
+        bool running = true;
+        vm.init(this);
         while (true)
         {
+            auto startTicks = SDL_GetTicks();
+            uint elapse;
+            do
+            {
+                try
+                {
+                    if(running) running = vm.runStep();
+                }
+                catch(SmileBasicError sbe)
+                {
+                    try
+                    {
+                        printConsole(sbe.to!string);
+                    }
+                    catch
+                    {
+                    }
+                }
+                catch(Throwable t)
+                {
+                    try
+                    {
+                        printConsole(t.to!string);
+                    }
+                    catch
+                    {
+                    }
+                }
+                elapse = SDL_GetTicks() - startTicks;
+            } while(elapse <= 1000 / 60);
             SDL_Event event;
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
             SDL_RenderClear(renderer);
@@ -212,10 +247,21 @@ class PetitComputer
                 SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x]], &rect);
             }
     }
-    void printConsole(wstring text)
+    void printConsole(T...)(T args)
+    {
+        foreach(i; args)
+        {
+            printConsoleString(i.to!wstring);
+        }
+    }
+    void printConsoleString(wstring text)
     {
         foreach(wchar c; text)
         {
+            if(CSRY >= consoleHeight)
+            {
+                CSRY = consoleHeight - 1;
+            }
             if(c != '\r' && c != '\n')
             {
                 console[CSRY][CSRX] = c;
@@ -225,6 +271,19 @@ class PetitComputer
             {
                 CSRX = 0;
                 CSRY++;
+            }
+            if(CSRY >= consoleHeight)
+            {
+                auto tmp = console[0];
+                for(int i = 0; i < consoleHeight - 1; i++)
+                {
+                    console[i] = console[i + 1];
+                }
+                console[consoleHeight - 1] = tmp;
+                for(int j = 0; j < tmp.length; j++)
+                    tmp[j] = '\0';
+                assert(console[0] != console[2]);
+                CSRY = consoleHeight - 1;
             }
         }
     }
