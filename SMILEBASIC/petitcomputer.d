@@ -177,7 +177,15 @@ class PetitComputer
         renderer = SDL_CreateRenderer(window, -1, 0);
         GRPF.createTexture(renderer);
         //とりあえず
-        auto parser = new Parser(readText("FIZZBUZZ.TXT").to!wstring);
+        auto parser = new Parser(/*readText("FIZZBUZZ.TXT").to!wstring*/"
+
+FOR I=0 TO 10
+ ?I;\"!\",\"=\",FACT(I)
+NEXT
+DEF FACT(N)
+ IF N<=1 THEN RETURN 1
+ RETURN N*FACT(N-1)
+END");
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
