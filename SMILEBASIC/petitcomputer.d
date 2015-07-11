@@ -178,7 +178,7 @@ class PetitComputer
         GRPF.createTexture(renderer);
         //とりあえず
         auto parser = new Parser(/*readText("FIZZBUZZ.TXT").to!wstring*/"
-
+?ABS(-1)
 FOR I=0 TO 10
  ?I;\"!\",\"=\",FACT(I)
 NEXT
@@ -209,7 +209,7 @@ END");
                     catch
                     {
                     }
-                }
+                }/*
                 catch(Throwable t)
                 {
                     running = false;
@@ -220,7 +220,7 @@ END");
                     catch
                     {
                     }
-                }
+                }*/
                 elapse = SDL_GetTicks() - startTicks;
             } while(elapse <= 1000 / 60);
             SDL_Event event;

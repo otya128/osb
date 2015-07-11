@@ -13,7 +13,8 @@ int main(string[] argv)
         writeln(parser.calc());
     }
 
-    
+    version(none)
+    {
     auto parser = new Parser(
 //"@A\nA=1+2+3+4\nPRINT 1+1,2+3;10-5,A:A=A*2 PRINT A
 "
@@ -119,6 +120,7 @@ END
     catch(Throwable t)
     {
         writeln(t);
+    }
     }
     try
     {

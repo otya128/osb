@@ -335,7 +335,15 @@ class Compiler
                     {
                         compileExpression(i, sc);
                     }
-                    genCode(new CallFunctionCode(func.name, func.args.length));
+                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    if(bfun)
+                    {
+                        genCode(new CallBuiltinFunction(bfun, func.args.length, 1));
+                    }
+                    else
+                    {
+                        genCode(new CallFunctionCode(func.name, func.args.length));
+                    }
                 }
                 break;
             case NodeType.IndexExpressions://[expr,expr,expr,expr]用
@@ -598,7 +606,15 @@ class Compiler
                     {
                         compileExpression(j, s);
                     }
-                    genCode(new CallFunctionCode(func.name, func.args.length, func.outVariable.length));
+                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    if(bfun)
+                    {
+                        genCode(new CallBuiltinFunction(bfun, func.args.length, func.outVariable.length));
+                    }
+                    else
+                    {
+                        genCode(new CallFunctionCode(func.name, func.args.length, func.outVariable.length));
+                    }
                     //TODO:OUT
                     foreach_reverse(wstring var; func.outVariable)
                     {

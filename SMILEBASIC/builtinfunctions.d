@@ -50,11 +50,12 @@ class BuiltinFunction
     }
     import std.math;
     /*
-    static pure double ABS(double a, double b)
+    static pure double ABS(double a)
     {
         return a < 0 ? -a : a;
     }*/
-    static ABS = function(double x) => abs(x);
+    static double function(double) ABS = &abs!double;
+    //static ABS = function double(double x) => abs(this.result == ValueType.Double ? 1 : 0);
     static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, DefaultValue!int z)
     {
     }
