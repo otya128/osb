@@ -331,11 +331,19 @@ class Compiler
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
+                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    if(bfun)
+                    {
+                        auto k = bfun.argments.length - func.args.length;
+                        foreach(l;0..k)
+                        {
+                            genCodeImm(Value(ValueType.Void));
+                        }
+                    }
                     foreach_reverse(Expression i ; func.args)
                     {
                         compileExpression(i, sc);
                     }
-                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
                         genCode(new CallBuiltinFunction(bfun, func.args.length, 1));
@@ -602,11 +610,19 @@ class Compiler
             case NodeType.CallFunctionStatement:
                 {
                     auto func = cast(CallFunctionStatement)i;
+                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    if(bfun)
+                    {
+                        auto k = bfun.argments.length - func.args.length;
+                        foreach(l;0..k)
+                        {
+                            genCodeImm(Value(ValueType.Void));
+                        }
+                    }
                     foreach_reverse(Expression j ; func.args)
                     {
                         compileExpression(j, s);
                     }
-                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
                         genCode(new CallBuiltinFunction(bfun, func.args.length, func.outVariable.length));

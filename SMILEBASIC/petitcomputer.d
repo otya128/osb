@@ -39,7 +39,36 @@ class PetitComputer
     int fontHeight;
     int consoleWidth;
     int consoleHeight;
-    wchar[][] console;
+    int[] consoleColor = 
+    [
+        0x00000000,
+        0xFF000000,
+        0xFF7F0000,
+        0xFFFF0000,
+        0xFF007F00,
+        0xFF00FF00,
+        0xFF7F7F00,
+        0xFFFFFF00,
+        0xFF00007F,
+        0xFF0000FF,
+        0xFF7F007F,
+        0xFFFF00FF,
+        0xFF007F7F,
+        0xFF00FFFF,
+        0xFF7F7F7F,
+        0xFFFFFFFF,
+    ];
+    struct ConsoleCharacter
+    {
+        wchar charater;
+        int foreColor;
+        int backColor;
+    }
+    SDL_Color PetitColor(byte r, byte g, byte b, byte a)
+    {
+        return SDL_Color(r >> 5 << 5, g >> 5 << 5, b >> 5 << 5, a == 255 ? 255 : 0);
+    }
+    ConsoleCharacter[][] console;
     GraphicPage[] grp;
     GraphicPage GRPF;
     //PNG画像から透過色のpixelを指定して透過しGRPを作る
@@ -158,12 +187,15 @@ class PetitComputer
         fontHeight = 8;
         consoleWidth = screenWidth / fontWidth;
         consoleHeight = screenHeight / fontHeight;
-        console = new wchar[][consoleHeight];
+        console = new ConsoleCharacter[][consoleHeight];
+        consoleForeColor = 15;//#T_WHITE
         for(int i = 0; i < console.length; i++)
         {
-            console[i] = new wchar[consoleWidth];
+            console[i] = new ConsoleCharacter[consoleWidth];
+            console[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+            /*
             for(int j = 0; j < console[i].length; j++)
-                console[i][j] = '\0';
+                console[i][j] = '\0';*/
         }
     }
     SDL_Renderer* renderer;
@@ -177,15 +209,26 @@ class PetitComputer
         renderer = SDL_CreateRenderer(window, -1, 0);
         GRPF.createTexture(renderer);
         //とりあえず
-        auto parser = new Parser(/*readText("FIZZBUZZ.TXT").to!wstring*/"
+        auto parser = new Parser(/*readText("FIZZBUZZ.TXT").to!wstring*//*"
 ?ABS(-1)
+LOCATE 0,10
+COLOR 5
 FOR I=0 TO 10
  ?I;\"!\",\"=\",FACT(I)
 NEXT
 DEF FACT(N)
  IF N<=1 THEN RETURN 1
  RETURN N*FACT(N-1)
-END");
+END"*/
+`CLS : CL=0 : Z=0
+WHILE 1
+  INC Z : IF Z>200 THEN Z=0
+  FOR I=0 TO 15
+    LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
+    PRINT "★ 梅雨で雨が多い季節ですね ★"
+  NEXT
+  CL=(CL+1) MOD 16 : VSYNC 2
+WEND`);
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
@@ -209,7 +252,7 @@ END");
                     catch
                     {
                     }
-                }/*
+                }
                 catch(Throwable t)
                 {
                     running = false;
@@ -220,7 +263,7 @@ END");
                     catch
                     {
                     }
-                }*/
+                }
                 elapse = SDL_GetTicks() - startTicks;
             } while(elapse <= 1000 / 60);
             SDL_Event event;
@@ -248,13 +291,20 @@ END");
     int CSRX;
     int CSRY;
     int CSRZ;
+    int consoleForeColor, consoleBackColor;
     void renderConsole()
     {
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
             {
                 SDL_Rect rect = SDL_Rect(x * 8, y * 8, 8, 8);
-                SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x]], &rect);
+                auto back = consoleColor[console[y][x].backColor];
+                SDL_SetRenderDrawColor(renderer, back >> 16 & 0xFF, back >> 8 & 0xFF, back & 0xFF, back >> 24 & 0xFF);
+                SDL_RenderFillRect(renderer, &rect);
+                auto fore = consoleColor[console[y][x].foreColor];
+                SDL_SetTextureColorMod(GRPF.texture, fore >> 16 & 0xFF, fore >> 8 & 0xFF, fore & 0xFF);
+                SDL_SetTextureAlphaMod(GRPF.texture, fore >> 24 & 0xFF);
+                SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x].charater], &rect);
             }
     }
     void printConsole(T...)(T args)
@@ -274,7 +324,9 @@ END");
             }
             if(c != '\r' && c != '\n')
             {
-                console[CSRY][CSRX] = c;
+                console[CSRY][CSRX].charater = c;
+                console[CSRY][CSRX].foreColor = consoleForeColor;
+                console[CSRY][CSRX].backColor = consoleBackColor;
             }
             CSRX++;
             if(CSRX >= consoleWidth || c == '\n' || c == '\r')
@@ -290,8 +342,7 @@ END");
                     console[i] = console[i + 1];
                 }
                 console[consoleHeight - 1] = tmp;
-                for(int j = 0; j < tmp.length; j++)
-                    tmp[j] = '\0';
+                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
                 assert(console[0] != console[2]);
                 CSRY = consoleHeight - 1;
             }

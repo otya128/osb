@@ -867,8 +867,18 @@ class CallBuiltinFunction : Code
     }
     override void execute(VM vm)
     {
-        Value[] arg = vm.stack[vm.stacki - argcount..vm.stacki];
-        Value[] result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount];//雑;
+        Value[] arg;
+        Value[] result;
+        if(func.hasSkipArgument)
+        {
+            arg = vm.stack[vm.stacki - func.argments.length..vm.stacki];
+            result = vm.stack[vm.stacki - func.argments.length..vm.stacki - func.argments.length + outcount];//雑;
+        }
+        else
+        {
+            arg = vm.stack[vm.stacki - argcount..vm.stacki];
+            result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount];//雑;
+        }
         func.func(vm.petitcomputer, arg, result);
     }
 }
