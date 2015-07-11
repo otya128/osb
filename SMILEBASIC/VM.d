@@ -853,3 +853,22 @@ class CallFunctionCode : Code
         }
     }
 }
+import otya.smilebasic.builtinfunctions;
+class CallBuiltinFunction : Code
+{
+    BuiltinFunction func;
+    int argcount;
+    int outcount;
+    this(BuiltinFunction func, int argcount, int outcount/+可変長引数用+/)
+    {
+        this.func = func;
+        this.argcount = argcount;
+        this.outcount = outcount;
+    }
+    override void execute(VM vm)
+    {
+        Value[] arg = vm.stack[vm.stacki - argcount..vm.stacki - 1];
+        Value[] result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount - 1];//雑;
+        func.func(vm.petitcomputer, arg, result);
+    }
+}
