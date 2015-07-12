@@ -438,6 +438,17 @@ class Compiler
         breakAddr.address = code.length;
         s.breakAddr.address = code.length;
     }
+    void compileWhile(While node, Scope s)
+    {
+        auto whilestart = code.length;
+        s = new Scope(new GotoAddr(-1), new GotoAddr(whilestart), s);
+        compileExpression(node.condExpression, s);
+        auto breakAddr = genCodeGotoFalse();
+        compileStatements(node.statements, s);
+        genCode(s.continueAddr);
+        s.breakAddr.address = code.length;
+        breakAddr.address = code.length;
+    }
     void compileVar(Var node, Scope sc)
     {
         foreach(Statement v ; node.define)
@@ -637,6 +648,9 @@ class Compiler
                         genCodePopVar(var, s);
                     }
                 }
+                break;
+            case NodeType.While:
+                compileWhile(cast(While)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
