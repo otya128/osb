@@ -356,7 +356,7 @@ NEXT
 DEF FACT(N)
  IF N<=1 THEN RETURN 1
  RETURN N*FACT(N-1)
-END"*//*
+END"*/
 `CLS : CL=0 : Z=0
 WHILE 1
   INC Z : IF Z>200 THEN Z=0
@@ -365,7 +365,7 @@ WHILE 1
     PRINT "★ 梅雨で雨が多い季節ですね ★"
   NEXT
   CL=(CL+1) MOD 16 : VSYNC 2
-WEND`*/
+WEND`/*
 `CLS : CL=0
 WHILE 1
 FOR I=0 TO 15
@@ -373,7 +373,7 @@ FOR I=0 TO 15
   PRINT "Ё プチコン3ゴウ Ж"
 NEXT
 CL=(CL+1) MOD 16 : VSYNC 1
-WEND`
+WEND`*/
 /*
 `CLS : CL=0
 @LOOP

@@ -35,6 +35,7 @@ enum NodeType
     ArrayAssign,
     DefineFunction,
     While,
+    Inc,
 }
 abstract class Node
 {
@@ -418,5 +419,15 @@ class While : Statement
         this.type = NodeType.While;
         this.condExpression = condExpression;
         this.statements = statements;
+    }
+}
+class Inc : Statement
+{
+    wstring name;
+    Expression expression;
+    this(wstring name, Expression expr)
+    {
+        this.name = name;
+        this.expression = expr;
     }
 }

@@ -62,6 +62,8 @@ class Lexical
         reserved["OUT"] = TokenType.Out;
         reserved["WHILE"] = TokenType.While;
         reserved["WEND"] = TokenType.WEnd;
+        reserved["INC"] = TokenType.Inc;
+        reserved["DEC"] = TokenType.Dec;
         reserved.rehash();
         line = 1;
     }
@@ -756,12 +758,51 @@ class Parser
             case TokenType.While:
                 node = whileStatement();
                 break;
+            case TokenType.Inc:
+            case TokenType.Dec:
+                return incStatement();
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    Inc incStatement()
+    {
+        auto token = lex.front();
+        bool dec = token.type == TokenType.Dec;
+        lex.popFront();
+        token = lex.front();
+        if(token.type != TokenType.Iden)
+        {
+            syntaxError();
+            return null;
+        }
+        wstring var = token.value.stringValue;
+        //TODO:Array
+        lex.popFront();
+        token = lex.front();
+        Expression expr;
+        if(token.type == TokenType.Comma)
+        {
+            lex.popFront();
+            expr = expression();
+            if(!expr)
+            {
+                syntaxError();
+                return null;
+            }
+        }
+        else
+        {
+            expr = new Constant(Value(1));
+        }
+        if(dec)
+        {
+            expr = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, expr);
+        }
+        return new Inc(var, expr);
     }
     IndexExpressions indexExpressions()
     {
