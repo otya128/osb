@@ -347,7 +347,7 @@ class PetitComputer
             }
         }+/
         //とりあえず
-        auto parser = new Parser(/*readText("FIZZBUZZ.TXT").to!wstring*//*"
+        auto parser = new Parser(readText("TEST.TXT").to!wstring/*readText("FIZZBUZZ.TXT").to!wstring*//*"
 ?ABS(-1)
 LOCATE 0,10
 COLOR 5
@@ -357,10 +357,10 @@ NEXT
 DEF FACT(N)
  IF N<=1 THEN RETURN 1
  RETURN N*FACT(N-1)
-END"*/
+END"*//*
 `CLS : CL=0 : Z=0
 WHILE 1
-INC Z
+INC Z,2
 ?Z,
 WEND
 WHILE 1
@@ -370,7 +370,7 @@ WHILE 1
     PRINT "★ 梅雨で雨が多い季節ですね ★"
   NEXT
   CL=(CL+1) MOD 16 : VSYNC 2
-WEND`/*
+WEND`*//*
 `CLS : CL=0
 WHILE 1
 FOR I=0 TO 15
@@ -452,7 +452,7 @@ GOTO @LOOP`*/
                 auto back = console[y][x].backColor;
                 auto fore = consoleColor[console[y][x].foreColor];
                 auto texture = GRPFColor[back].texture;
-                //SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);
+                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);
                 SDL_SetTextureColorMod(GRPF.texture, fore >> 16 & 0xFF, fore >> 8 & 0xFF, fore & 0xFF);
                 SDL_SetTextureAlphaMod(GRPF.texture, fore >> 24 & 0xFF);
                 SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x].charater], &rect);

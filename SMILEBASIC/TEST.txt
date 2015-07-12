@@ -1,0 +1,28 @@
+ASSERT__ 1, "TRUE"
+A$="A"
+ASSERT__ A$=="A", "A$==A"
+A$=A$+"B"
+ASSERT__ A$=="AB", "A$==AA"
+A=0
+INC A
+ASSERT__ A==1, "A==1"
+INC A, 3
+ASSERT__ A==4, "A==4"
+DEC A, 3
+ASSERT__ A==1, "A==1"
+DEC A
+ASSERT__ A==0, "A==0"
+INCTEST 0
+DEF INCTEST A
+ INC A
+ ASSERT__ A==1, "A==1"
+ INC A, 3
+ ASSERT__ A==4, "A==4"
+ DEC A, 3
+ ASSERT__ A==1, "A==1"
+ DEC A
+ ASSERT__ A==0, "A==0"
+END
+LOCATE 10,
+COLOR 1,15
+PRINT "テスト正常終了"

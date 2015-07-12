@@ -537,6 +537,7 @@ class Parser
         }
         isFuncReturnExpr = node.returnExpr;//面倒くさい
         node.functionBody = functionStatements();
+        lex.popFront();
         isFuncReturnExpr = false;
         return node;
     }

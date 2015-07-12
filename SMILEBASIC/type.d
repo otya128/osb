@@ -90,6 +90,10 @@ struct Value
     {
         return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? this.doubleValue : 0);
     }
+    wstring castString()
+    {
+        return this.type == ValueType.String ? this.stringValue : "";
+    }
     string toString()
     {
         import std.conv;

@@ -94,6 +94,14 @@ class BuiltinFunction
     {
         p.cls;
     }
+    static void ASSERT__(PetitComputer p, int cond, wstring message)
+    {
+        if(!cond)
+        {
+            p.printConsole("Assertion failed: ", message, "\n");
+        }
+        assert(cond, message.to!string);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
@@ -202,6 +210,10 @@ template GetFunctionParamType(T, string N)
             {
                 const string arg = "ValueType.Integer, false";
             }
+            else static if(is(P[0] == wstring))
+            {
+                const string arg = "ValueType.String, false";
+            }
             else static if(is(P[0] == DefaultValue!int))
             {
                 const string arg = "ValueType.Integer, true";
@@ -249,6 +261,11 @@ template AddFuncArg(int L, int N, int M, P...)
     {
         enum add = 1;
         const string arg = "arg[" ~ I.to!string ~ "].castInteger";
+    }
+    else static if(is(P[0] == wstring))
+    {
+        enum add = 1;
+        const string arg = "arg[" ~ I.to!string ~ "].castString";
     }
     else static if(is(P[0] == DefaultValue!int))
     {

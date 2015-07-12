@@ -212,6 +212,7 @@
   <File path="node.d" />
   <File path="parser.d" />
   <File path="petitcomputer.d" />
+  <File path="TEST.txt" />
   <File path="token.d" />
   <File path="type.d" />
   <File path="VM.d" />
