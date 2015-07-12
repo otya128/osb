@@ -70,6 +70,11 @@ class VM
     }
     void push(ref Value value)
     {
+        if(stacki >= this.stack.length)
+        {
+            writeln("Stack OF");
+            readln();
+        }
         stack[stacki++] = value;
     }
     void push(Value value)
@@ -138,17 +143,17 @@ class PrintCode : Code
             switch(arg.type)
             {
                 case ValueType.Integer:
-                    write(arg.integerValue);
+                    //write(arg.integerValue);
                     if(vm.petitcomputer)
                         vm.petitcomputer.printConsole(arg.integerValue);
                     break;
                 case ValueType.Double:
-                    write(arg.doubleValue);
+                    //write(arg.doubleValue);
                     if(vm.petitcomputer)
                         vm.petitcomputer.printConsole(arg.doubleValue);
                     break;
                 case ValueType.String:
-                    write(arg.stringValue);
+                    //write(arg.stringValue);
                     if(vm.petitcomputer)
                         vm.petitcomputer.printConsole(arg.stringValue);
                     break;
@@ -880,5 +885,6 @@ class CallBuiltinFunction : Code
             result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount];//雑;
         }
         func.func(vm.petitcomputer, arg, result);
+        vm.stacki -= func.argments.length;
     }
 }

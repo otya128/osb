@@ -613,7 +613,7 @@ class Compiler
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
-                        auto k = bfun.argments.length - func.args.length;
+                        int k = bfun.argments.length - func.args.length;
                         foreach(l;0..k)
                         {
                             genCodeImm(Value(ValueType.Void));

@@ -84,6 +84,16 @@ class BuiltinFunction
         p.consoleForeColor = cast(int)fore;
         p.consoleBackColor = cast(int)back;
     }
+    static void VSYNC(PetitComputer p, DefaultValue!int time)
+    {
+        time.setDefaultValue(1);
+        p.vsync(cast(int)time);
+    }
+    //TODO:プチコンのCLSには引数の個数制限がない
+    static void CLS(PetitComputer p/*vaarg*/)
+    {
+        p.cls;
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
@@ -177,33 +187,48 @@ template GetFunctionParamType(T, string N)
     enum GetFunctionParamType = mixin("[" ~ Array!(ParameterTypeTuple!(__traits(getMember, T, N))) ~ "]");
     private template Array(P...)
     {
-        static if(is(P[0] == double))
+        static if(P.length == 0)
         {
-            const string arg = "ValueType.Double, false";
+            const string arg = "";
+            enum Array = "";
         }
-        else static if(is(P[0] == int))
+        else
         {
-            const string arg = "ValueType.Integer, false";
-        }
-        else static if(is(P[0] == DefaultValue!int))
-        {
-            const string arg = "ValueType.Integer, true";
-        }
-        else static if(is(P[0] == DefaultValue!(int, false)))
-        {
-            const string arg = "ValueType.Integer, true";
-        }
-        else static if(is(P[0] == PetitComputer))
-        {
-            enum Array = Array!(P[1..$]);
-        }
-        static if(1 == P.length && !is(P[0] == PetitComputer))
-        {
-            enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")";
-        }
-        else static if(!is(P[0] == PetitComputer))
-        {
-            enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")," ~ Array!(P[1..$]);
+            static if(is(P[0] == double))
+            {
+                const string arg = "ValueType.Double, false";
+            }
+            else static if(is(P[0] == int))
+            {
+                const string arg = "ValueType.Integer, false";
+            }
+            else static if(is(P[0] == DefaultValue!int))
+            {
+                const string arg = "ValueType.Integer, true";
+            }
+            else static if(is(P[0] == DefaultValue!(int, false)))
+            {
+                const string arg = "ValueType.Integer, true";
+            }
+            else static if(is(P[0] == PetitComputer))
+            {
+                static if(P.length != 0)
+                {
+                    enum Array = Array!(P[1..$]);
+                }
+                else
+                {
+                    enum Array = "";
+                }
+            }
+            static if(1 == P.length && !is(P[0] == PetitComputer))
+            {
+                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")";
+            }
+            else static if(!is(P[0] == PetitComputer))
+            {
+                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")," ~ Array!(P[1..$]);
+            }
         }
     }
 }
