@@ -34,6 +34,7 @@ enum NodeType
     DefineArray,
     ArrayAssign,
     DefineFunction,
+    While,
 }
 abstract class Node
 {
@@ -406,5 +407,16 @@ class CallFunctionStatement : Statement
     void addOut(wstring var)
     {
         outVariable ~= var;
+    }
+}
+class While : Statement
+{
+    Expression condExpression;
+    Statements statements;
+    this(Expression condExpression, Statements statements)
+    {
+        this.type = NodeType.While;
+        this.condExpression = condExpression;
+        this.statements = statements;
     }
 }

@@ -54,6 +54,8 @@ enum TokenType
     RBracket,//]
     Def,
     Out,
+    While,
+    Wend,
 }
 
 struct Token
