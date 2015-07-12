@@ -60,6 +60,8 @@ class Lexical
         reserved["DIM"] = TokenType.Var;
         reserved["DEF"] = TokenType.Def;
         reserved["OUT"] = TokenType.Out;
+        reserved["WHILE"] = TokenType.While;
+        reserved["WEND"] = TokenType.WEnd;
         reserved.rehash();
         line = 1;
     }
@@ -606,6 +608,22 @@ class Parser
         lex.popFront();
         return statements;
     }
+    Statements whileStatements()
+    {
+        auto statements = new Statements();
+        while(!lex.empty())
+        {
+            auto type = lex.front().type;
+            if(type == TokenType.WEnd) break;
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        lex.popFront();
+        return statements;
+    }
     void syntaxError()
     {
         stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
@@ -735,6 +753,9 @@ class Parser
                 lex.popFront();
                 node = var();
                 return node;
+            case TokenType.While:
+                node = whileStatement();
+                break;
             default:
                 syntaxError();
                 break;
@@ -898,6 +919,19 @@ class Parser
         token = lex.front();
         Statements statements = forStatements();
         node = new For(init, to, step, statements);
+        return node;
+    }
+    While whileStatement()
+    {
+        lex.popFront();
+        auto expr = expression();
+        if(expr is null)
+        {
+            syntaxError();
+            return null;
+        }
+        Statements statements = whileStatements();
+        auto node = new While(expr, statements);
         return node;
     }
     If if_()

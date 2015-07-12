@@ -367,13 +367,22 @@ WHILE 1
   CL=(CL+1) MOD 16 : VSYNC 2
 WEND`*/
 `CLS : CL=0
+WHILE 1
+FOR I=0 TO 15
+  LOCATE 9,4+I : COLOR (CL+I) MOD 16
+  PRINT "Ё プチコン3ゴウ Ж"
+NEXT
+CL=(CL+1) MOD 16 : VSYNC 1
+WEND`
+/*
+`CLS : CL=0
 @LOOP
 FOR I=0 TO 15
   LOCATE 9,4+I : COLOR (CL+I) MOD 16
   PRINT "Ё プチコン3ゴウ Ж"
 NEXT
 CL=(CL+1) MOD 16 : VSYNC 1
-GOTO @LOOP`
+GOTO @LOOP`*/
 );
         auto vm = parser.compile();
         bool running = true;

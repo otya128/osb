@@ -55,7 +55,7 @@ enum TokenType
     Def,
     Out,
     While,
-    Wend,
+    WEnd,
 }
 
 struct Token
