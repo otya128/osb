@@ -888,3 +888,79 @@ class CallBuiltinFunction : Code
         vm.stacki -= func.argments.length - outcount;
     }
 }
+class IncCodeG : Code
+{
+    int var;
+    this(int var)
+    {
+        this.var = var;
+    }
+    //TODO:文字列INCの挙動
+    override void execute(VM vm)
+    {
+        Value v;
+        Value g = vm.global[var];
+        vm.pop(v);
+        if(!g.isNumber() && g.type != ValueType.String)
+        {
+            throw new TypeMismatch();
+        }
+        if((!g.isNumber() || !v.isNumber()) && g.type != v.type)
+        {
+            throw new TypeMismatch();
+        }
+        if(g.isNumber())
+        {
+            double l = g.castDouble;
+            double r = v.castDouble;
+            if(v.type == ValueType.Double)
+                vm.global[var] = Value(l + r);
+            else
+                vm.global[var] = Value(cast(int)(l + r));
+        }
+        else
+        {
+            wstring l = g.stringValue;
+            wstring r = v.stringValue;
+            vm.global[var] = Value(l ~ r);
+        }
+    }
+}
+class IncCodeL : Code
+{
+    int var;
+    this(int var)
+    {
+        this.var = var;
+    }
+    //TODO:文字列INCの挙動
+    override void execute(VM vm)
+    {
+        Value v;
+        Value* g = &vm.stack[vm.bp + var];
+        vm.pop(v);
+        if(!g.isNumber() && g.type != ValueType.String)
+        {
+            throw new TypeMismatch();
+        }
+        if((!g.isNumber() || !v.isNumber()) && g.type != v.type)
+        {
+            throw new TypeMismatch();
+        }
+        if(g.isNumber())
+        {
+            double l = g.castDouble;
+            double r = v.castDouble;
+            if(v.type == ValueType.Double)
+                *g = Value(l + r);
+            else
+                *g = Value(cast(int)(l + r));
+        }
+        else
+        {
+            wstring l = g.stringValue;
+            wstring r = v.stringValue;
+            *g = Value(l ~ r);
+        }
+    }
+}

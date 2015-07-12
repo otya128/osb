@@ -277,8 +277,6 @@ class Compiler
     {
         if(sc.func)
         {
-            int global = hasGlobalVarIndex(name);
-            if(global) return global;
             int local = sc.func.getLocalVarIndex(name, this);
             return local;
         }
@@ -477,6 +475,19 @@ class Compiler
             }
         }
     }
+    void compileInc(Inc node, Scope sc)
+    {
+        compileExpression(node.expression, sc);
+        int index = sc.func ? sc.func.hasLocalVarIndex(node.name) : 0;
+        if(index)
+        {
+            genCode(new IncCodeL(index));
+        }
+        else
+        {
+            genCode(new IncCodeG(this.getGlobalVarIndex(node.name)));
+        }
+    }
     void compileStatements(Statements statements, Scope sc)
     {
         foreach(Statement s ; statements.statements)
@@ -651,6 +662,9 @@ class Compiler
                 break;
             case NodeType.While:
                 compileWhile(cast(While)i, s);
+                break;
+            case NodeType.Inc:
+                compileInc(cast(Inc)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

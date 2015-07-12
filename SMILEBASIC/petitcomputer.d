@@ -360,8 +360,8 @@ DEF FACT(N)
 END"*/
 `CLS : CL=0 : Z=0
 WHILE 1
-Z=Z+1
-?Z;
+INC Z
+?Z,
 WEND
 WHILE 1
   INC Z : IF Z>200 THEN Z=0

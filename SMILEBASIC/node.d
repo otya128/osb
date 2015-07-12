@@ -427,6 +427,7 @@ class Inc : Statement
     Expression expression;
     this(wstring name, Expression expr)
     {
+        this.type = NodeType.Inc;
         this.name = name;
         this.expression = expr;
     }
