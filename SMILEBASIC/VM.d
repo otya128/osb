@@ -885,6 +885,6 @@ class CallBuiltinFunction : Code
             result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount];//雑;
         }
         func.func(vm.petitcomputer, arg, result);
-        vm.stacki -= func.argments.length;
+        vm.stacki -= func.argments.length - outcount;
     }
 }

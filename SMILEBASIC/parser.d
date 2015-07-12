@@ -1055,7 +1055,7 @@ class Parser
             //3号から厳密になって必ずいる
             if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
             {
-                print.addLine();
+                if(addline) print.addLine();
                 break;
             }
             addline = true;
@@ -1091,12 +1091,14 @@ class Parser
                 if(token.type == TokenType.Semicolon)
                 {
                     addline = false;
+                    token = lex.front();
                     continue;
                 }
                 if(token.type == TokenType.Comma) 
                 {
                     print.addTab();
                     addline = false;
+                    token = lex.front();
                     continue;
                 }
                 token = lex.front();

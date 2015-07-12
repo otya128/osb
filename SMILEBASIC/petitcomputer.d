@@ -7,6 +7,7 @@ import std.stdio;
 import std.conv;
 import std.string;
 import std.c.stdio;
+import core.sync.mutex;
 import otya.smilebasic.parser;
 class GraphicPage
 {
@@ -359,6 +360,10 @@ DEF FACT(N)
 END"*/
 `CLS : CL=0 : Z=0
 WHILE 1
+Z=Z+1
+?Z;
+WEND
+WHILE 1
   INC Z : IF Z>200 THEN Z=0
   FOR I=0 TO 15
     LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
@@ -373,7 +378,7 @@ FOR I=0 TO 15
   PRINT "Ё プチコン3ゴウ Ж"
 NEXT
 CL=(CL+1) MOD 16 : VSYNC 1
-WEND`*/
+WEND`
 /*
 `CLS : CL=0
 @LOOP
@@ -387,6 +392,7 @@ GOTO @LOOP`*/
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
+        consolem = new Mutex();
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         auto startTicks = SDL_GetTicks();
@@ -434,8 +440,11 @@ GOTO @LOOP`*/
     int CSRY;
     int CSRZ;
     int consoleForeColor, consoleBackColor;
+    Mutex consolem;
     void renderConsole()
     {
+        consolem.lock();
+        scope(exit) consolem.unlock();
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
             {
@@ -474,6 +483,9 @@ GOTO @LOOP`*/
     }
     void printConsoleString(wstring text)
     {
+        consolem.lock();
+        scope(exit) consolem.unlock();
+        //write(text);
         foreach(wchar c; text)
         {
             if(CSRY >= consoleHeight)
@@ -501,7 +513,7 @@ GOTO @LOOP`*/
                 }
                 console[consoleHeight - 1] = tmp;
                 tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
-                assert(console[0] != console[2]);
+                //assert(console[0] != console[2]);
                 CSRY = consoleHeight - 1;
             }
         }
