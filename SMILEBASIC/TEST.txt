@@ -1,3 +1,4 @@
+'COMMENT'
 ASSERT__ 1, "TRUE"
 A$="A"
 ASSERT__ A$=="A", "A$==A"
@@ -12,16 +13,16 @@ DEC A, 3
 ASSERT__ A==1, "A==1"
 DEC A
 ASSERT__ A==0, "A==0"
-INCTEST 0
+INCTEST 10
 DEF INCTEST A
  INC A
- ASSERT__ A==1, "A==1"
+ ASSERT__ A==11, "A==11"
  INC A, 3
- ASSERT__ A==4, "A==4"
+ ASSERT__ A==14, "A==14"
  DEC A, 3
- ASSERT__ A==1, "A==1"
+ ASSERT__ A==11, "A==11"
  DEC A
- ASSERT__ A==0, "A==0"
+ ASSERT__ A==10, "A==10"
 END
 LOCATE 10,
 COLOR 1,15

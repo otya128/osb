@@ -88,6 +88,16 @@ class Lexical
         {
             wchar c = code[i];
             if(c == ' ') continue;
+            if(c == '\'')
+            {
+                for(;i < code.length;i++)
+                {
+                    c = code[i];
+                    if(table[cast(char)c] == TokenType.NewLine) break;
+                }
+                token = Token(TokenType.NewLine);
+                break;
+            }
             if(c.isDigit())
             {
                 int num;
@@ -224,14 +234,14 @@ class Lexical
             if(token.type == TokenType.NewLine)
             {
                 line++;
-            if(c == '\n')
-            {
-                //CRLF
-                if(i < code.length && code[i] == '\r')
+                if(c == '\n')
                 {
-                    i++;
+                    //CRLF
+                    if(i < code.length && code[i] == '\r')
+                    {
+                        i++;
+                    }
                 }
-            }
             }
             break;
         }
