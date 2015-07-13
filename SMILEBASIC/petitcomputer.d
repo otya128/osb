@@ -75,6 +75,8 @@ class PetitComputer
     GraphicPage GRPF;
     GraphicPage[] GRPFColor;
     GraphicPage[][] GRPFColorFore;
+    SDL_Surface* s8x8;
+    SDL_Texture* t8x8;
     //PNG画像から透過色のpixelを指定して透過しGRPを作る
     GraphicPage createGraphicPage(string file, int pixel)
     {
@@ -223,12 +225,22 @@ class PetitComputer
                      fontFile);
         }
         GRPF = createGraphicPage(fontFile, 0);
-        GRPFColor = new GraphicPage[consoleColor.length];
-        GRPFColorFore = new GraphicPage[][consoleColor.length];
-        for(int i = 0; i < GRPFColor.length; i++)
+        s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
+        auto pixels = (cast(uint*)s8x8.pixels);
+        for(int x = 0; x < 8; x++)
         {
-            GRPFColor[i] = createGRPF(i, GRPF.surface);
+            for(int y = 0; y < 8; y++)
+            {
+                *pixels = SDL_MapRGBA(s8x8.format, 255, 255, 255, 255);
+                pixels++;
+            }
         }
+        //GRPFColor = new GraphicPage[consoleColor.length];
+        //GRPFColorFore = new GraphicPage[][consoleColor.length];
+        //for(int i = 0; i < GRPFColor.length; i++)
+        //{
+        //    GRPFColor[i] = createGRPF(i, GRPF.surface);
+        //}
         /+for(int i = 0; i < GRPFColor.length; i++)
         {
             GRPFColorFore[i] = new GraphicPage[consoleColor.length];
@@ -289,6 +301,9 @@ class PetitComputer
         vsyncCount = 0;
         vsyncFrame = f;
     }
+    int keybufferpos;
+    //解析した結果キー入力のバッファは127くらい
+    wchar[] keybuffer = new wchar[127];
     void render()
     {
         bool renderprofile;
@@ -299,10 +314,11 @@ class PetitComputer
                                       SDL_WINDOW_SHOWN);
             renderer = SDL_CreateRenderer(window, -1, 0);
             GRPF.createTexture(renderer);
-            for(int i = 0; i < GRPFColor.length; i++)
+            /*for(int i = 0; i < GRPFColor.length; i++)
             {
                 GRPFColor[i].createTexture(renderer);
-            }
+            }*/
+            t8x8 = SDL_CreateTextureFromSurface(renderer, s8x8);
             write("OK!");
             SDL_Event event;
             while(true)
@@ -313,7 +329,6 @@ class PetitComputer
                 renderConsole;
                 SDL_RenderPresent(renderer);
                 auto a = (SDL_GetTicks() - profile);
-                if(renderprofile) writeln(a);
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -322,11 +337,16 @@ class PetitComputer
                             SDL_DestroyWindow(window);
                             SDL_Quit();
                             return;
-
+                        case SDL_KEYDOWN:
+                            auto key = event.key.keysym.sym;
+                            keybuffer[keybufferpos] = cast(wchar)key;
+                            keybufferpos = (keybufferpos + 1) % keybuffer.length;
+                            break;
                         default:
                             break;
                     }
                 }
+                if(!renderprofile) writeln(a);
             }
         }
         catch(Throwable t)
@@ -347,8 +367,10 @@ class PetitComputer
             }
         }+/
         //とりあえず
-        auto parser = new Parser(readText("TEST.TXT").to!wstring/*readText("FIZZBUZZ.TXT").to!wstring*//*"
-?ABS(-1)
+        auto parser = new Parser(//readText("./SYS/EX1TEXT.TXT").to!wstring
+                                 //readText("FIZZBUZZ.TXT").to!wstring
+                                 readText("TEST.TXT").to!wstring
+/*"?ABS(-1)
 LOCATE 0,10
 COLOR 5
 FOR I=0 TO 10
@@ -357,12 +379,9 @@ NEXT
 DEF FACT(N)
  IF N<=1 THEN RETURN 1
  RETURN N*FACT(N-1)
-END"*//*
+END"*/
+/*
 `CLS : CL=0 : Z=0
-WHILE 1
-INC Z,2
-?Z,
-WEND
 WHILE 1
   INC Z : IF Z>200 THEN Z=0
   FOR I=0 TO 15
@@ -370,7 +389,8 @@ WHILE 1
     PRINT "★ 梅雨で雨が多い季節ですね ★"
   NEXT
   CL=(CL+1) MOD 16 : VSYNC 2
-WEND`*//*
+WEND`*/
+/*
 `CLS : CL=0
 WHILE 1
 FOR I=0 TO 15
@@ -436,6 +456,11 @@ GOTO @LOOP`*/
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
+    wstring input(wstring prompt, bool useClipBoard)
+    {
+        printConsole(prompt);
+        return "";
+    }
     int CSRX;
     int CSRY;
     int CSRZ;
@@ -449,10 +474,15 @@ GOTO @LOOP`*/
             for(int x = 0; x < consoleWidth; x++)
             {
                 SDL_Rect rect = SDL_Rect(x * 8, y * 8, 8, 8);
-                auto back = console[y][x].backColor;
                 auto fore = consoleColor[console[y][x].foreColor];
+                auto back = consoleColor[console[y][x].backColor];
+                SDL_SetTextureColorMod(t8x8, back >> 16 & 0xFF, back >> 8 & 0xFF, back & 0xFF);
+                SDL_SetTextureAlphaMod(t8x8, back >> 24 & 0xFF);
+                SDL_RenderCopy(renderer, t8x8, null, &rect);
+                /*
                 auto texture = GRPFColor[back].texture;
-                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);
+                auto back = console[y][x].backColor;
+                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);*/
                 SDL_SetTextureColorMod(GRPF.texture, fore >> 16 & 0xFF, fore >> 8 & 0xFF, fore & 0xFF);
                 SDL_SetTextureAlphaMod(GRPF.texture, fore >> 24 & 0xFF);
                 SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x].charater], &rect);

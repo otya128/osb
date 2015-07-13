@@ -486,14 +486,16 @@ class GotoAddr : Code
 class GotoS : Code
 {
     wstring label;
-    this(wstring label)
+    Scope sc;
+    this(wstring label, Scope sc)
     {
         this.type = CodeType.GotoS;
         this.label = label;
+        this.sc = sc;
     }
     override void execute(VM vm)
     {
-        stderr.writeln("can't execute");
+        stderr.writeln("can't execute (compiler bug?)");
     }
 }
 class GotoTrue : Code
@@ -545,14 +547,16 @@ class GosubAddr : Code
 class GosubS : Code
 {
     wstring label;
-    this(wstring label)
+    Scope sc;
+    this(wstring label, Scope sc)
     {
         this.type = CodeType.GosubS;
         this.label = label;
+        this.sc = sc;
     }
     override void execute(VM vm)
     {
-        stderr.writeln("can't execute");
+        stderr.writeln("can't execute (compiler bug?)");
     }
 }
 class ReturnSubroutine : Code
@@ -829,7 +833,7 @@ class CallFunctionCode : Code
     }
     override void execute(VM vm)
     {
-        Function func = vm.functions[name];
+        Function func = vm.functions.get(name, null);
         if(!func)
         {
             throw new SyntaxError();

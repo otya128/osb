@@ -36,6 +36,9 @@ enum NodeType
     DefineFunction,
     While,
     Inc,
+    Data,
+    Read,
+    Restore,
 }
 abstract class Node
 {
@@ -430,5 +433,18 @@ class Inc : Statement
         this.type = NodeType.Inc;
         this.name = name;
         this.expression = expr;
+    }
+}
+class Data : Statement
+{
+    Value[] data;
+    this()
+    {
+        this.type = NodeType.Data;
+        this.data = new Value[0];
+    }
+    void addData(Value v)
+    {
+        data ~= v;
     }
 }

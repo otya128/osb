@@ -58,6 +58,9 @@ enum TokenType
     WEnd,
     Inc,
     Dec,
+    Data,
+    Read,
+    Restore,
 }
 
 struct Token

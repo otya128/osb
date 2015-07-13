@@ -64,6 +64,9 @@ class Lexical
         reserved["WEND"] = TokenType.WEnd;
         reserved["INC"] = TokenType.Inc;
         reserved["DEC"] = TokenType.Dec;
+        reserved["DATA"] = TokenType.Data;
+        reserved["READ"] = TokenType.Read;
+        reserved["RESTORE"] = TokenType.Restore;
         reserved.rehash();
         line = 1;
     }
@@ -168,7 +171,7 @@ class Lexical
                 for(;i < code.length;i++)
                 {
                     c = code[i];
-                    if(!c.isAlpha())
+                    if(!c.isAlpha() && !c.isDigit() && c != '_')
                     {
                         break;
                     }
@@ -506,21 +509,25 @@ class Parser
         else
         {
             //MEMO:引数に[]を付けようが扱いは同一
-            while(true)
+            token = lex.front();
+            if(token.type == TokenType.Iden)
             {
-                wstring arg = getFunctionArgument();
-                if(arg.length == 0)
+                while(true)
                 {
-                    return null;
+                    wstring arg = getFunctionArgument();
+                    if(arg.length == 0)
+                    {
+                        return null;
+                    }
+                    node.addArgument(arg);
+                    token = lex.front();
+                    if(token.type == TokenType.Comma)
+                    {
+                        lex.popFront();
+                        continue;
+                    }
+                    break;
                 }
-                node.addArgument(arg);
-                token = lex.front();
-                if(token.type == TokenType.Comma)
-                {
-                    lex.popFront();
-                    continue;
-                }
-                break;
             }
             if(token.type == TokenType.Out)
             {
@@ -680,7 +687,11 @@ class Parser
                             token = lex.front();
                         }
                         else
-                            func.addArg(expression());
+                        {
+                            auto expr = expression();
+                            if(expr)
+                                func.addArg(expr);
+                        }
                         if(lex.front().type != TokenType.Comma) break;
                         lex.popFront();
                     }
@@ -772,12 +783,39 @@ class Parser
             case TokenType.Inc:
             case TokenType.Dec:
                 return incStatement();
+            case TokenType.Data:
+                return dataStatement();
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    Data dataStatement()
+    {
+        Data data = new Data();
+        lex.popFront();
+        auto token = lex.front();
+        while(true)
+        {
+            if(token.type != TokenType.String && token.type != TokenType.Integer)
+            {
+                syntaxError();
+                return null;
+            }
+            data.addData(token.value);
+            lex.popFront();
+            token = lex.front();
+            if(token.type == TokenType.Comma)
+            {
+                lex.popFront();
+                token = lex.front();
+                continue;
+            }
+            break;
+        }
+        return data;
     }
     Inc incStatement()
     {

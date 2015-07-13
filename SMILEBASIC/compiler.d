@@ -10,18 +10,35 @@ class Scope
     GotoAddr breakAddr;
     GotoAddr continueAddr;
     Function func;
+    DataTable data;
     this()
     {
+        this.data = new DataTable();
     }
     this(GotoAddr breakAddr, GotoAddr continueAddr, Scope parent)
     {
         this.breakAddr =  breakAddr;
         this.continueAddr = continueAddr;
         this.func = parent.func;
+        this.data = parent.data;
     }
     this(Function func)
     {
+        this();
         this.func = func;
+    }
+}
+class DataTable
+{
+    Value[] data;
+    int[wstring] label;
+    void addData(Value data)
+    {
+        this.data ~= data;
+    }
+    void addLabel(wstring label)
+    {
+        this.label[label] = data.length;
     }
 }
 class Function
@@ -185,13 +202,13 @@ class Compiler
     {
         code ~= new Operate(op);
     }
-    void genCodeGoto(wstring label)
+    void genCodeGoto(wstring label, Scope sc)
     {
-        code ~= new GotoS(label);
+        code ~= new GotoS(label, sc);
     }
-    void genCodeGosub(wstring label)
+    void genCodeGosub(wstring label, Scope sc)
     {
-        code ~= new GosubS(label);
+        code ~= new GosubS(label, sc);
     }
     GotoAddr genCodeGoto()
     {
@@ -554,12 +571,19 @@ class Compiler
             case NodeType.Label:
                 {
                     auto label = cast(Label)i;
-                    globalLabel[label.label] = code.length;
+                    if(s.func)
+                    {
+                        s.func.label[label.label] = code.length;
+                    }
+                    else
+                    {
+                        globalLabel[label.label] = code.length;
+                    }
                 }
                 break;
             case NodeType.Goto:
                 {
-                    genCodeGoto((cast(Goto)i).label);
+                    genCodeGoto((cast(Goto)i).label, s);
                 }
                 break;
             case NodeType.If:
@@ -571,7 +595,7 @@ class Compiler
             case NodeType.Gosub:
                 {
                     auto gosub = cast(Gosub)i;
-                    genCodeGosub(gosub.label);
+                    genCodeGosub(gosub.label, s);
                 }
                 break;
             case NodeType.Return:
@@ -666,6 +690,13 @@ class Compiler
             case NodeType.Inc:
                 compileInc(cast(Inc)i, s);
                 break;
+            case NodeType.Data:
+                {
+                    auto data = cast(Data)i;
+                    foreach(j; data.data)
+                        s.data.addData(j);
+                }
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
@@ -686,11 +717,27 @@ class Compiler
         {
             if(c.type == CodeType.GotoS)
             {
-                code[i] = new GotoAddr(globalLabel[(cast(GotoS)c).label]);
+                auto label = cast(GotoS)c;
+                if(label.sc.func)
+                {
+                    code[i] = new GotoAddr(label.sc.func.label[label.label]);
+                }
+                else
+                {
+                    code[i] = new GotoAddr(globalLabel[label.label]);
+                }
             }
             if(c.type == CodeType.GosubS)
             {
-                code[i] = new GosubAddr(globalLabel[(cast(GosubS)c).label]);
+                auto label = cast(GosubS)c;
+                if(label.sc.func)
+                {
+                    code[i] = new GosubAddr(label.sc.func.label[label.label]);
+                }
+                else
+                {
+                    code[i] = new GosubAddr(globalLabel[label.label]);
+                }
             }
         }
         return new VM(code, globalIndex + 1, global, functions);

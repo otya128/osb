@@ -102,6 +102,20 @@ class BuiltinFunction
         }
         assert(cond, message.to!string);
     }
+    static int BUTTON(PetitComputer p, DefaultValue!(int, false) mode)
+    {
+        return 0;
+    }
+    static void VISIBLE(PetitComputer p, DefaultValue!(int) console, DefaultValue!(int) graphic, DefaultValue!(int) BG, DefaultValue!(int) sprite)
+    {
+    }
+    static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
+    {
+    }
+    static void DISPLAY(PetitComputer p, DefaultValue!(int) display)
+    {
+    }
+
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
@@ -148,6 +162,10 @@ template GetFunctionReturnType(T, string N)
     {
         enum GetFunctionReturnType = ValueType.Double;
     }
+    else static if(is(ReturnType!(__traits(getMember, T, N)) == int))
+    {
+        enum GetFunctionReturnType = ValueType.Integer;
+    }
     else static if(is(ReturnType!(__traits(getMember, T, N)) == void))
     {
         enum GetFunctionReturnType = ValueType.Void;
@@ -160,7 +178,7 @@ template GetFunctionReturnType(T, string N)
 }
 template AddFunc(T, string N)
 {
-    static if(is(ReturnType!(__traits(getMember, T, N)) == double))
+    static if(is(ReturnType!(__traits(getMember, T, N)) == double) || is(ReturnType!(__traits(getMember, T, N)) == int))
     {
         const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall();}ret[0] = Value(" ~ N ~ "(" ~
             AddFuncArg!(ParameterTypeTuple!(__traits(getMember, T, N)).length - 1, 0, 0, ParameterTypeTuple!(__traits(getMember, T, N))) ~ "));}";
