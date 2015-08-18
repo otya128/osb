@@ -12,8 +12,8 @@ import core.sync.mutex;
 import otya.smilebasic.parser;
 class GraphicPage
 {
+    static GLenum textureScaleMode = GL_NEAREST;
     SDL_Surface* surface;
-    SDL_Texture* texture;
     this(SDL_Surface* s)
     {
         surface = s;
@@ -21,7 +21,6 @@ class GraphicPage
     GLuint glTexture;
     void createTexture(SDL_Renderer* renderer)
     {
-        texture = SDL_CreateTextureFromSurface(renderer, surface);
         ubyte r,g,b,a;
         SDL_GetRGBA(*cast(uint*)surface.pixels, surface.format, &r, &g, &b, &a);
         GLenum texture_format;
@@ -48,8 +47,8 @@ class GraphicPage
         // Bind the texture object
         glBindTexture( GL_TEXTURE_2D, glTexture );
         // Set the texture's stretching properties
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, textureScaleMode );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, textureScaleMode );
 
         // Edit the texture object's image data using the information SDL_Surface gives us
         glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface.w, surface.h, 0,
@@ -93,6 +92,12 @@ class PetitComputer
         0xFF7F7F7F,
         0xFFFFFFFF,
     ];
+    int[] consoleColorGL = new int[16];
+    uint toGLColor(uint color)
+    {
+        //ARGB -> ABGR
+        return (color & 0xFF00FF00) | (color >> 16 & 0xFF) | ((color & 0xFF) << 16);
+    }
     struct ConsoleCharacter
     {
         wchar charater;
@@ -301,6 +306,8 @@ class PetitComputer
         DerelictSDL2.load();
         DerelictSDL2Image.load();
         DerelictGL.load();
+        for(int i = 0; i < consoleColor.length; i++)
+            consoleColorGL[i] = toGLColor(consoleColor[i]);
         if(!exists(resourcePath))
         {
             writeln("create ./resources");
@@ -414,30 +421,29 @@ class PetitComputer
             context = SDL_GL_CreateContext(window);
             GRPF.createTexture(renderer);
             if (!context) return;
-            //glViewport(0, 0, 400, 240);
+            glViewport(0, 0, 400, 240);
             glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
             while(true)
             {
+                auto profile = SDL_GetTicks();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                glEnable(GL_TEXTURE_2D);
                 GLenum aa = glGetError();
-                glBindTexture( GL_TEXTURE_2D, GRPF.glTexture );
-                //glEnable(GL_BLEND);
-                //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-                glAlphaFunc(GL_GEQUAL, 0.5);
-                glEnable(GL_ALPHA_TEST);
+                //glBindTexture( GL_TEXTURE_2D, GRPF.glTexture );
                 aa = glGetError();
+                renderConsoleGL();
+                /*
                 glBegin(GL_QUADS);
                 glTexCoord2f(1-0 , 1-0); glVertex2f(512/200f - 1, 1 - 512/120f);
                 glTexCoord2f(1-0 , 1-1); glVertex2f(512/200f - 1, 1);
                 glTexCoord2f(1-1 , 1-1); glVertex2f(-1, 1);
                 glTexCoord2f(1-1 , 1-0); glVertex2f(-1, 1 - 512/120f);
-                glEnd();                glFlush();
+                glEnd();                glFlush();*/
                 SDL_GL_SwapWindow(window);
+                auto a = (SDL_GetTicks() - profile);
 
+                if(!renderprofile) writeln(a);
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -456,30 +462,33 @@ class PetitComputer
                     }
                 }
                 continue;
-                auto profile = SDL_GetTicks();
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                SDL_RenderClear(renderer);
-                renderConsole;
-                SDL_RenderPresent(renderer);
-                auto a = (SDL_GetTicks() - profile);
-                while (SDL_PollEvent(&event))
+                version(none)
                 {
-                    switch (event.type)
+                    auto profile = SDL_GetTicks();
+                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+                    SDL_RenderClear(renderer);
+                    renderConsole;
+                    SDL_RenderPresent(renderer);
+                    auto a = (SDL_GetTicks() - profile);
+                    while (SDL_PollEvent(&event))
                     {
-                        case SDL_QUIT:
-                            SDL_DestroyWindow(window);
-                            SDL_Quit();
-                            return;
-                        case SDL_KEYDOWN:
-                            auto key = event.key.keysym.sym;
-                            keybuffer[keybufferpos] = cast(wchar)key;
-                            keybufferpos = (keybufferpos + 1) % keybuffer.length;
-                            break;
-                        default:
-                            break;
+                        switch (event.type)
+                        {
+                            case SDL_QUIT:
+                                SDL_DestroyWindow(window);
+                                SDL_Quit();
+                                return;
+                            case SDL_KEYDOWN:
+                                auto key = event.key.keysym.sym;
+                                keybuffer[keybufferpos] = cast(wchar)key;
+                                keybufferpos = (keybufferpos + 1) % keybuffer.length;
+                                break;
+                            default:
+                                break;
+                        }
                     }
+                    if(!renderprofile) writeln(a);
                 }
-                if(!renderprofile) writeln(a);
             }
         }
         catch(Throwable t)
@@ -521,7 +530,7 @@ WHILE 1
     LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
     PRINT "★ 梅雨で雨が多い季節ですね ★"
   NEXT
-  CL=(CL+1) MOD 16 : VSYNC 2
+  CL=(CL+1) MOD 16 
 WEND`*/
 /*
 `CLS : CL=0
@@ -599,43 +608,50 @@ GOTO @LOOP`*/
     int CSRZ;
     int consoleForeColor, consoleBackColor;
     Mutex consolem;
-    void renderConsole()
+
+    void renderConsoleGL()
     {
         consolem.lock();
         scope(exit) consolem.unlock();
+        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
             {
-                SDL_Rect rect = SDL_Rect(x * 8, y * 8, 8, 8);
-                auto fore = consoleColor[console[y][x].foreColor];
-                auto back = consoleColor[console[y][x].backColor];
-                SDL_SetTextureColorMod(t8x8, back >> 16 & 0xFF, back >> 8 & 0xFF, back & 0xFF);
-                SDL_SetTextureAlphaMod(t8x8, back >> 24 & 0xFF);
-                SDL_RenderCopy(renderer, t8x8, null, &rect);
-                /*
-                auto texture = GRPFColor[back].texture;
-                auto back = console[y][x].backColor;
-                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);*/
-                SDL_SetTextureColorMod(GRPF.texture, fore >> 16 & 0xFF, fore >> 8 & 0xFF, fore & 0xFF);
-                SDL_SetTextureAlphaMod(GRPF.texture, fore >> 24 & 0xFF);
-                SDL_RenderCopy(renderer, GRPF.texture, &fontTable[console[y][x].charater], &rect);
-                /*
-                auto back = console[y][x].backColor;
-                auto fore = console[y][x].foreColor;
-                auto texture = GRPFColorFore[back][fore].texture;
-                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);*/
-                /*
-                auto back = consoleColor[console[y][x].backColor];
-                auto texture = GRPFColor[back].texture;
-                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);
-                texture = GRPF.texture;
-                //SDL_SetRenderDrawColor(renderer, back >> 16 & 0xFF, back >> 8 & 0xFF, back & 0xFF, back >> 24 & 0xFF);
-                //SDL_RenderFillRect(renderer, &rect);
-                auto fore = consoleColor[console[y][x].foreColor];
-                SDL_SetTextureColorMod(texture, fore >> 16 & 0xFF, fore >> 8 & 0xFF, fore & 0xFF);
-                SDL_SetTextureAlphaMod(texture, fore >> 24 & 0xFF);
-                SDL_RenderCopy(renderer, texture, &fontTable[console[y][x].charater], &rect);*/
+                auto back = consoleColorGL[console[y][x].backColor];
+                glColor4ubv(cast(ubyte*)&back);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
             }
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        //glAlphaFunc(GL_GEQUAL, 0.5);
+        //glEnable(GL_ALPHA_TEST);
+        glBegin(GL_QUADS);
+        glColor3f(1.0, 1.0, 1.0);
+        for(int y = 0; y < consoleHeight; y++)
+            for(int x = 0; x < consoleWidth; x++)
+            {
+                auto fore = consoleColorGL[console[y][x].foreColor];
+                auto rect = &fontTable[console[y][x].charater];
+                glColor4ubv(cast(ubyte*)&fore);
+                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+            }
+        glEnd();
+        glFlush();
     }
     void printConsole(T...)(T args)
     {
