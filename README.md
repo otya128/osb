@@ -4,8 +4,10 @@ SMILEBASIC 3.x互換BASIC
 + DerelictSDL2
 + DerelictGL3
 + curl
+
 ## 実行時に必要なもの
 + SDL2
+
 ## 実装機能
 動くコード例
 ```
