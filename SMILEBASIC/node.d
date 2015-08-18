@@ -39,6 +39,7 @@ enum NodeType
     Data,
     Read,
     Restore,
+    On,
 }
 abstract class Node
 {
@@ -446,5 +447,19 @@ class Data : Statement
     void addData(Value v)
     {
         data ~= v;
+    }
+}
+class On : Statement
+{
+    bool isGosub;
+    wstring[] labels;
+    this(bool isgosub)
+    {
+        this.isGosub = isgosub;
+        this.labels = new wstring[0];
+    }
+    void addLabel(wstring label)
+    {
+        this.labels ~= label;
     }
 }
