@@ -1,6 +1,7 @@
 module otya.smilebasic.petitcomputer;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
+import derelict.opengl3.gl;
 import std.net.curl;
 import std.file;
 import std.stdio;
@@ -17,9 +18,42 @@ class GraphicPage
     {
         surface = s;
     }
+    GLuint glTexture;
     void createTexture(SDL_Renderer* renderer)
     {
         texture = SDL_CreateTextureFromSurface(renderer, surface);
+        ubyte r,g,b,a;
+        SDL_GetRGBA(*cast(uint*)surface.pixels, surface.format, &r, &g, &b, &a);
+        GLenum texture_format;
+        GLint  nOfColors;
+        nOfColors = surface.format.BytesPerPixel;
+        if (nOfColors == 4)     // contains an alpha channel
+        {
+            if (surface.format.Rmask == 0x000000ff)
+                texture_format = GL_RGBA;
+            else
+                texture_format = GL_BGRA;
+        } else if (nOfColors == 3)     // no alpha channel
+        {
+            if (surface.format.Rmask == 0x000000ff)
+                texture_format = GL_RGB;
+            else
+                texture_format = GL_BGR;
+        } else {
+            //printf("warning: the image is not truecolor..  this will probably break\n");
+            // this error should not go unhandled
+        }
+        // Have OpenGL generate a texture object handle for us
+        glGenTextures( 1, &glTexture );
+        // Bind the texture object
+        glBindTexture( GL_TEXTURE_2D, glTexture );
+        // Set the texture's stretching properties
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
+        // Edit the texture object's image data using the information SDL_Surface gives us
+        glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface.w, surface.h, 0,
+                      texture_format, GL_UNSIGNED_BYTE, surface.pixels );
     }
 }
 class PetitComputer
@@ -77,6 +111,13 @@ class PetitComputer
     GraphicPage[][] GRPFColorFore;
     SDL_Surface* s8x8;
     SDL_Texture* t8x8;
+    SDL_Surface* createSurfaceFromFile(string file)
+    {
+        SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
+        auto surfacesrc = IMG_LoadPNG_RW(stream);
+        SDL_RWclose(stream);
+        return surfacesrc;
+    }
     //PNG画像から透過色のpixelを指定して透過しGRPを作る
     GraphicPage createGraphicPage(string file, int pixel)
     {
@@ -88,12 +129,58 @@ class PetitComputer
         rect.y = 0;
         rect.w = surfacesrc.w;
         rect.h = surfacesrc.h;
+        SDL_SetColorKey(surfacesrc, SDL_TRUE, (cast(uint*)surface.pixels)[pixel]);
         int i = SDL_BlitSurface(surfacesrc, &rect, surface, &rect);
-        SDL_SetColorKey(surface, SDL_TRUE, (cast(uint*)surface.pixels)[pixel]);
         auto grp = new GraphicPage(surface);
         SDL_FreeSurface(surfacesrc);
         SDL_RWclose(stream);
         return grp;
+    }
+    GraphicPage createGRPF(string file)
+    {
+        SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
+        auto src = IMG_LoadPNG_RW(stream);
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = src.w;
+        rect.h = src.h;
+//        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
+//        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
+        SDL_SetColorKey(src, SDL_TRUE, (cast(uint*)src.pixels)[0]);
+        SDL_SetColorKey(surface, SDL_TRUE, (cast(uint*)src.pixels)[0]);
+        int i = SDL_BlitSurface(src, &rect, surface, &rect);
+        auto srcpixels = (cast(uint*)src.pixels);
+        auto pixels = (cast(uint*)surface.pixels);
+        auto aaa = surface.format.Amask;
+        //surface.format.Amask = 0xFF;
+        /+for(int x = 0; x < src.w; x++)
+        {
+            for(int y = 0; y < src.h; y++)
+            {
+                ubyte r, g, b, a;
+                write(x,y, ',');
+                SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
+                if(r == 158 && g == 0 && b == 93)
+                {
+                    r = 0;
+                    g = 0;
+                    b = 0;
+                    a = 0;
+                    *pixels = 0;
+                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
+                }/+
+                else
+                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
+                +/ubyte _r, _g, _b, _a;
+                SDL_GetRGBA(*pixels, surface.format, &_r, &_g, &_b, &_a);
+                pixels++;
+            }
+        }+/
+        SDL_RWclose(stream);
+        SDL_FreeSurface(src);
+        return new GraphicPage(surface);
     }
     GraphicPage createGRPF(int color, SDL_Surface *src)
     {
@@ -213,6 +300,7 @@ class PetitComputer
     {
         DerelictSDL2.load();
         DerelictSDL2Image.load();
+        DerelictGL.load();
         if(!exists(resourcePath))
         {
             writeln("create ./resources");
@@ -224,7 +312,7 @@ class PetitComputer
             download("http://smileboom.com/special/ptcm3/download/unicode/image/res_font_table-320.png",
                      fontFile);
         }
-        GRPF = createGraphicPage(fontFile, 0);
+        GRPF = createGRPF(fontFile);//createGraphicPage(fontFile, 0);
         s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
         auto pixels = (cast(uint*)s8x8.pixels);
         for(int x = 0; x < 8; x++)
@@ -309,11 +397,12 @@ class PetitComputer
         bool renderprofile;
         try
         {
+            SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
-                                      SDL_WINDOW_SHOWN);
+                                      /*SDL_WINDOW_SHOWN | */SDL_WINDOW_OPENGL);
             renderer = SDL_CreateRenderer(window, -1, 0);
-            GRPF.createTexture(renderer);
             /*for(int i = 0; i < GRPFColor.length; i++)
             {
                 GRPFColor[i].createTexture(renderer);
@@ -321,8 +410,52 @@ class PetitComputer
             t8x8 = SDL_CreateTextureFromSurface(renderer, s8x8);
             write("OK!");
             SDL_Event event;
+            SDL_GLContext context;
+            context = SDL_GL_CreateContext(window);
+            GRPF.createTexture(renderer);
+            if (!context) return;
+            //glViewport(0, 0, 400, 240);
+            glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+            glEnable(GL_DEPTH_TEST);
             while(true)
             {
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                glEnable(GL_TEXTURE_2D);
+                GLenum aa = glGetError();
+                glBindTexture( GL_TEXTURE_2D, GRPF.glTexture );
+                //glEnable(GL_BLEND);
+                //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+                glAlphaFunc(GL_GEQUAL, 0.5);
+                glEnable(GL_ALPHA_TEST);
+                aa = glGetError();
+                glBegin(GL_QUADS);
+                glTexCoord2f(1-0 , 1-0); glVertex2f(512/200f - 1, 1 - 512/120f);
+                glTexCoord2f(1-0 , 1-1); glVertex2f(512/200f - 1, 1);
+                glTexCoord2f(1-1 , 1-1); glVertex2f(-1, 1);
+                glTexCoord2f(1-1 , 1-0); glVertex2f(-1, 1 - 512/120f);
+                glEnd();                glFlush();
+                SDL_GL_SwapWindow(window);
+
+                while (SDL_PollEvent(&event))
+                {
+                    switch (event.type)
+                    {
+                        case SDL_QUIT:
+                            SDL_DestroyWindow(window);
+                            SDL_Quit();
+                            return;
+                        case SDL_KEYDOWN:
+                            auto key = event.key.keysym.sym;
+                            keybuffer[keybufferpos] = cast(wchar)key;
+                            keybufferpos = (keybufferpos + 1) % keybuffer.length;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                continue;
                 auto profile = SDL_GetTicks();
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
                 SDL_RenderClear(renderer);
