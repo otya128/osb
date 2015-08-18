@@ -534,6 +534,11 @@ class Compiler
         skip.address = this.code.length;
         this.functions[func.name] = func;
     }
+    void compileOn(On on, Scope sc)
+    {
+        compileExpression(on.condition, sc);
+        genCode(new OnS(on.labels, on.isGosub, sc));
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -697,6 +702,9 @@ class Compiler
                         s.data.addData(j);
                 }
                 break;
+            case NodeType.On:
+                compileOn(cast(On)i, s);
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
@@ -737,6 +745,30 @@ class Compiler
                 else
                 {
                     code[i] = new GosubAddr(globalLabel[label.label]);
+                }
+            }
+            if(c.type == CodeType.OnS)
+            {
+                auto label = cast(OnS)c;
+                int[] addresses = new int[label.labels.length];
+                foreach(int index, wstring l; label.labels)
+                {
+                    if(label.sc.func)
+                    {
+                        addresses[index] =label.sc.func.label[l];
+                    }
+                    else
+                    {
+                        addresses[index] = globalLabel[l];
+                    }
+                }
+                if(label.isGosub)
+                {
+                    code[i] = new OnGosub(addresses);
+                }
+                else
+                {
+                    code[i] = new OnGoto(addresses);
                 }
             }
         }

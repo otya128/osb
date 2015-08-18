@@ -451,12 +451,15 @@ class Data : Statement
 }
 class On : Statement
 {
+    Expression condition;
     bool isGosub;
     wstring[] labels;
-    this(bool isgosub)
+    this(Expression expr, bool isgosub)
     {
+        this.condition = expr;
         this.isGosub = isgosub;
         this.labels = new wstring[0];
+        this.type = NodeType.On;
     }
     void addLabel(wstring label)
     {

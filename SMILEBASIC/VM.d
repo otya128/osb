@@ -120,6 +120,7 @@ enum CodeType
     GotoTrue,
     GosubS,
     ReturnSubroutine,
+    OnS,
 }
 abstract class Code
 {
@@ -966,5 +967,72 @@ class IncCodeL : Code
             wstring r = v.stringValue;
             *g = Value(l ~ r);
         }
+    }
+}
+class OnBase : Code
+{
+    int[] labels;
+    this(int[] labels)
+    {
+        this.labels = labels;
+    }
+    int on(VM vm)
+    {
+        Value value;
+        vm.pop(value);
+        if(!value.isNumber())
+        {
+            throw new TypeMismatch();
+        }
+        int index = value.castInteger();
+        if(index < 0 || index >= labels.length)
+        {
+            return -1;
+        }
+        return labels[index];
+    }
+}
+class OnS : Code
+{
+    wstring[] labels;
+    bool isGosub;
+    Scope sc;
+    this(wstring[] labels, bool isGosub, Scope sc)
+    {
+        this.labels = labels;
+        this.isGosub = isGosub;
+        this.sc = sc;
+        this.type = CodeType.OnS;
+    }
+    override void execute(VM vm)
+    {
+        stderr.writeln("can't execute (compiler bug?)");
+    }
+}
+class OnGoto : OnBase
+{
+    this(int[] labels)
+    {
+        super(labels);
+    }
+    override void execute(VM vm)
+    {
+        int index = on(vm);
+        if(index < 0) return;
+        vm.pc = index - 1;
+    }
+}
+class OnGosub : OnBase
+{
+    this(int[] labels)
+    {
+        super(labels);
+    }
+    override void execute(VM vm)
+    {
+        int index = on(vm);
+        if(index < 0) return;
+        vm.push(Value(vm.pc));
+        vm.pc = index - 1;
     }
 }

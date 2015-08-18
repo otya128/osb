@@ -67,6 +67,7 @@ class Lexical
         reserved["DATA"] = TokenType.Data;
         reserved["READ"] = TokenType.Read;
         reserved["RESTORE"] = TokenType.Restore;
+        reserved["ON"] = TokenType.On;
         reserved.rehash();
         line = 1;
     }
@@ -785,12 +786,51 @@ class Parser
                 return incStatement();
             case TokenType.Data:
                 return dataStatement();
+            case TokenType.On:
+                node = onStatement();
+                break;
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    On onStatement()
+    {
+        lex.popFront();
+        auto cond = expression();
+        if(!cond) return null;
+        auto token = lex.front();
+        On on;
+        if(token.type == TokenType.Gosub)
+        {
+            on = new On(cond, true);//gosub
+        }
+        else if(token.type == TokenType.Goto)
+        {
+            on = new On(cond, false);//gosub
+        }
+        else
+        {
+            //GOTO/GOSUBいる
+            syntaxError();
+            return null;
+        }
+        do
+        {
+            lex.popFront();
+            token = lex.front();
+            if(token.type != TokenType.Label)
+            {
+                syntaxError();
+                return null;
+            }
+            on.addLabel(token.value.stringValue);
+            lex.popFront();
+            token = lex.front();
+        } while(token.type == TokenType.Comma);
+        return on;
     }
     Data dataStatement()
     {

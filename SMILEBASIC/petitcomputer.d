@@ -424,7 +424,7 @@ class PetitComputer
                 renderConsoleGL();
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
-                if(!renderprofile) writeln(renderticks);
+                if(renderprofile) writeln(renderticks);
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
