@@ -405,45 +405,26 @@ class PetitComputer
         try
         {
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
-                                      /*SDL_WINDOW_SHOWN | */SDL_WINDOW_OPENGL);
+                                      SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
             renderer = SDL_CreateRenderer(window, -1, 0);
-            /*for(int i = 0; i < GRPFColor.length; i++)
-            {
-                GRPFColor[i].createTexture(renderer);
-            }*/
-            t8x8 = SDL_CreateTextureFromSurface(renderer, s8x8);
-            write("OK!");
             SDL_Event event;
             SDL_GLContext context;
             context = SDL_GL_CreateContext(window);
-            GRPF.createTexture(renderer);
             if (!context) return;
+            GRPF.createTexture(renderer);
             glViewport(0, 0, 400, 240);
-            glClearColor(0.0f, 1.0f, 0.0f, 0.0f);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
             while(true)
             {
                 auto profile = SDL_GetTicks();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-                GLenum aa = glGetError();
-                //glBindTexture( GL_TEXTURE_2D, GRPF.glTexture );
-                aa = glGetError();
                 renderConsoleGL();
-                /*
-                glBegin(GL_QUADS);
-                glTexCoord2f(1-0 , 1-0); glVertex2f(512/200f - 1, 1 - 512/120f);
-                glTexCoord2f(1-0 , 1-1); glVertex2f(512/200f - 1, 1);
-                glTexCoord2f(1-1 , 1-1); glVertex2f(-1, 1);
-                glTexCoord2f(1-1 , 1-0); glVertex2f(-1, 1 - 512/120f);
-                glEnd();                glFlush();*/
                 SDL_GL_SwapWindow(window);
-                auto a = (SDL_GetTicks() - profile);
-
-                if(!renderprofile) writeln(a);
+                auto renderticks = (SDL_GetTicks() - profile);
+                if(!renderprofile) writeln(renderticks);
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -461,34 +442,9 @@ class PetitComputer
                             break;
                     }
                 }
-                continue;
-                version(none)
-                {
-                    auto profile = SDL_GetTicks();
-                    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-                    SDL_RenderClear(renderer);
-                    renderConsole;
-                    SDL_RenderPresent(renderer);
-                    auto a = (SDL_GetTicks() - profile);
-                    while (SDL_PollEvent(&event))
-                    {
-                        switch (event.type)
-                        {
-                            case SDL_QUIT:
-                                SDL_DestroyWindow(window);
-                                SDL_Quit();
-                                return;
-                            case SDL_KEYDOWN:
-                                auto key = event.key.keysym.sym;
-                                keybuffer[keybufferpos] = cast(wchar)key;
-                                keybufferpos = (keybufferpos + 1) % keybuffer.length;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    if(!renderprofile) writeln(a);
-                }
+                long delay = (1000/60) - cast(long)(SDL_GetTicks() - profile);
+                if(delay > 0)
+                    SDL_Delay(cast(uint)delay);
             }
         }
         catch(Throwable t)
