@@ -451,10 +451,20 @@ class PetitComputer
                     auto c = ImmAssociateContext(wm.info.win.window, null);
                 }
             }
-
+            int loopcnt;
             while(true)
             {
                 auto profile = SDL_GetTicks();
+                if(showCursor)
+                {
+                    loopcnt++;
+                    //30フレームに一回
+                    if(loopcnt >= 30)
+                    {
+                        animationCursor = !animationCursor;
+                        loopcnt = 0;
+                    }
+                }
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 renderConsoleGL();
                 SDL_GL_SwapWindow(window);
@@ -621,6 +631,7 @@ GOTO @LOOP`*/
         printConsole(prompt);
         clearKeyBuffer();
         wstring buffer;
+        showCursor = true;
         while(true)
         {
             auto oldpos = keybufferpos;
@@ -636,6 +647,8 @@ GOTO @LOOP`*/
                 kbp = oldpos;
             }
             wchar k;
+            //文字入力中はカーソルを表示する
+            animationCursor = true;
             foreach(key; keybuffer[oldpos..kbp])
             {
                 printConsole(key);
@@ -652,12 +665,15 @@ GOTO @LOOP`*/
                 break;
             }
         }
+        showCursor = false;
         return buffer;
     }
     int CSRX;
     int CSRY;
     int CSRZ;
     int consoleForeColor, consoleBackColor;
+    bool showCursor;
+    bool animationCursor;
     Mutex consolem;
 
     void renderConsoleGL()
@@ -677,6 +693,14 @@ GOTO @LOOP`*/
                 glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
                 glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
             }
+        if(showCursor && animationCursor)
+        {
+            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
+            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+        }
         glEnd();
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
