@@ -1048,8 +1048,15 @@ class InputCode : Code
         type = new ValueType[count];
         output = new Value[count];
     }
+    void exit(int save_SP, VM vm)
+    {
+        for(int i = save_SP - 1, j = vm.stacki; i > vm.stacki && j <= save_SP; i--, j++)
+            std.algorithm.swap(vm.stack[i], vm.stack[j]);
+        vm.stacki = save_SP;
+    }
     override void execute(VM vm)
     {
+        int save_SP = vm.stacki;
         for(int i = 0; i < count; i++)
         {
             Value v;
@@ -1066,6 +1073,19 @@ class InputCode : Code
             wstring input = vm.petitcomputer.input("", false);
             wstring[] split = input.split(",");
             error = false;
+            if(split.length == 0)
+            {
+                //スペース以外何も与えないと値を書き換えずに終了する
+                exit(save_SP, vm);
+                break;
+            }
+            munch(split[0], " ");
+            if(split[0].length == 0)
+            {
+                //スペース以外何も与えないと値を書き換えずに終了する
+                exit(save_SP, vm);
+                break;
+            }
             if(split.length < count)
             {
                 error = true;
