@@ -824,7 +824,7 @@ class Parser
             return null;
         }
         auto token = lex.front();
-        if(token.type == TokenType.Semicolon || token.type == TokenType.Comma)
+        if(token.type == TokenType.Semicolon || (token.type == TokenType.Comma && !isLValue(message)))
         {
             Input input = new Input(message, token.type == TokenType.Semicolon);
             do
@@ -836,7 +836,6 @@ class Parser
                     syntaxError();
                 }
                 input.addVariable(expr);
-                lex.popFront();
                 token = lex.front();
             } while(token.type == TokenType.Comma);
             return input;
@@ -850,6 +849,18 @@ class Parser
             }
             Input input = new Input(null, true);
             input.addVariable(message);
+            do
+            {
+                lex.popFront();
+                auto expr = expression();
+                if(!isLValue(expr))
+                {
+                    syntaxError();
+                }
+                input.addVariable(expr);
+                token = lex.front();
+            } while(token.type == TokenType.Comma);
+
             return input;
         }
     }
