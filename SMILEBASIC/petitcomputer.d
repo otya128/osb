@@ -395,6 +395,8 @@ class PetitComputer
         {
             console[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
+        CSRX = 0;
+        CSRY = 0;
     }
     SDL_Renderer* renderer;
     int vsyncFrame;
@@ -528,57 +530,59 @@ class PetitComputer
                 GRPFColorFore[i][j].createTexture(renderer);
             }
         }+/
-        //とりあえず
-        auto parser = new Parser(//readText("./SYS/EX1TEXT.TXT").to!wstring
-                                 //readText("FIZZBUZZ.TXT").to!wstring
-                                 readText("TEST.TXT").to!wstring
-/*"?ABS(-1)
-LOCATE 0,10
-COLOR 5
-FOR I=0 TO 10
- ?I;\"!\",\"=\",FACT(I)
-NEXT
-DEF FACT(N)
- IF N<=1 THEN RETURN 1
- RETURN N*FACT(N-1)
-END"*/
-/*
-`CLS : CL=0 : Z=0
-WHILE 1
-  INC Z : IF Z>200 THEN Z=0
-  FOR I=0 TO 15
-    LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
-    PRINT "★ 梅雨で雨が多い季節ですね ★"
-  NEXT
-  CL=(CL+1) MOD 16 
-WEND`*/
-/*
-`CLS : CL=0
-WHILE 1
-FOR I=0 TO 15
-  LOCATE 9,4+I : COLOR (CL+I) MOD 16
-  PRINT "Ё プチコン3ゴウ Ж"
-NEXT
-CL=(CL+1) MOD 16 : VSYNC 1
-WEND`
-/*
-`CLS : CL=0
-@LOOP
-FOR I=0 TO 15
-  LOCATE 9,4+I : COLOR (CL+I) MOD 16
-  PRINT "Ё プチコン3ゴウ Ж"
-NEXT
-CL=(CL+1) MOD 16 : VSYNC 1
-GOTO @LOOP`*/
-);
-        auto vm = parser.compile();
-        bool running = true;
-        vm.init(this);
+
         consolem = new Mutex();
         keybuffermutex = new Mutex();
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         auto startTicks = SDL_GetTicks();
+        //とりあえず
+        auto parser = new Parser(readText(input("LOAD PROGRAM:", true).to!string).to!wstring
+                                 //readText("./SYS/EX1TEXT.TXT").to!wstring
+                                 //readText("FIZZBUZZ.TXT").to!wstring
+                                 //readText("TEST.TXT").to!wstring
+                                 /*"?ABS(-1)
+                                 LOCATE 0,10
+                                 COLOR 5
+                                 FOR I=0 TO 10
+                                 ?I;\"!\",\"=\",FACT(I)
+                                 NEXT
+                                 DEF FACT(N)
+                                 IF N<=1 THEN RETURN 1
+                                 RETURN N*FACT(N-1)
+                                 END"*/
+                                 /*
+                                 `CLS : CL=0 : Z=0
+                                 WHILE 1
+                                 INC Z : IF Z>200 THEN Z=0
+                                 FOR I=0 TO 15
+                                 LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
+                                 PRINT "★ 梅雨で雨が多い季節ですね ★"
+                                 NEXT
+                                 CL=(CL+1) MOD 16 
+                                 WEND`*/
+                                 /*
+                                 `CLS : CL=0
+                                 WHILE 1
+                                 FOR I=0 TO 15
+                                 LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                 PRINT "Ё プチコン3ゴウ Ж"
+                                 NEXT
+                                 CL=(CL+1) MOD 16 : VSYNC 1
+                                 WEND`
+                                 /*
+                                 `CLS : CL=0
+                                 @LOOP
+                                 FOR I=0 TO 15
+                                 LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                 PRINT "Ё プチコン3ゴウ Ж"
+                                 NEXT
+                                 CL=(CL+1) MOD 16 : VSYNC 1
+                                 GOTO @LOOP`*/
+                                 );
+        auto vm = parser.compile();
+        bool running = true;
+        vm.init(this);
         while (true)
         {
             uint elapse;
@@ -632,6 +636,8 @@ GOTO @LOOP`*/
         clearKeyBuffer();
         wstring buffer;
         showCursor = true;
+        int oldCSRX = this.CSRX;
+        int oldCSRY = this.CSRY;
         while(true)
         {
             auto oldpos = keybufferpos;
@@ -651,6 +657,16 @@ GOTO @LOOP`*/
             animationCursor = true;
             foreach(key; keybuffer[oldpos..kbp])
             {
+                if(key == 8)
+                {
+                    k = key;
+                    if(!buffer.length) continue;
+                    buffer = buffer[0..$ - 1];
+                    CSRX--;
+                    printConsoleString(" ");
+                    CSRX--;
+                    continue;
+                }
                 printConsole(key);
                 if(key == '\r')
                 {

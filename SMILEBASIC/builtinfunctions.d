@@ -112,10 +112,15 @@ class BuiltinFunction
     static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
     {
     }
-    static void DISPLAY(PetitComputer p, DefaultValue!(int) display)
+    static void DISPLAY(PetitComputer p, DefaultValue!(int, false) display)
     {
     }
-
+    static void GCLS(PetitComputer p, DefaultValue!(int, false) display)
+    {
+    }
+    static void BEEP(PetitComputer p, DefaultValue!(int, false) display)
+    {
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
