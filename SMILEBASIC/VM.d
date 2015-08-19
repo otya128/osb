@@ -1036,3 +1036,67 @@ class OnGosub : OnBase
         vm.pc = index - 1;
     }
 }
+import std.string;
+class InputCode : Code
+{
+    int count;
+    ValueType[] type;
+    Value[] output;
+    this(int count)
+    {
+        this.count = count;
+        type = new ValueType[count];
+        output = new Value[count];
+    }
+    override void execute(VM vm)
+    {
+        for(int i = 0; i < count; i++)
+        {
+            Value v;
+            vm.pop(v);
+            type[i] = v.type;
+        }
+        bool error;
+        do
+        {
+            if(error)
+            {
+                vm.petitcomputer.printConsoleString("?Redo from start \n");
+            }
+            wstring input = vm.petitcomputer.input("", false);
+            wstring[] split = input.split(",");
+            error = false;
+            if(split.length < count)
+            {
+                error = true;
+                continue;
+            }
+            foreach(i, s; split)
+            {
+                if(i >= count)
+                {
+                    //指定数超えたら無視
+                    break;
+                }
+                //先頭のスペースは無視する
+                munch(s, " ");
+                if(type[i] == ValueType.Double || type[i] == ValueType.Integer)
+                {
+                    try
+                    {
+                        vm.push(Value(to!double(s)));
+                    }
+                    catch
+                    {
+                        error = true;
+                        break;
+                    }
+                }
+                else
+                {
+                    vm.push(Value(s));
+                }
+            }
+        } while(error);
+    }
+}

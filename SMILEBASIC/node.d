@@ -40,6 +40,7 @@ enum NodeType
     Read,
     Restore,
     On,
+    Input,
 }
 abstract class Node
 {
@@ -464,5 +465,22 @@ class On : Statement
     void addLabel(wstring label)
     {
         this.labels ~= label;
+    }
+}
+class Input : Statement
+{
+    Expression message;
+    bool question;
+    Expression[] variables;
+    this(Expression message, bool question)
+    {
+        this.message = message;
+        this.question = question;
+        this.variables = new Expression[0];
+        this.type = NodeType.Input;
+    }
+    void addVariable(Expression lvalue)
+    {
+        variables ~= lvalue;
     }
 }

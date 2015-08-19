@@ -55,6 +55,14 @@ class GraphicPage
                       texture_format, GL_UNSIGNED_BYTE, surface.pixels );
     }
 }
+version(Windows)
+{
+    extern (Windows) static void* LoadLibraryA(in char*);
+    extern (Windows) static bool FreeLibrary(void*);
+    extern (Windows) static void* GetProcAddress(void*, in char*);
+    alias extern (Windows) void* function(void*, void*) ImmAssociateContext;
+    alias extern (Windows) int function(int) ImmDisableIME;
+}
 class PetitComputer
 {
     this()
@@ -396,14 +404,30 @@ class PetitComputer
         vsyncCount = 0;
         vsyncFrame = f;
     }
+    Mutex keybuffermutex;
     int keybufferpos;
+    int keybufferlen;
     //解析した結果キー入力のバッファは127くらい
-    wchar[] keybuffer = new wchar[127];
+    wchar[] keybuffer = new wchar[128];
+    void sendKey(wchar key)
+    {
+        keybuffer[keybufferpos] = cast(wchar)key;
+        keybufferlen++;
+        if(keybufferlen > keybuffer.length)
+            keybufferlen = keybuffer.length;
+        keybufferpos = (keybufferpos + 1) % keybuffer.length;
+    }
     void render()
     {
         bool renderprofile;
         try
         {
+            version(Windows)
+            {
+                auto imm32 = LoadLibraryA("imm32.dll".toStringz);
+                ImmDisableIME ImmDisableIME = cast(ImmDisableIME)GetProcAddress(imm32, "ImmDisableIME".toStringz);
+                ImmDisableIME(0);
+            }
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
@@ -417,6 +441,17 @@ class PetitComputer
             glViewport(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
+            version(Windows)
+            {
+                SDL_SysWMinfo wm;
+                if(SDL_GetWindowWMInfo(window, &wm))
+                {
+                    ImmAssociateContext ImmAssociateContext = cast(ImmAssociateContext)GetProcAddress(imm32, "ImmAssociateContext".toStringz);
+                    auto aa = wm.info.win.window;
+                    auto c = ImmAssociateContext(wm.info.win.window, null);
+                }
+            }
+
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -435,8 +470,27 @@ class PetitComputer
                             return;
                         case SDL_KEYDOWN:
                             auto key = event.key.keysym.sym;
-                            keybuffer[keybufferpos] = cast(wchar)key;
-                            keybufferpos = (keybufferpos + 1) % keybuffer.length;
+                            if(key == SDLK_BACKSPACE)
+                            {
+                                keybuffermutex.lock();
+                                sendKey('\u0008');
+                                keybuffermutex.unlock();
+                            }
+                            if(key == SDLK_RETURN)
+                            {
+                                keybuffermutex.lock();
+                                sendKey('\u000D');
+                                keybuffermutex.unlock();
+                            }
+                            break;
+                        case SDL_TEXTINPUT:
+                            auto text = event.text.text[0..event.text.text.indexOf('\0')].to!wstring;
+                            keybuffermutex.lock();
+                            foreach(wchar key; text)
+                            {
+                                sendKey(key);
+                            }
+                            keybuffermutex.unlock();
                             break;
                         default:
                             break;
@@ -511,6 +565,7 @@ GOTO @LOOP`*/
         bool running = true;
         vm.init(this);
         consolem = new Mutex();
+        keybuffermutex = new Mutex();
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         auto startTicks = SDL_GetTicks();
@@ -554,10 +609,50 @@ GOTO @LOOP`*/
         SDL_DestroyWindow(window);
         SDL_Quit();
     }
+    void clearKeyBuffer()
+    {
+        keybuffermutex.lock();
+        scope(exit) keybuffermutex.unlock();
+        keybufferpos = 0;
+        keybufferlen = 0;
+    }
     wstring input(wstring prompt, bool useClipBoard)
     {
         printConsole(prompt);
-        return "";
+        clearKeyBuffer();
+        wstring buffer;
+        while(true)
+        {
+            auto oldpos = keybufferpos;
+            while(oldpos == keybufferpos)
+            {
+                SDL_Delay(4);//適当 ストレスを感じないくらい
+            }
+            auto kbp = keybufferpos;
+            auto len = kbp - oldpos;
+            if(len < 0)
+            {
+                //arienai
+                kbp = oldpos;
+            }
+            wchar k;
+            foreach(key; keybuffer[oldpos..kbp])
+            {
+                printConsole(key);
+                if(key == '\r')
+                {
+                    k = key;
+                    break;
+                }
+                buffer ~= key;
+            }
+            clearKeyBuffer();
+            if(k == '\r')
+            {
+                break;
+            }
+        }
+        return buffer;
     }
     int CSRX;
     int CSRY;

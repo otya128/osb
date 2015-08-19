@@ -89,7 +89,7 @@
   <cv2pdbOptions />
   <objfiles />
   <linkswitches />
-  <libfiles>DerelictSDL2.lib;DerelictUtil.lib;DerelictGL3.lib</libfiles>
+  <libfiles>DerelictSDL2.lib;DerelictUtil.lib;DerelictGL3.lib;kernel32.lib</libfiles>
   <libpaths>$(DMDInstallDir)windows\lib\</libpaths>
   <deffile />
   <resfile />

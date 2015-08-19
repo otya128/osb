@@ -68,6 +68,7 @@ class Lexical
         reserved["READ"] = TokenType.Read;
         reserved["RESTORE"] = TokenType.Restore;
         reserved["ON"] = TokenType.On;
+        reserved["INPUT"] = TokenType.Input;
         reserved.rehash();
         line = 1;
     }
@@ -789,12 +790,68 @@ class Parser
             case TokenType.On:
                 node = onStatement();
                 break;
+            case TokenType.Input:
+                return inputStatement();
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    //左辺値か
+    bool isLValue(Expression expr)
+    {
+        if(expr.type == NodeType.Variable)
+        {
+            return true;
+        }
+        if(expr.type == NodeType.BinaryOperator)
+        {
+            auto op = cast(BinaryOperator)expr;
+            if(!isLValue(op.item1)) return false;
+            return op.operator == TokenType.LBracket;
+        }
+        return false;
+    }
+    Input inputStatement()
+    {
+        lex.popFront();
+        Expression message = expression();
+        if(!message)
+        {
+            syntaxError();
+            return null;
+        }
+        auto token = lex.front();
+        if(token.type == TokenType.Semicolon || token.type == TokenType.Comma)
+        {
+            Input input = new Input(message, token.type == TokenType.Semicolon);
+            do
+            {
+                lex.popFront();
+                auto expr = expression();
+                if(!isLValue(expr))
+                {
+                    syntaxError();
+                }
+                input.addVariable(expr);
+                lex.popFront();
+                token = lex.front();
+            } while(token.type == TokenType.Comma);
+            return input;
+        }
+        else
+        {
+            if(!isLValue(message))
+            {
+                   syntaxError();
+                   return null;
+            }
+            Input input = new Input(null, true);
+            input.addVariable(message);
+            return input;
+        }
     }
     On onStatement()
     {

@@ -198,6 +198,23 @@ class Compiler
         }
         code ~= new PopG(getGlobalVarIndex(name));
     }
+    void getVarIndex(wstring name, Scope sc, out int index, out bool isLocal)
+    {
+        auto global = hasGlobalVarIndex(name);
+        if(sc.func)
+            isLocal = sc.func.hasLocalVarIndex(name) != 0;
+        if(sc.func && isLocal)
+        {
+            index = sc.func.getLocalVarIndex(name, this);
+            return;
+        }
+        if(global)
+        {
+            index = global;
+            return;
+        }
+        index = getGlobalVarIndex(name);
+    }
     void genCodeOP(TokenType op)
     {
         code ~= new Operate(op);
@@ -386,6 +403,47 @@ class Compiler
                 break;
         }
     }
+    void compilePopVar(Expression expr, Scope sc)
+    {
+        switch(expr.type)
+        {
+            case NodeType.Variable:
+                {
+                    auto var = cast(Variable)expr;
+                    int index;
+                    bool local;
+                    getVarIndex(var.name, sc, index, local);
+                    genCode(local ? new PopL(index) : new PopG(index));
+                }
+                break;
+            case NodeType.BinaryOperator:
+                { 
+                    auto binop = cast(BinaryOperator)expr;
+                    compileExpression(binop.item2, sc);
+                    if(binop.operator == TokenType.LBracket)
+                    {
+                        IndexExpressions ie = cast(IndexExpressions)binop.item2;
+                        auto var = cast(Variable)binop.item1;
+                        int index;
+                        bool local;
+                        getVarIndex(var.name, sc, index, local);
+                        if(ie)
+                        {
+                            genCode(new PopArray(index, ie.expressions.length, local));
+                        }
+                        else
+                        {
+                            genCode(new PopArray(index, 1, local));
+                        }
+                        break;
+                    }
+                }
+                default:
+                    stderr.writeln("ERROR");
+                    break;
+
+        }
+    }
     void compileIf(If node, Scope sc)
     {
         compileExpression(node.condition, sc);
@@ -538,6 +596,27 @@ class Compiler
     {
         compileExpression(on.condition, sc);
         genCode(new OnS(on.labels, on.isGosub, sc));
+    }
+    void compileInput(Input input, Scope sc)
+    {
+        if(input.question)
+        {
+            genCodeImm(Value("?\n"));
+        }
+        if(input.message)
+        {
+            compileExpression(input.message, sc);
+        }
+        genCode(new PrintCode((input.question ? 1 : 0) + (input.message ? 1 : 0)));
+        foreach_reverse(i; input.variables)
+        {
+            compileExpression(i, sc);
+        }
+        genCode(new InputCode(input.variables.length));
+        foreach_reverse(i; input.variables)
+        {
+            compilePopVar(i, sc);
+        }
     }
     void compileStatement(Statement i, Scope s)
     {
@@ -704,6 +783,9 @@ class Compiler
                 break;
             case NodeType.On:
                 compileOn(cast(On)i, s);
+                break;
+            case NodeType.Input:
+                compileInput(cast(Input)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

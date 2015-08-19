@@ -62,6 +62,7 @@ enum TokenType
     Read,
     Restore,
     On,
+    Input,
 }
 
 struct Token
