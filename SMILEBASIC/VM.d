@@ -20,6 +20,7 @@ struct VMVariable
 }
 class VM
 {
+    DataTable globalDataTable;
     Code[] code;
     int stacki;
     int pc;
@@ -29,7 +30,7 @@ class VM
     Function[wstring] functions;
     int bp;
     PetitComputer petitcomputer;
-    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions)
+    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/)
     {
         this.code = code;
         this.stack = new Value[16384];
@@ -40,6 +41,7 @@ class VM
             this.global[v.index] = Value(v.type);
         }
         this.functions = functions;
+        this.globalDataTable = gdt;
     }
     void run()
     {
@@ -1118,5 +1120,22 @@ class InputCode : Code
                 }
             }
         } while(error);
+    }
+}
+class ReadCode : Code
+{
+    int count;
+    this(int count)
+    {
+        this.count = count;
+    }
+    override void execute(VM vm)
+    {
+        for(int i = 0; i < count; i++)
+        {
+            Value data;
+            vm.globalDataTable.read(data, vm);
+            vm.push(data);
+        }
     }
 }

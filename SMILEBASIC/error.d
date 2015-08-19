@@ -43,6 +43,14 @@ class TypeMismatch : SmileBasicError
         super("Type mismatch");
     }
 }
+class OutOfDATA : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 13;
+        super("Out of DATA");
+    }
+}
 class DuplicateVariable : SmileBasicError
 {
     this()

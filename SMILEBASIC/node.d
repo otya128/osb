@@ -450,6 +450,27 @@ class Data : Statement
         data ~= v;
     }
 }
+class Read : Statement
+{
+    Expression[] variables;
+    this()
+    {
+        this.type = NodeType.Read;
+    }
+    void addVariable(Expression lvalue)
+    {
+        variables ~= lvalue;
+    }
+}
+class Restore : Statement
+{
+    Expression label;
+    this(Expression label)
+    {
+        this.label = label;
+        this.type = NodeType.Restore;
+    }
+}
 class On : Statement
 {
     Expression condition;

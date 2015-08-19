@@ -118,7 +118,7 @@ class Lexical
                 token = Token(TokenType.Integer, Value(num));
                 break;
             }
-            if(c.isAlpha())
+            if(c.isAlpha() || c == '_')
             {
                 wstring iden;
                 for(;i < code.length;i++)
@@ -787,6 +787,10 @@ class Parser
                 return incStatement();
             case TokenType.Data:
                 return dataStatement();
+            case TokenType.Read:
+                return readStatement();
+            case TokenType.Restore:
+                return restoreStatement();
             case TokenType.On:
                 node = onStatement();
                 break;
@@ -924,6 +928,34 @@ class Parser
             break;
         }
         return data;
+    }
+    Read readStatement()
+    {
+        Read read = new Read();
+        Token token;
+        do
+        {
+            lex.popFront();
+            auto expr = expression();
+            if(!expr || !isLValue(expr))
+            {
+                syntaxError();
+            }
+            read.addVariable(expr);
+            token = lex.front();
+        } while(token.type == TokenType.Comma);
+        return read;
+    }
+    Restore restoreStatement()
+    {
+        lex.popFront();
+        auto label = expression();
+        if(!label)
+        {
+            syntaxError();
+            return null;
+        }
+        return new Restore(label);
     }
     Inc incStatement()
     {

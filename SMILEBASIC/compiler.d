@@ -32,6 +32,7 @@ class DataTable
 {
     Value[] data;
     int[wstring] label;
+    int dataIndex;
     void addData(Value data)
     {
         this.data ~= data;
@@ -39,6 +40,13 @@ class DataTable
     void addLabel(wstring label)
     {
         this.label[label] = data.length;
+    }
+    void read(out Value value, VM vm)
+    {
+        if(dataIndex >= data.length)
+            throw new OutOfDATA();
+        value = data[dataIndex];
+        dataIndex++;
     }
 }
 class Function
@@ -618,6 +626,14 @@ class Compiler
             compilePopVar(i, sc);
         }
     }
+    void compileRead(Read read, Scope sc)
+    {
+        genCode(new ReadCode(read.variables.length));
+        foreach_reverse(i; read.variables)
+        {
+            compilePopVar(i, sc);
+        }
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -781,6 +797,9 @@ class Compiler
                         s.data.addData(j);
                 }
                 break;
+            case NodeType.Read:
+                compileRead(cast(Read)i, s);
+                break;
             case NodeType.On:
                 compileOn(cast(On)i, s);
                 break;
@@ -854,7 +873,7 @@ class Compiler
                 }
             }
         }
-        return new VM(code, globalIndex + 1, global, functions);
+        return new VM(code, globalIndex + 1, global, functions, s.data);
     }
 }
 
