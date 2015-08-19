@@ -19,6 +19,7 @@ class GraphicPage
         surface = s;
     }
     GLuint glTexture;
+    GLenum textureFormat;
     void createTexture(SDL_Renderer* renderer)
     {
         ubyte r,g,b,a;
@@ -53,8 +54,10 @@ class GraphicPage
         // Edit the texture object's image data using the information SDL_Surface gives us
         glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface.w, surface.h, 0,
                       texture_format, GL_UNSIGNED_BYTE, surface.pixels );
+        textureFormat = texture_format;
     }
 }
+
 version(Windows)
 {
     extern (Windows) static void* LoadLibraryA(in char*);
@@ -118,7 +121,9 @@ class PetitComputer
         return SDL_Color(r >> 5 << 5, g >> 5 << 5, b >> 5 << 5, a == 255 ? 255 : 0);
     }
     ConsoleCharacter[][] console;
-    GraphicPage[] grp;
+    bool visibleGRP = true;
+    int showGRP;
+    GraphicPage[] GRP;
     GraphicPage GRPF;
     GraphicPage[] GRPFColor;
     GraphicPage[][] GRPFColorFore;
@@ -328,8 +333,8 @@ class PetitComputer
                      fontFile);
         }
         GRPF = createGRPF(fontFile);//createGraphicPage(fontFile, 0);
-        s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
-        auto pixels = (cast(uint*)s8x8.pixels);
+        //s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
+        /*auto pixels = (cast(uint*)s8x8.pixels);
         for(int x = 0; x < 8; x++)
         {
             for(int y = 0; y < 8; y++)
@@ -337,7 +342,7 @@ class PetitComputer
                 *pixels = SDL_MapRGBA(s8x8.format, 255, 255, 255, 255);
                 pixels++;
             }
-        }
+        }*/
         //GRPFColor = new GraphicPage[consoleColor.length];
         //GRPFColorFore = new GraphicPage[][consoleColor.length];
         //for(int i = 0; i < GRPFColor.length; i++)
@@ -374,6 +379,13 @@ class PetitComputer
         {
             loadFontTable();
         }
+        GRP = new GraphicPage[6];
+        for(int i = 0; i < 4; i++)
+        {
+            GRP[i] = new GraphicPage(SDL_CreateRGBSurface(0, 512, 512, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xff));
+        }
+        GRP[4] = createGRPF(spriteFile);
+        GRP[5] = createGRPF(BGFile);
         writeln("OK");
         screenWidth = 400;
         screenHeight = 240;
@@ -421,7 +433,7 @@ class PetitComputer
     }
     void render()
     {
-        bool renderprofile;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -454,6 +466,13 @@ class PetitComputer
                 }
             }
             int loopcnt;
+            foreach(g; GRP)
+            {
+                g.createTexture(renderer);
+            }
+            //GRP[0] = GRPF;
+            gpset(0, 10, 10, 0xFF00FF00);
+            gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -468,7 +487,8 @@ class PetitComputer
                     }
                 }
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                renderConsoleGL();
+                //renderConsoleGL();
+                renderGraphicPage();
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
@@ -691,7 +711,97 @@ class PetitComputer
     bool showCursor;
     bool animationCursor;
     Mutex consolem;
-
+    //プチコン内部表現はRGB5_A1
+    uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
+    {
+        if(format == GL_BGRA)
+        {
+            return a << 24 | r << 16 | g << 8 | b;
+        }
+        if(format == GL_RGBA)
+        {
+            return a << 24 | b << 16 | g << 8 | r;
+        }
+        throw new Exception("unsuport enviroment");
+    }
+    uint toGLColor(GLenum format, uint petitcolor)
+    {
+        if(format == GL_BGRA)
+        {
+            return petitcolor;
+        }
+        if(format == GL_RGBA)
+        {
+            //return a << 24 | b << 16 | g << 8 | r;
+        }
+        throw new Exception("unsuport enviroment");
+    }
+    //プチコンと違って[A,]R,G,Bじゃない
+    void RGBRead(uint color, out ubyte r, out ubyte g, out ubyte b, out ubyte a)
+    {
+        //エンディアン関係ない
+        a = color >> 24;
+        r = color >> 16 & 0xFF;
+        g = color >> 8 & 0xFF;
+        b = color& 0xFF;
+    }
+    uint RGB(ubyte r, ubyte g, ubyte b)
+    {
+        return 0xFF000000 | r << 16 | g << 8 | b; 
+    }
+    uint RGB(ubyte a, ubyte r, ubyte g, ubyte b)
+    {
+        return a << 24 | r << 16 | g << 8 | b; 
+    }
+    void gpset(int page, int x, int y, uint color)
+    {
+        color = toGLColor(GRP[page].textureFormat, color);
+        glBindTexture(GL_TEXTURE_2D, GRP[page].glTexture);
+        glTexSubImage2D(GL_TEXTURE_2D , 0, x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &color);
+    }
+    void gline(int page, int x, int y, int x2, int y2, uint color)
+    {
+        import std.math;
+        int dx = abs(x2 - x);
+        int dy = abs(y2 - y);
+        int sx, sy;
+        if(x < x2) sx = 1; else sx = -1;
+        if(y < y2) sy = 1; else sy = -1;
+        int err = dx - dy;
+        while(true)
+        {
+            gpset(page, x, y, color);
+            if(x == x2 && y == y2)break;
+            int e2 = 2*err;
+            if(e2 > -dy)
+            {
+                err = err - dy;
+                x = x + sx;
+            }
+            if(e2 <  dx)
+            {
+                err = err + dx;
+                y = y + sy ;
+            }
+        }
+    }
+    void renderGraphicPage()
+    {
+        glColor3f(1.0, 1.0, 1.0);
+        glBindTexture(GL_TEXTURE_2D, GRP[showGRP].glTexture);
+        glEnable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+        glTexCoord2f(0 / 512f - 1 , 240 / 512f - 1);
+        glVertex3f(0 / 200f - 1, 1 - 240 / 120f, 0);
+        glTexCoord2f(0 / 512f - 1, 0 / 512f - 1);
+        glVertex3f(0 / 200f - 1, 1 - 0 / 120f, 0);
+        glTexCoord2f(400 / 512f - 1, 0 / 512f - 1);
+        glVertex3f(400 / 200f - 1, 1 - 0 / 120f, 0);
+        glTexCoord2f(400 / 512f - 1, 240 / 512f - 1);
+        glVertex3f(400 / 200f - 1, 1 - 240 / 120f, 0);
+        glEnd();
+        glFlush();
+    }
     void renderConsoleGL()
     {
         consolem.lock();
@@ -725,7 +835,6 @@ class PetitComputer
         //glAlphaFunc(GL_GEQUAL, 0.5);
         //glEnable(GL_ALPHA_TEST);
         glBegin(GL_QUADS);
-        glColor3f(1.0, 1.0, 1.0);
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
             {

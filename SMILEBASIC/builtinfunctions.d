@@ -118,6 +118,10 @@ class BuiltinFunction
     static void GCLS(PetitComputer p, DefaultValue!(int, false) display)
     {
     }
+    static void GPSET(PetitComputer p, int x, int y, DefaultValue!(int, false) color)
+    {
+        //p.gpset(p.useGRP, x, y, );
+    }
     static void BEEP(PetitComputer p, DefaultValue!(int, false) display)
     {
     }
