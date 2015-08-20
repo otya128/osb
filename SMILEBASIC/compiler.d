@@ -4,6 +4,7 @@ import otya.smilebasic.token;
 import otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.error;
+import otya.smilebasic.systemvariable;
 import std.stdio;
 class Scope
 {
@@ -145,6 +146,7 @@ class Compiler
             case '%':
                 return ValueType.Integer;
             default:
+                return ValueType.Double;//非DEFINT時
                 return ValueType.Integer;//DEFINT時
         }
     }
@@ -153,8 +155,13 @@ class Compiler
     {
         this.statements = statements;
         code = new Code[0];
+        global["DATE$"] = VMVariable(-1);
+        sysVariable["DATE$"] = new Date();
+        global["TIME$"] = VMVariable(-1);
+        sysVariable["TIME$"] = new Time();
     }
 
+    SystemVariable[wstring] sysVariable;
     Code[] code;
     VMVariable[wstring] global;
     int[wstring] globalLabel;
@@ -176,6 +183,19 @@ class Compiler
     {
         code ~= new PopG(ind);
     }
+    SystemVariable getSystemVariable(wstring name)
+    {
+        auto var = sysVariable.get(name, null);
+        return var;
+    }
+    void genCodePushSysVar(wstring name)
+    {
+        code ~= new PushSystemVariable(getSystemVariable(name));
+    }
+    void genCodePopSysVar(wstring name)
+    {
+        code ~= new PopSystemVariable(getSystemVariable(name));
+    }
     void genCodePushVar(wstring name, Scope sc)
     {
         auto global = hasGlobalVarIndex(name);
@@ -186,6 +206,11 @@ class Compiler
         }
         if(global)
         {
+            if(global < 0)
+            {
+                genCodePushSysVar(name);
+                return;
+            }
             code ~= new PushG(global);
             return;
         }
@@ -201,6 +226,11 @@ class Compiler
         }
         if(global)
         {
+            if(global < 0)
+            {
+                genCodePopSysVar(name);
+                return;
+            }
             code ~= new PopG(global);
             return;
         }
@@ -371,13 +401,17 @@ class Compiler
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
+                    writeln(func.name);
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
-                        auto k = bfun.argments.length - func.args.length;
-                        foreach(l;0..k)
+                        if(bfun.argments.length >= func.args.length)
                         {
-                            genCodeImm(Value(ValueType.Void));
+                            auto k = bfun.argments.length - func.args.length;
+                            foreach(l;0..k)
+                            {
+                                genCodeImm(Value(ValueType.Void));
+                            }
                         }
                     }
                     foreach_reverse(Expression i ; func.args)
@@ -418,10 +452,11 @@ class Compiler
             case NodeType.Variable:
                 {
                     auto var = cast(Variable)expr;
-                    int index;
-                    bool local;
-                    getVarIndex(var.name, sc, index, local);
-                    genCode(local ? new PopL(index) : new PopG(index));
+                    genCodePopVar(var.name, sc);
+                    //int index;
+                    //bool local;
+                    //getVarIndex(var.name, sc, index, local);
+                    //genCode(local ? new PopL(index) : new PopG(index));
                 }
                 break;
             case NodeType.BinaryOperator:

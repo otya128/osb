@@ -207,11 +207,13 @@
  <Folder name="SMILEBASIC">
   <File path="builtinfunctions.d" />
   <File path="compiler.d" />
+  <File path="draw.d" />
   <File path="error.d" />
   <File path="main.d" />
   <File path="node.d" />
   <File path="parser.d" />
   <File path="petitcomputer.d" />
+  <File path="systemvariable.d" />
   <File path="TEST.txt" />
   <File path="token.d" />
   <File path="type.d" />

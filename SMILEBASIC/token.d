@@ -63,6 +63,8 @@ enum TokenType
     Restore,
     On,
     Input,
+    True,
+    False,
 }
 
 struct Token

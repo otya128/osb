@@ -5,6 +5,7 @@ import otya.smilebasic.node;
 import otya.smilebasic.compiler;
 import std.ascii;
 import std.stdio;
+import std.conv;
 class Lexical
 {
     TokenType[] table;
@@ -60,6 +61,7 @@ class Lexical
         reserved["DIM"] = TokenType.Var;
         reserved["DEF"] = TokenType.Def;
         reserved["OUT"] = TokenType.Out;
+        reserved["out"] = TokenType.Out;//ekkitou
         reserved["WHILE"] = TokenType.While;
         reserved["WEND"] = TokenType.WEnd;
         reserved["INC"] = TokenType.Inc;
@@ -69,6 +71,8 @@ class Lexical
         reserved["RESTORE"] = TokenType.Restore;
         reserved["ON"] = TokenType.On;
         reserved["INPUT"] = TokenType.Input;
+        reserved["TRUE"] = TokenType.True;
+        reserved["FALSE"] = TokenType.False;
         reserved.rehash();
         line = 1;
     }
@@ -103,19 +107,34 @@ class Lexical
                 token = Token(TokenType.NewLine);
                 break;
             }
-            if(c.isDigit())
+            if(c.isDigit() || c == '.')
             {
-                int num;
+                bool dot;
+                int start = i;
+                double num;
                 for(;i < code.length;i++)
                 {
                     c = code[i];
-                    if(!c.isDigit())
+                    if(c == '.') 
+                    {
+                        if(dot) break;
+                        dot = true;
+                    }
+                    if(!c.isDigit() && c != '.')
                     {
                         break;
                     }
-                    num = num * 10 + (c - '0');
                 }
-                token = Token(TokenType.Integer, Value(num));
+                wstring numstr = code[start..i];
+                num = numstr.to!double;
+                if(num <= int.max && num >= int.min && !dot)
+                {
+                    token = Token(TokenType.Integer, Value(cast(int)num));
+                }
+                else
+                {
+                    token = Token(TokenType.Integer, Value(num));
+                }
                 break;
             }
             if(c.isAlpha() || c == '_')
@@ -138,6 +157,17 @@ class Lexical
                 else//変数が予約語であることはありえない
                 {
                     auto r = reserved.get(iden, TokenType.Unknown);
+                    //TRUE/FALSEは3.1でもDATAに使える定数
+                    if(r == TokenType.True)
+                    {
+                        token = Token(TokenType.Integer, Value(1));
+                        break;
+                    }
+                    if(r == TokenType.False)
+                    {
+                        token = Token(TokenType.Integer, Value(0));
+                        break;
+                    }
                     if(r != TokenType.Unknown)
                     {
                         token = Token(r);
@@ -628,6 +658,20 @@ class Parser
             }
         }
         lex.popFront();
+        auto token = lex.front;
+        if(token.type == TokenType.Iden)
+        {
+            //NEXT I[,J[,K...]]プチコン3号だと無視
+            lex.popFront();
+            token = lex.front;
+            while(token.type == TokenType.Comma)
+            {
+                lex.popFront();
+                token = lex.front;
+                if(token.type != TokenType.Iden) break;
+                lex.popFront();
+            }
+        }
         return statements;
     }
     Statements whileStatements()
@@ -655,6 +699,7 @@ class Parser
     {
         auto token = lex.front();
         Statement node = null;
+        writeln(token.type);
         switch(token.type)
         {
             case TokenType.Print:
@@ -694,6 +739,7 @@ class Parser
                             if(expr)
                                 func.addArg(expr);
                         }
+                        if(lex.front().type == TokenType.Out) break;
                         if(lex.front().type != TokenType.Comma) break;
                         lex.popFront();
                     }
@@ -753,8 +799,7 @@ class Parser
                 node = if_();
                 return node;
             case TokenType.For:
-                node = forStatement();
-                break;
+                return forStatement();
             case TokenType.Return:
                 lex.popFront();
                 if(isFuncReturnExpr)

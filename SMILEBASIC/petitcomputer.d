@@ -123,6 +123,8 @@ class PetitComputer
     ConsoleCharacter[][] console;
     bool visibleGRP = true;
     int showGRP;
+    int useGRP;
+    uint gcolor;
     GraphicPage[] GRP;
     GraphicPage GRPF;
     GraphicPage[] GRPFColor;
@@ -261,6 +263,19 @@ class PetitComputer
         }
         return new GraphicPage(surface);
     }
+    GraphicPage createEmptyPage()
+    {
+        auto surface = SDL_CreateRGBSurface(0, 512, 512, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xff);
+        auto pixels = (cast(uint*)surface.pixels);
+        for(int x = 0; x < surface.w; x++)
+        {
+            for(int y = 0; y < surface.h; y++)
+            {
+                *pixels++ = 0;
+            }
+        }
+        return new GraphicPage(surface);
+    }
     struct Point
     {
         int x, y;
@@ -382,7 +397,7 @@ class PetitComputer
         GRP = new GraphicPage[6];
         for(int i = 0; i < 4; i++)
         {
-            GRP[i] = new GraphicPage(SDL_CreateRGBSurface(0, 512, 512, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xff));
+            GRP[i] = createEmptyPage();
         }
         GRP[4] = createGRPF(spriteFile);
         GRP[5] = createGRPF(BGFile);
@@ -431,9 +446,43 @@ class PetitComputer
             keybufferlen = keybuffer.length;
         keybufferpos = (keybufferpos + 1) % keybuffer.length;
     }
+    Mutex grpmutex;
+    otya.smilebasic.draw.Draw draw;
+    void renderGraphic()
+    {
+        //grpmutex.lock();
+        //scope(exit)
+        //    grpmutex.unlock();
+        drawflag = true;
+        //betuni kouzoutai demo sonnnani sokudo kawaranasasou
+        auto len = drawMessageLength;
+        drawMessageLength = 0;
+        for(int i = 0; i < len; i++)
+        {
+            DrawMessage dm = drawMessageQueue[i];
+            switch(dm.type)
+            {
+                case DrawType.PSET:
+                    draw.gpset(dm.page, dm.x, dm.y ,dm.color);
+                    break;
+                case DrawType.LINE:
+                    draw.gline(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    break;
+                case DrawType.FILL:
+                    draw.gfill(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    break;
+                case DrawType.BOX:
+                    draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    break;
+                default:
+            }
+        }
+        drawflag = false;
+
+    }
     void render()
     {
-        bool renderprofile = true;
+        bool renderprofile;
         try
         {
             version(Windows)
@@ -471,8 +520,12 @@ class PetitComputer
                 g.createTexture(renderer);
             }
             //GRP[0] = GRPF;
-            gpset(0, 10, 10, 0xFF00FF00);
-            gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
+            //glEnable(GL_BLEND);
+            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            glAlphaFunc(GL_GEQUAL, 0.5);
+            glEnable(GL_ALPHA_TEST);
+            draw = new otya.smilebasic.draw.Draw(this);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -486,9 +539,10 @@ class PetitComputer
                         loopcnt = 0;
                     }
                 }
+                renderGraphic();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                //renderConsoleGL();
                 renderGraphicPage();
+                renderConsoleGL();
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
@@ -528,9 +582,18 @@ class PetitComputer
                             break;
                     }
                 }
-                long delay = (1000/60) - cast(long)(SDL_GetTicks() - profile);
-                if(delay > 0)
-                    SDL_Delay(cast(uint)delay);
+                while(true)
+                {
+                    long delay = (1000/60) - cast(long)(SDL_GetTicks() - profile);
+                    if(delay > 0)
+                            SDL_Delay(cast(uint)delay);
+                    break;
+                    if(delay < 0) break;
+                    renderGraphic();
+                    SDL_Delay(1);
+                    //if(delay > 0)
+                //    SDL_Delay(cast(uint)delay);
+                }
             }
         }
         catch(Throwable t)
@@ -553,11 +616,13 @@ class PetitComputer
 
         consolem = new Mutex();
         keybuffermutex = new Mutex();
+        grpmutex = new Mutex();
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         auto startTicks = SDL_GetTicks();
         //とりあえず
-        auto parser = new Parser(readText(input("LOAD PROGRAM:", true).to!string).to!wstring
+        auto parser = new Parser(readText("./SYS/EX5BIORHYTHM.TXT").to!wstring
+                                 //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
                                  //readText("TEST.TXT").to!wstring
@@ -603,6 +668,10 @@ class PetitComputer
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
+        gpset(0, 10, 10, 0xFF00FF00);
+        gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
+        gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
+        gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
         while (true)
         {
             uint elapse;
@@ -712,7 +781,7 @@ class PetitComputer
     bool animationCursor;
     Mutex consolem;
     //プチコン内部表現はRGB5_A1
-    uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
+    static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {
         if(format == GL_BGRA)
         {
@@ -724,7 +793,7 @@ class PetitComputer
         }
         throw new Exception("unsuport enviroment");
     }
-    uint toGLColor(GLenum format, uint petitcolor)
+    static uint toGLColor(GLenum format, uint petitcolor)
     {
         if(format == GL_BGRA)
         {
@@ -737,7 +806,7 @@ class PetitComputer
         throw new Exception("unsuport enviroment");
     }
     //プチコンと違って[A,]R,G,Bじゃない
-    void RGBRead(uint color, out ubyte r, out ubyte g, out ubyte b, out ubyte a)
+    static void RGBRead(uint color, out ubyte r, out ubyte g, out ubyte b, out ubyte a)
     {
         //エンディアン関係ない
         a = color >> 24;
@@ -745,62 +814,107 @@ class PetitComputer
         g = color >> 8 & 0xFF;
         b = color& 0xFF;
     }
-    uint RGB(ubyte r, ubyte g, ubyte b)
+    static uint RGB(ubyte r, ubyte g, ubyte b)
     {
         return 0xFF000000 | r << 16 | g << 8 | b; 
     }
-    uint RGB(ubyte a, ubyte r, ubyte g, ubyte b)
+    static uint RGB(ubyte a, ubyte r, ubyte g, ubyte b)
     {
         return a << 24 | r << 16 | g << 8 | b; 
     }
+    enum DrawType
+    {
+        CLEAR,
+        PSET,
+        LINE,
+        FILL,
+        BOX,
+        CIRCLE,
+        TRI,
+    }
+    struct DrawMessage
+    {
+        DrawType type;
+        byte page;
+        short x;
+        short y;
+        short x2;
+        short y2;
+        uint color;
+        //
+    }
+    static const int dmqqueuelen = 8192;
+    DrawMessage[] drawMessageQueue = new DrawMessage[dmqqueuelen];
+    int drawMessageLength;
+    bool drawflag;
+    void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
+    {
+        //grpmutex.lock();
+        //scope(exit)
+        //    grpmutex.unlock();
+        if(drawMessageLength >= dmqqueuelen)
+        {
+            while(drawMessageLength)
+            {
+                SDL_Delay(1);
+            }
+        }
+        while(drawflag){}
+        drawMessageQueue[drawMessageLength].type = type;
+        drawMessageQueue[drawMessageLength].page = page;
+        drawMessageQueue[drawMessageLength].x = x;
+        drawMessageQueue[drawMessageLength].y = y;
+        drawMessageQueue[drawMessageLength].color = color;
+        drawMessageLength++;
+    }
+    void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
+    {
+        grpmutex.lock();
+        scope(exit)
+            grpmutex.unlock();
+        drawMessageQueue[drawMessageLength].type = type;
+        drawMessageQueue[drawMessageLength].page = page;
+        drawMessageQueue[drawMessageLength].x = x;
+        drawMessageQueue[drawMessageLength].y = y;
+        drawMessageQueue[drawMessageLength].x2 = x2;
+        drawMessageQueue[drawMessageLength].y2 = y2;
+        drawMessageQueue[drawMessageLength].color = color;
+        drawMessageLength++;
+    }
+    //TODO:範囲チェック
     void gpset(int page, int x, int y, uint color)
     {
-        color = toGLColor(GRP[page].textureFormat, color);
-        glBindTexture(GL_TEXTURE_2D, GRP[page].glTexture);
-        glTexSubImage2D(GL_TEXTURE_2D , 0, x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &color);
+        sendDrawMessage(DrawType.PSET, cast(byte)page, cast(short)x, cast(short)y, color);
     }
     void gline(int page, int x, int y, int x2, int y2, uint color)
     {
-        import std.math;
-        int dx = abs(x2 - x);
-        int dy = abs(y2 - y);
-        int sx, sy;
-        if(x < x2) sx = 1; else sx = -1;
-        if(y < y2) sy = 1; else sy = -1;
-        int err = dx - dy;
-        while(true)
-        {
-            gpset(page, x, y, color);
-            if(x == x2 && y == y2)break;
-            int e2 = 2*err;
-            if(e2 > -dy)
-            {
-                err = err - dy;
-                x = x + sx;
-            }
-            if(e2 <  dx)
-            {
-                err = err + dx;
-                y = y + sy ;
-            }
-        }
+        sendDrawMessage(DrawType.LINE, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+    }
+    void gbox(int page, int x, int y, int x2, int y2, uint color)
+    {
+        sendDrawMessage(DrawType.BOX, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+    }
+    void gfill(int page, int x, int y, int x2, int y2, uint color)
+    {
+        sendDrawMessage(DrawType.FILL, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
     }
     void renderGraphicPage()
     {
+        float z = 0.01f;
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showGRP].glTexture);
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
         glTexCoord2f(0 / 512f - 1 , 240 / 512f - 1);
-        glVertex3f(0 / 200f - 1, 1 - 240 / 120f, 0);
+        glVertex3f(0 / 200f - 1, 1 - 240 / 120f, z);
         glTexCoord2f(0 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(0 / 200f - 1, 1 - 0 / 120f, 0);
+        glVertex3f(0 / 200f - 1, 1 - 0 / 120f, z);
         glTexCoord2f(400 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(400 / 200f - 1, 1 - 0 / 120f, 0);
+        glVertex3f(400 / 200f - 1, 1 - 0 / 120f, z);
         glTexCoord2f(400 / 512f - 1, 240 / 512f - 1);
-        glVertex3f(400 / 200f - 1, 1 - 240 / 120f, 0);
+        glVertex3f(400 / 200f - 1, 1 - 240 / 120f, z);
         glEnd();
-        glFlush();
+        //glFlush();
     }
     void renderConsoleGL()
     {
@@ -829,8 +943,6 @@ class PetitComputer
         }
         glEnd();
         glEnable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         //glAlphaFunc(GL_GEQUAL, 0.5);
         //glEnable(GL_ALPHA_TEST);
@@ -851,7 +963,7 @@ class PetitComputer
                 glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
             }
         glEnd();
-        glFlush();
+       // glFlush();
     }
     void printConsole(T...)(T args)
     {

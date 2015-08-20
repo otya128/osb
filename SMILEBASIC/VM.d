@@ -4,6 +4,7 @@ import otya.smilebasic.token;
 import otya.smilebasic.error;
 import otya.smilebasic.compiler;
 import otya.smilebasic.petitcomputer;
+import otya.smilebasic.systemvariable;
 import std.uni;
 import std.utf;
 import std.conv;
@@ -16,6 +17,10 @@ struct VMVariable
     {
         this.index = index;
         this.type = type;
+    }
+    this(int index)
+    {
+        this.index = index;
     }
 }
 class VM
@@ -38,7 +43,8 @@ class VM
         this.globalTable = globalTable;
         foreach(wstring k, VMVariable v ; globalTable)
         {
-            this.global[v.index] = Value(v.type);
+            if(v.index >= 0)
+                this.global[v.index] = Value(v.type);
         }
         this.functions = functions;
         this.globalDataTable = gdt;
@@ -889,10 +895,16 @@ class CallBuiltinFunction : Code
         else
         {
             arg = vm.stack[vm.stacki - argcount..vm.stacki];
-            result = vm.stack[vm.stacki - argcount..vm.stacki - argcount + outcount];//雑;
+            result = vm.stack[vm.stacki/* - argcount */+ 1..vm.stacki + 1/* - argcount */+ outcount];//雑;
         }
         func.func(vm.petitcomputer, arg, result);
-        vm.stacki -= func.argments.length - outcount;
+        vm.stacki -= func.argments.length;// - outcount;
+        ////vm.stacki += outcount;
+        //vm.stacki = old;
+        for(int i = 0; i < result.length; i++)
+        {
+            vm.push(result[i]);
+        }
     }
 }
 class IncCodeG : Code
@@ -1137,5 +1149,31 @@ class ReadCode : Code
             vm.globalDataTable.read(data, vm);
             vm.push(data);
         }
+    }
+}
+class PushSystemVariable : Code
+{
+    SystemVariable var;
+    this(SystemVariable var)
+    {
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(var.value);
+    }
+}
+class PopSystemVariable : Code
+{
+    SystemVariable var;
+    this(SystemVariable var)
+    {
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        Value v;
+        vm.pop(v);
+        var.value = v;
     }
 }
