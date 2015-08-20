@@ -82,6 +82,10 @@ struct Value
     {
         return this.type == ValueType.Integer || this.type == ValueType.Double;
     }
+    bool isString()
+    {
+        return this.type == ValueType.String;
+    }
     int castInteger()
     {
         return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? cast(int)this.doubleValue : 0);

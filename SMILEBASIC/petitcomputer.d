@@ -512,7 +512,7 @@ class PetitComputer
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile;// = true;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -555,8 +555,8 @@ class PetitComputer
             glAlphaFunc(GL_GEQUAL, 0.5);
             glEnable(GL_ALPHA_TEST);
             draw = new otya.smilebasic.draw.Draw(this);
-            sprite.spset(0, 0);
-            sprite.spofs(0, 9, 8);
+           // sprite.spset(0, 0);
+           // sprite.spofs(0, 9, 8);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -575,6 +575,16 @@ class PetitComputer
                 renderGraphicPage();
                 renderConsoleGL();
                 sprite.render();
+/*                if(this.sprite.sprites[0].define)
+                    if(this.sprite.sprites[0].u == 0)
+                    {
+                        writeln("WHATW");
+                    }
+                    else
+                    {
+                        writeln(this.sprite.sprites[0].u);
+                    }*/
+
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
@@ -658,9 +668,9 @@ class PetitComputer
         consolem = new Mutex();
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
-        sprite = new Sprite(this);
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
+        sprite = new Sprite(this);
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
@@ -750,6 +760,15 @@ class PetitComputer
                     }
                 }
                 elapse = SDL_GetTicks() - startTicks;
+                /*if(this.sprite.sprites[0].define)
+                    if(this.sprite.sprites[0].u == 0)
+                {
+                    writeln("WHATW");
+                }
+                else
+                {
+                    writeln(this.sprite.sprites[0].u);
+                }*/
             } while(elapse <= 1000 / 60);
             vsyncCount++;
             if(vsyncFrame <= vsyncCount) vsyncFrame = 0;

@@ -10,6 +10,7 @@ import std.range;
 import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
+import otya.smilebasic.sprite;
 //プチコンの引数省略は特殊なので
 //LOCATE ,,0のように省略できる
 struct DefaultValue(T, bool skippable = true)
@@ -241,6 +242,18 @@ class BuiltinFunction
     static void SPANIM(PetitComputer p, Value[] va_args)
     {
         writeln("NOTIMPL:SPANIM");
+        auto args = retro(va_args);
+        int no = args[0].castInteger;
+        double[] animdata = new double[args.length - 2];
+        int i;
+        foreach(a; args[2..$])
+        {
+            animdata[i++] = a.castDouble;
+        }
+        if(args[1].isString)
+            p.sprite.spanim(no, args[1].castString, animdata);
+        if(args[1].isNumber)
+            p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
     }
     static void BGMSTOP(PetitComputer p)
     {
