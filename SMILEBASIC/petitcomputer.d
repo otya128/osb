@@ -10,6 +10,23 @@ import std.string;
 import std.c.stdio;
 import core.sync.mutex;
 import otya.smilebasic.parser;
+enum Button
+{
+    UP = 1,
+    DOWN = 2,
+    LEFT = 4,
+    RIGHT = 8,
+    A = 16,
+    B = 32,
+    X = 64,
+    Y = 128,
+    L = 256,
+    R = 512,
+    UNUSED = 1024,
+    ZR = 2048,
+    ZL = 4096,
+    START = 8192,
+}
 class GraphicPage
 {
     static GLenum textureScaleMode = GL_NEAREST;
@@ -120,6 +137,7 @@ class PetitComputer
     {
         return SDL_Color(r >> 5 << 5, g >> 5 << 5, b >> 5 << 5, a == 255 ? 255 : 0);
     }
+    Button button;
     ConsoleCharacter[][] console;
     bool visibleGRP = true;
     int showGRP;
@@ -480,9 +498,16 @@ class PetitComputer
         drawflag = false;
 
     }
+    Button[] buttonTable;
     void render()
     {
-        bool renderprofile;
+        buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
+        buttonTable[SDL_SCANCODE_UP] = Button.UP;
+        buttonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
+        buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
+        buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
+        buttonTable[SDL_SCANCODE_SPACE] = Button.A;
+        bool renderprofile;// = true;
         try
         {
             version(Windows)
@@ -554,19 +579,28 @@ class PetitComputer
                             SDL_DestroyWindow(window);
                             SDL_Quit();
                             return;
-                        case SDL_KEYDOWN:
-                            auto key = event.key.keysym.sym;
-                            if(key == SDLK_BACKSPACE)
+                        case SDL_KEYUP:
                             {
-                                keybuffermutex.lock();
-                                sendKey('\u0008');
-                                keybuffermutex.unlock();
+                                auto key = event.key.keysym.sym;
+                                button &= ~buttonTable[event.key.keysym.scancode];
                             }
-                            if(key == SDLK_RETURN)
+                            break;
+                        case SDL_KEYDOWN:
                             {
-                                keybuffermutex.lock();
-                                sendKey('\u000D');
-                                keybuffermutex.unlock();
+                                auto key = event.key.keysym.sym;
+                                button |= buttonTable[event.key.keysym.scancode];
+                                if(key == SDLK_BACKSPACE)
+                                {
+                                    keybuffermutex.lock();
+                                    sendKey('\u0008');
+                                    keybuffermutex.unlock();
+                                }
+                                if(key == SDLK_RETURN)
+                                {
+                                    keybuffermutex.lock();
+                                    sendKey('\u000D');
+                                    keybuffermutex.unlock();
+                                }
                             }
                             break;
                         case SDL_TEXTINPUT:
@@ -584,7 +618,7 @@ class PetitComputer
                 }
                 while(true)
                 {
-                    long delay = (1000/60) - cast(long)(SDL_GetTicks() - profile);
+                    long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                     if(delay > 0)
                             SDL_Delay(cast(uint)delay);
                     break;
@@ -621,7 +655,8 @@ class PetitComputer
         thread.start();
         auto startTicks = SDL_GetTicks();
         //とりあえず
-        auto parser = new Parser(readText("./SYS/EX5BIORHYTHM.TXT").to!wstring
+        auto parser = new Parser(
+                                 readText("./SYS/EX7ALIEN.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
@@ -668,10 +703,10 @@ class PetitComputer
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
-        gpset(0, 10, 10, 0xFF00FF00);
-        gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
-        gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
-        gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
+        //gpset(0, 10, 10, 0xFF00FF00);
+        //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
+        //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
+        //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
         while (true)
         {
             uint elapse;
@@ -918,8 +953,8 @@ class PetitComputer
     }
     void renderConsoleGL()
     {
-        consolem.lock();
-        scope(exit) consolem.unlock();
+        //consolem.lock();
+        //scope(exit) consolem.unlock();
         glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);

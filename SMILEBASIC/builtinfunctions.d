@@ -108,7 +108,7 @@ class BuiltinFunction
     }
     static int BUTTON(PetitComputer p, DefaultValue!(int, false) mode)
     {
-        return 0;
+        return p.button;
     }
     static void VISIBLE(PetitComputer p, DefaultValue!(int) console, DefaultValue!(int) graphic, DefaultValue!(int) BG, DefaultValue!(int) sprite)
     {
@@ -191,6 +191,10 @@ class BuiltinFunction
     {
         double val = str.to!double;
         return val;
+    }
+    static double FLOOR(double val)
+    {
+        return val.floor;
     }
     static wstring MID(wstring str, int i, int len)
     {

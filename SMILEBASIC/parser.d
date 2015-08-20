@@ -614,12 +614,20 @@ class Parser
     Statements ifStatements()
     {
         auto statements = new Statements();
+        bool flag = true;
         while(!lex.empty())
         {
             auto type = lex.front().type;
+            flag = false;
             if(type == TokenType.NewLine) break;
             if(type == TokenType.Else) break;
             if(type == TokenType.Endif) break;
+            if(type == TokenType.Label)
+            {
+                statements.addStatement(new Goto(lex.front.value.stringValue));
+                lex.popFront;
+                continue;
+            }
             auto statement = statement();
             if(statement != Statement.NOP)
             {
@@ -1110,13 +1118,12 @@ class Parser
             {
                 var.addDefineArray(cast(DefineArray)v);
             }
+            token = lex.front();
             //VARの評価順は順番通り
             //VAR iden[=expr],
             if(token.type == TokenType.Comma)
             {
                 lex.popFront();
-                writeln("NOTIMPL");
-                syntaxError();
             }
             else
             {
