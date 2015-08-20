@@ -964,12 +964,27 @@ class Parser
         auto token = lex.front();
         while(true)
         {
+            bool minusflag;
+            //TODO:constexpression()関数作る
+            if(token.type == TokenType.Minus)
+            {
+                lex.popFront();
+                token = lex.front();
+                minusflag = true;
+            }
             if(token.type != TokenType.String && token.type != TokenType.Integer)
             {
                 syntaxError();
                 return null;
             }
-            data.addData(token.value);
+            if(minusflag)
+            {
+                data.addData(Value(-token.value.castDouble));
+            }
+            else
+            {
+                data.addData(token.value);
+            }
             lex.popFront();
             token = lex.front();
             if(token.type == TokenType.Comma)

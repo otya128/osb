@@ -1,4 +1,5 @@
-
+DIM ARRY[10]
+?ARRY[0],FORMAT$("%D",100)
 GOSUB@A
 GOTO@B
 'A=SIN(B) 

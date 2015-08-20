@@ -6,6 +6,7 @@ import std.typetuple;
 import std.traits;
 import std.stdio;
 import std.ascii;
+import std.range;
 import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
@@ -49,12 +50,15 @@ class BuiltinFunction
     ValueType result;
     void function(PetitComputer, Value[], Value[]) func;
     int startskip;
-    this(BuiltinFunctionArgument[] argments, ValueType result, void function(PetitComputer, Value[], Value[]) func, int startskip)
+    bool variadic;
+    this(BuiltinFunctionArgument[] argments, ValueType result, void function(PetitComputer, Value[], Value[]) func, int startskip,
+         bool variadic)
     {
         this.argments = argments;
         this.result = result;
         this.func = func;
         this.startskip = startskip;
+        this.variadic = variadic;
     }
     bool hasSkipArgument()
     {
@@ -67,6 +71,7 @@ class BuiltinFunction
         return a < 0 ? -a : a;
     }*/
     static double function(double) ABS = &abs!double;
+    static double function(double) SGN = &sgn!double;
     static double SIN(double arg1)
     {
         return sin(arg1);
@@ -148,8 +153,20 @@ class BuiltinFunction
     {
         p.gcolor = color;
     }
-    static void BEEP(PetitComputer p, DefaultValue!(int, false) display)
+    static void GPRIO(PetitComputer p, int z)
     {
+    }
+    static void BGMPLAY(PetitComputer p, int music)
+    {
+    }
+    static void BEEP(PetitComputer p, DefaultValue!(int, false) beep, DefaultValue!(int, false) pitch, DefaultValue!(int, false) volume, DefaultValue!(int, false) pan)
+    {
+    }
+    static void STICK(PetitComputer p, DefaultValue!(int, false) mp, out int x, out int y)
+    {
+        //JOYSTICK?
+        x = 0;
+        y = 0;
     }
     static int RGB(int R, int G, int B, DefaultValue!(int, false) _)
     {
@@ -189,6 +206,10 @@ class BuiltinFunction
     }
     static double VAL(wstring str)
     {
+        if(str[0..2] == "&H")
+        {
+            return str[2..$].to!int(16);
+        }
         double val = str.to!double;
         return val;
     }
@@ -200,6 +221,112 @@ class BuiltinFunction
     {
         //挙動未定
         return str[i..i + len];
+    }
+    static void SPSET(PetitComputer p, int id, int defno)
+    {
+        p.sprite.spset(id, defno);
+    }
+    static void SPHIDE(PetitComputer p, int id)
+    {
+        p.sprite.sphide(id);
+    }
+    static void SPSHOW(PetitComputer p, int id)
+    {
+        p.sprite.spshow(id);
+    }
+    static void SPOFS(PetitComputer p, int id, int x, int y, DefaultValue!(int, false) z)
+    {
+        p.sprite.spofs(id, x, y);
+    }
+    static void SPANIM(PetitComputer p, Value[] va_args)
+    {
+        writeln("NOTIMPL:SPANIM");
+    }
+    static void BGMSTOP(PetitComputer p)
+    {
+        writeln("NOTIMPL:BGMSTOP");
+    }
+    static int BGMCHK(PetitComputer p)
+    {
+        writeln("NOTIMPL:BGMCHK");
+        return false;
+    }
+    static int CHKCHR(PetitComputer p, int x, int y)
+    {
+        return cast(int)(p.console[y][x].character);
+    }
+    static wstring FORMAT(PetitComputer p, Value[] va_args)
+    {
+        alias retro!(Value[]) VaArgs;
+        auto args = retro(va_args);
+        auto format = args[0].castString;
+        import std.array : appender;
+        import std.format;
+        import std.string;
+        auto w = appender!wstring();
+        int j = 1;
+        for(int i = 0; i < format.length; i++)
+        {
+            auto f = format[i];
+            if(f == '%')
+            {
+                int d = indexOf(format, 'D', CaseSensitive.yes);
+                if(d != -1)
+                {
+                    auto spec = singleSpec(format[i .. d + 1]);
+                    spec.spec = 'd';
+                    formatValue(w, args[j].castInteger, spec);
+                    j++;
+                    i = d;
+                    continue;
+                }
+                d = indexOf(format, 'X', CaseSensitive.yes);
+                if(d != -1)
+                {
+                    auto spec = singleSpec(format[i .. d + 1]);
+                    spec.spec = 'x';
+                    formatValue(w, args[j].castDouble, spec);
+                    j++;
+                    i = d;
+                    continue;
+                }
+                d = indexOf(format, 'S', CaseSensitive.yes);
+                if(d != -1)
+                {
+                    auto spec = singleSpec(format[i .. d + 1]);
+                    spec.spec = 's';
+                    formatValue(w, args[j].castString, spec);
+                    j++;
+                    i = d;
+                    continue;
+                }
+                d = indexOf(format, 'F', CaseSensitive.yes);
+                if(d != -1)
+                {
+                    auto spec = singleSpec(format[i .. d + 1]);
+                    spec.spec = 'f';
+                    formatValue(w, args[j].castDouble, spec);
+                    j++;
+                    i = d;
+                    continue;
+                }
+            }
+            w ~= f;
+        }
+        //プチコン互換FOMA
+        return cast(immutable)w.data();
+    }
+    static wstring CHR(int code)
+    {
+        return (cast(wchar)code).to!wstring;
+    }
+    static double POW(double a1, double a2)
+    {
+        return a1 ^^ a2;
+    }
+    static double SQR(double a1)
+    {
+        return sqrt(a1);
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
@@ -221,6 +348,7 @@ class BuiltinFunction
                                                                   GetFunctionReturnType!(BuiltinFunction, name),
                                                                   mixin(AddFunc!(BuiltinFunction, name)),
                                                                   GetStartSkip!(BuiltinFunction, name),
+                                                                  IsVariadic!(BuiltinFunction, name),
                                                                   );
                 writeln(AddFunc!(BuiltinFunction, name));
             }
@@ -367,6 +495,10 @@ template GetFunctionParamType(T, string N)
             {
                 const string arg = "ValueType.String, true";
             }
+            else static if(is(P[0] == Value[]))
+            {
+                const string arg = "";
+            }
             else static if(is(P[0] == PetitComputer))
             {
                 static if(P.length != 0)
@@ -450,6 +582,10 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
         enum outadd = 0;
         const string arg = "fromStringToSkip(arg[" ~ I.to!string ~ "])";
     }
+    else static if(is(P[0] == Value[]))
+    {
+        const string arg = "arg";
+    }
     else
     {
         enum add = 1;
@@ -470,28 +606,35 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
 {
     enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
     alias param = ParameterTypeTuple!(__traits(getMember, T, N));
-    static if(tuple & ParameterStorageClass.out_)
+    static if(!param.length)
     {
-        enum add = 1;
-        enum ret1 = "ret[" ~ J.to!string ~ "].type = ";
-        static if(is(param[I] == int))
+        enum OutArgsInit = "";
+    }
+    else
+    {
+        static if(tuple & ParameterStorageClass.out_)
         {
-            enum ret2 = "ValueType.Integer;";
+            enum add = 1;
+            enum ret1 = "ret[" ~ J.to!string ~ "].type = ";
+            static if(is(param[I] == int))
+            {
+                enum ret2 = "ValueType.Integer;";
+            }
+            enum result = ret1 ~ ret2;
         }
-        enum result = ret1 ~ ret2;
-    }
-    else
-    {
-        enum add = 0;
-        enum result = "";
-    }
-    static if(param.length > I + 1)
-    {
-        enum OutArgsInit = result ~ OutArgsInit!(T, N, I + 1, J + add);
-    }
-    else
-    {
-        enum OutArgsInit = result;
+        else
+        {
+            enum add = 0;
+            enum result = "";
+        }
+        static if(param.length > I + 1)
+        {
+            enum OutArgsInit = result ~ OutArgsInit!(T, N, I + 1, J + add);
+        }
+        else
+        {
+            enum OutArgsInit = result;
+        }
     }
 }
 template GetArgumentCount(T, string N, int I = 0)
@@ -522,3 +665,20 @@ template GetArgumentCount(T, string N, int I = 0)
         enum GetArgumentCount = add;
     }
 }
+template IsVariadic(T, string N, int I = 0)
+{
+    alias param = ParameterTypeTuple!(__traits(getMember, T, N));
+    static if(param.length == 0 || param.length <= I)
+    {
+        enum IsVariadic = false;
+    }
+    else static if(is(param[I] == Value[]))
+    {
+        enum IsVariadic = true;
+    }
+    else
+    {
+        enum IsVariadic = IsVariadic!(T, N, I + 1);
+    }
+}
+

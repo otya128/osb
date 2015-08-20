@@ -13,6 +13,7 @@ import otya.smilebasic.parser;
 import otya.smilebasic.sprite;
 enum Button
 {
+    NONE = 0,
     UP = 1,
     DOWN = 2,
     LEFT = 4,
@@ -129,7 +130,7 @@ class PetitComputer
     }
     struct ConsoleCharacter
     {
-        wchar charater;
+        wchar character;
         int foreColor;
         int backColor;
         byte attr;
@@ -554,7 +555,6 @@ class PetitComputer
             glAlphaFunc(GL_GEQUAL, 0.5);
             glEnable(GL_ALPHA_TEST);
             draw = new otya.smilebasic.draw.Draw(this);
-            sprite = new Sprite(this);
             sprite.spset(0, 0);
             sprite.spofs(0, 9, 8);
             while(true)
@@ -658,12 +658,13 @@ class PetitComputer
         consolem = new Mutex();
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
+        sprite = new Sprite(this);
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
-                                 readText("./SYS/EX7ALIEN.TXT").to!wstring
+                                 readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
@@ -730,6 +731,7 @@ class PetitComputer
                     try
                     {
                         printConsole(sbe.to!string);
+                        writeln(sbe.to!string);
                     }
                     catch
                     {
@@ -741,6 +743,7 @@ class PetitComputer
                     try
                     {
                         printConsole(t.to!string);
+                        writeln(t);
                     }
                     catch
                     {
@@ -993,7 +996,7 @@ class PetitComputer
             for(int x = 0; x < consoleWidth; x++)
             {
                 auto fore = consoleColorGL[console[y][x].foreColor];
-                auto rect = &fontTable[console[y][x].charater];
+                auto rect = &fontTable[console[y][x].character];
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
                 glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
@@ -1027,7 +1030,7 @@ class PetitComputer
             }
             if(c != '\r' && c != '\n')
             {
-                console[CSRY][CSRX].charater = c;
+                console[CSRY][CSRX].character = c;
                 console[CSRY][CSRX].foreColor = consoleForeColor;
                 console[CSRY][CSRX].backColor = consoleBackColor;
             }

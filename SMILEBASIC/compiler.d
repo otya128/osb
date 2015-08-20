@@ -33,6 +33,7 @@ class DataTable
 {
     Value[] data;
     int[wstring] label;
+    //dataIndexは関数ごとに別じゃないといけない
     int dataIndex;
     void addData(Value data)
     {
@@ -714,6 +715,7 @@ class Compiler
                     {
                         globalLabel[label.label] = code.length;
                     }
+                    s.data.addLabel(label.label);
                 }
                 break;
             case NodeType.Goto:
@@ -791,6 +793,7 @@ class Compiler
             case NodeType.CallFunctionStatement:
                 {
                     auto func = cast(CallFunctionStatement)i;
+                    writeln(func.name);
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
@@ -834,6 +837,9 @@ class Compiler
                 break;
             case NodeType.Read:
                 compileRead(cast(Read)i, s);
+                break;
+            case NodeType.Restore:
+                genCode(new RestoreCodeS((cast(Constant)(cast(Restore)i).label).value.stringValue));
                 break;
             case NodeType.On:
                 compileOn(cast(On)i, s);
@@ -906,6 +912,11 @@ class Compiler
                 {
                     code[i] = new OnGoto(addresses);
                 }
+            }
+            if(c.type == CodeType.RestoreCodeS)
+            {
+                auto restore = cast(RestoreCodeS)c;
+                code[i] = new RestoreCode(s.data.label[restore.label], s.data);
             }
         }
         return new VM(code, globalIndex + 1, global, functions, s.data);

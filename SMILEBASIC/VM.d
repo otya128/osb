@@ -129,6 +129,7 @@ enum CodeType
     GosubS,
     ReturnSubroutine,
     OnS,
+    RestoreCodeS,
 }
 abstract class Code
 {
@@ -898,7 +899,14 @@ class CallBuiltinFunction : Code
             result = vm.stack[vm.stacki/* - argcount */+ 1..vm.stacki + 1/* - argcount */+ outcount];//雑;
         }
         func.func(vm.petitcomputer, arg, result);
-        vm.stacki -= func.argments.length;// - outcount;
+        if(func.variadic)
+        {
+            vm.stacki -= argcount;
+        }
+        else
+        {
+            vm.stacki -= func.argments.length;// - outcount;
+        }
         ////vm.stacki += outcount;
         //vm.stacki = old;
         for(int i = 0; i < result.length; i++)
@@ -1149,6 +1157,33 @@ class ReadCode : Code
             vm.globalDataTable.read(data, vm);
             vm.push(data);
         }
+    }
+}
+class RestoreCodeS : Code
+{
+    wstring label;
+    this(wstring label)
+    {
+        this.label = label;
+        this.type = CodeType.RestoreCodeS;
+    }
+    override void execute(VM vm)
+    {
+        stderr.writeln("can't execute (compiler bug?)");
+    }
+}
+class RestoreCode : Code
+{
+    int label;
+    DataTable datatable;
+    this(int label, DataTable datatable)
+    {
+        this.label = label;
+        this.datatable = datatable;
+    }
+    override void execute(VM vm)
+    {
+        datatable.dataIndex = label;
     }
 }
 class PushSystemVariable : Code

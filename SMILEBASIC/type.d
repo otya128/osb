@@ -124,6 +124,10 @@ class Array(T)
         dim[2] = 0;
         dim[3] = 0;
         array = new T[len];
+        static if(is(T == double))
+        {
+            array[] = 0;
+        }
         dimCount = 1;
     }
     this(int[] dim)
@@ -135,6 +139,10 @@ class Array(T)
             this.dim[i] = dim[i];
         }
         array = new T[len];
+        static if(is(T == double))
+        {
+            array[] = 0;
+        }
         dimCount = dim.length;
     }
     T opIndexAssign(T v, int[] dim)

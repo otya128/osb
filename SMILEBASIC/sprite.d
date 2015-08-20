@@ -49,7 +49,7 @@ class Sprite
     PetitComputer petitcom;
     void initUVTable()
     {
-        UVTable[0] = SDL_Rect(0, 0, 16, 16);//Ichigo
+        UVTable[] = SDL_Rect(0, 0, 16, 16);//Ichigo
     }
     this(PetitComputer petitcom)
     {
@@ -89,11 +89,23 @@ class Sprite
     }
     void spset(int id, int defno)
     {
+        if(defno >= 2048 && defno < 4096)
+        {
+            defno -= 2048;
+        }
         sprites[id] = SpriteData(id, UVTable[defno].x, UVTable[defno].y, UVTable[defno].w, UVTable[defno].h);
     }
     void spofs(int id, int x, int y)
     {
         sprites[id].x = x;
         sprites[id].y = y;
+    }
+    void sphide(int id)
+    {
+        sprites[id].attr ^= SpriteAttr.show;
+    }
+    void spshow(int id)
+    {
+        sprites[id].attr |= SpriteAttr.show;
     }
 }
