@@ -213,6 +213,7 @@
   <File path="node.d" />
   <File path="parser.d" />
   <File path="petitcomputer.d" />
+  <File path="sprite.d" />
   <File path="systemvariable.d" />
   <File path="TEST.txt" />
   <File path="token.d" />

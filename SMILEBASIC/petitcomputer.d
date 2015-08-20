@@ -10,6 +10,7 @@ import std.string;
 import std.c.stdio;
 import core.sync.mutex;
 import otya.smilebasic.parser;
+import otya.smilebasic.sprite;
 enum Button
 {
     UP = 1,
@@ -178,7 +179,7 @@ class PetitComputer
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
         auto src = IMG_LoadPNG_RW(stream);
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);//0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
         SDL_Rect rect;
         rect.x = 0;
         rect.y = 0;
@@ -186,21 +187,24 @@ class PetitComputer
         rect.h = src.h;
 //        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
 //        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
+
+        ubyte sr, sg, sb, sa;
+        SDL_GetRGBA((cast(uint*)src.pixels)[0], src.format, &sr, &sg, &sb, &sa);
+        auto color = SDL_MapRGBA(surface.format, sr, sg, sb, sa);
         SDL_SetColorKey(src, SDL_TRUE, (cast(uint*)src.pixels)[0]);
-        SDL_SetColorKey(surface, SDL_TRUE, (cast(uint*)src.pixels)[0]);
+        //SDL_SetColorKey(surface, SDL_TRUE, color);
         int i = SDL_BlitSurface(src, &rect, surface, &rect);
         auto srcpixels = (cast(uint*)src.pixels);
         auto pixels = (cast(uint*)surface.pixels);
         auto aaa = surface.format.Amask;
         //surface.format.Amask = 0xFF;
-        /+for(int x = 0; x < src.w; x++)
+        for(int x = 0; x < src.w; x++)
         {
             for(int y = 0; y < src.h; y++)
             {
                 ubyte r, g, b, a;
-                write(x,y, ',');
                 SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
-                if(r == 158 && g == 0 && b == 93)
+                if(r == sr && g == sg && b == sb)
                 {
                     r = 0;
                     g = 0;
@@ -208,14 +212,10 @@ class PetitComputer
                     a = 0;
                     *pixels = 0;
                     *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
-                }/+
-                else
-                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
-                +/ubyte _r, _g, _b, _a;
-                SDL_GetRGBA(*pixels, surface.format, &_r, &_g, &_b, &_a);
+                }
                 pixels++;
             }
-        }+/
+        }
         SDL_RWclose(stream);
         SDL_FreeSurface(src);
         return new GraphicPage(surface);
@@ -304,6 +304,7 @@ class PetitComputer
         }
     }
     SDL_Rect[] fontTable = new SDL_Rect[65536];
+    int sppage, bgpage;
     void createFontTable()
     {
         string html = cast(string)get("http://smileboom.com/special/ptcm3/download/unicode/");
@@ -417,7 +418,9 @@ class PetitComputer
         {
             GRP[i] = createEmptyPage();
         }
+        sppage = 4;
         GRP[4] = createGRPF(spriteFile);
+        bgpage = 5;
         GRP[5] = createGRPF(BGFile);
         writeln("OK");
         screenWidth = 400;
@@ -499,6 +502,7 @@ class PetitComputer
 
     }
     Button[] buttonTable;
+    Sprite sprite;
     void render()
     {
         buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
@@ -547,10 +551,12 @@ class PetitComputer
             //GRP[0] = GRPF;
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
             glAlphaFunc(GL_GEQUAL, 0.5);
             glEnable(GL_ALPHA_TEST);
             draw = new otya.smilebasic.draw.Draw(this);
+            sprite = new Sprite(this);
+            sprite.spset(0, 0);
+            sprite.spofs(0, 9, 8);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -568,6 +574,7 @@ class PetitComputer
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 renderGraphicPage();
                 renderConsoleGL();
+                sprite.render();
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
