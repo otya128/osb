@@ -5,10 +5,12 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 enum SpriteAttr
 {
-    show = 1,
-    rotate90 = 2,
-    rotate180 = 4,
-    rotate270 = 8,
+    show =      0b00001,
+    rotate90 =  0b00010,
+    rotate180 = 0b00100,
+    rotate270 = 0b00110,
+    hflip =     0b01000,//yoko
+    vflip =     0b10000,//tate
 }
 enum SpriteAnimTarget
 {
@@ -188,6 +190,7 @@ class Sprite
     SpriteDef[] SPDEFTable;
     SpriteData[] sprites;
     PetitComputer petitcom;
+    string spdefTableFile = "spdef.csv";
     void initUVTable()
     {
         SPDEFTable = new SpriteDef[4096];
@@ -198,6 +201,18 @@ class Sprite
         }
         SPDEFTable[4095] = SpriteDef(192, 480, 96, 32, 48, 16, SpriteAttr.show);
         //UVTable[] = SDL_Rect(192, 480, 96, 32);
+        import std.csv;
+        import std.typecons;//I	X	Y	W	H	HX	HY	ATTR
+        import std.file;
+        import std.stdio;
+        import std.algorithm;
+        auto file = File(spdefTableFile, "r");
+        file.readln();//一行読み飛ばす
+        auto csv = file.byLine.joiner("\n").csvReader!(Tuple!(int, "I", int, "X" ,int, "Y", int, "W", int, "H", int, "HX", int, "HY", int, "ATTR"));
+        foreach(record; csv)
+        {
+            SPDEFTable[record.I] = SpriteDef(record.X, record.Y, record.W, record.H, record.HX, record.HY, cast(SpriteAttr)record.ATTR);
+        }
     }
     this(PetitComputer petitcom)
     {
@@ -251,14 +266,16 @@ class Sprite
         }
     }
     bool lll;
+    double d = 0;
+    import std.algorithm;
     void render()
     {
         auto texture = petitcom.GRP[petitcom.sppage].glTexture;
         float z = -0.01f;
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-        foreach(ref sprite; sprites)
+       // glDisable(GL_TEXTURE_2D);
+        foreach(i,ref sprite; sprites)
         {
             //定義されてたら動かす
             if(sprite.define)
@@ -267,24 +284,94 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
-                glColor3f(1.0, 1.0, 1.0);
+                glLoadIdentity();
                 int x = cast(int)sprite.x - sprite.homex;
                 int y = cast(int)sprite.y - sprite.homey;
-                int x2 = cast(int)x + sprite.w;//-1
-                int y2 = cast(int)y + sprite.h;
+                int w = sprite.w;
+                int h = sprite.h;
+                if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
+                {
+                    swap(w, h);
+                }
+                int x2 = cast(int)x + w;//-1
+                int y2 = cast(int)y + h;
+                int u = cast(int)sprite.u;
+                int v = cast(int)sprite.v;
                 int u2 = cast(int)sprite.u + sprite.w;//-1
                 int v2 = cast(int)sprite.v + sprite.h;
-                glTexCoord2f(sprite.u / 512f - 1 , v2 / 512f - 1);
-                glVertex3f(x / 200f - 1, 1 - y2 / 120f, z);
-                glTexCoord2f(sprite.u / 512f - 1, sprite.v / 512f - 1);
-                glVertex3f(x / 200f - 1, 1 - y / 120f, z);
-                glTexCoord2f(u2 / 512f - 1, sprite.v / 512f - 1);
-                glVertex3f(x2 / 200f - 1, 1 - y / 120f, z);
-                glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
-                glVertex3f(x2 / 200f - 1, 1 - y2 / 120f, z);
+                int flipx = 1, flipy = 1, flipx2 = x, flipy2 = y;
+                if(sprite.attr & SpriteAttr.hflip)
+                {
+                    flipx = -1;
+                    flipx2 = x2;
+                }
+                if(sprite.attr & SpriteAttr.hflip)
+                {
+                    flipy = -1;
+                    flipy2 = y2;
+                }
+                glTranslatef((flipx2) / 200f - 1,1 - ((flipy2) / 120f), z);
+                glRotatef(d, 0.0f, 0.0f, 1.0f );
+                glScalef(flipx, flipy, 1f);
+                glBegin(GL_QUADS);
+                glColor3f(1.0, 1.0, 1.0);
+                if(sprite.attr == SpriteAttr.show)
+                {
+                    //d+=0.01;
+                    glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                    glVertex3f(0, 0, z);//1
+                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
+                    glVertex3f(0, -(sprite.h / 120f), z);//2
+                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
+                    glVertex3f(sprite.w / 200f, -(sprite.h / 120f), z);//3
+                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
+                    glVertex3f(sprite.w / 200f, 0, z);//4
+                    glEnd();
+                    continue;
+                }
+                if((sprite.attr & SpriteAttr.rotate270) == SpriteAttr.rotate270)
+                {
+                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
+                    glVertex3f(0, 0, z);//1
+                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glVertex3f(0, -(h / 120f), z);//
+                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
+                    glVertex3f(w / 200f, 0, z);//4
+                    glEnd();
+                    continue;
+                }
+                if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
+                {
+                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glVertex3f(0, 0, z);//1
+                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//3
+                    glVertex3f(0, -(h / 120f), z);//2
+                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//4
+                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glVertex3f(w / 200f, 0, z);//4
+                    glEnd();
+                    continue;
+                }
+                if((sprite.attr & SpriteAttr.rotate180) == SpriteAttr.rotate180)
+                {
+                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
+                    glVertex3f(0, 0, z);//1
+                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
+                    glVertex3f(0, -(h / 120f), z);//2
+                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glVertex3f(w / 200f, 0, z);//4
+                    glEnd();
+                    continue;
+                }
+                glEnd();
+                continue;
             }
         }
-        glEnd();
     }
     void spset(int id, int defno)
     {

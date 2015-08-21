@@ -674,11 +674,12 @@ class PetitComputer
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
-                                 readText("./SYS/GAME1DOTRC.TXT").to!wstring
+                                 //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                 //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
-                                 //readText("TEST.TXT").to!wstring
+                                 readText("TEST.TXT").to!wstring
                                  /*"?ABS(-1)
                                  LOCATE 0,10
                                  COLOR 5

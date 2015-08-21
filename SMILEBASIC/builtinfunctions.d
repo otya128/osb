@@ -341,6 +341,9 @@ class BuiltinFunction
     {
         return sqrt(a1);
     }
+    static void TALK(wstring a1)
+    {
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
