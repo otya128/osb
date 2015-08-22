@@ -142,7 +142,7 @@ class Lexical
                 wstring iden;
                 for(;i < code.length;i++)
                 {
-                    c = code[i];
+                    c = cast(wchar)code[i].toUpper;;
                     if(!c.isAlpha() && !c.isDigit() && c != '_')
                     {
                         break;

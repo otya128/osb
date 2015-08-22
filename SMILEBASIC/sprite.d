@@ -5,6 +5,7 @@ import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 enum SpriteAttr
 {
+    none = 0,
     show =      0b00001,
     rotate90 =  0b00010,
     rotate180 = 0b00100,
@@ -113,7 +114,7 @@ struct SpriteAnimData
                 this.data.var = data[i++];
                 break;
             default:
-                throw new IllegalFunctionCall();
+                throw new IllegalFunctionCall("SPANIM");
         }
         return i;
     }
@@ -178,6 +179,10 @@ struct SpriteData
     {
         this.anim[sat] = anim;
         isAnim = true;
+    }
+    void clear()
+    {
+        this.define = false;
     }
 }
 struct SpriteDef
@@ -284,7 +289,6 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
-                glLoadIdentity();
                 int x = cast(int)sprite.x - sprite.homex;
                 int y = cast(int)sprite.y - sprite.homey;
                 int w = sprite.w;
@@ -327,6 +331,7 @@ class Sprite
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
                     glVertex3f(sprite.w / 200f, 0, z);//4
                     glEnd();
+                    glLoadIdentity();
                     continue;
                 }
                 if((sprite.attr & SpriteAttr.rotate270) == SpriteAttr.rotate270)
@@ -340,6 +345,7 @@ class Sprite
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
                     glVertex3f(w / 200f, 0, z);//4
                     glEnd();
+                    glLoadIdentity();
                     continue;
                 }
                 if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
@@ -353,6 +359,7 @@ class Sprite
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
                     glVertex3f(w / 200f, 0, z);//4
                     glEnd();
+                    glLoadIdentity();
                     continue;
                 }
                 if((sprite.attr & SpriteAttr.rotate180) == SpriteAttr.rotate180)
@@ -366,9 +373,11 @@ class Sprite
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
                     glVertex3f(w / 200f, 0, z);//4
                     glEnd();
+                    glLoadIdentity();
                     continue;
                 }
                 glEnd();
+                glLoadIdentity();
                 continue;
             }
         }
@@ -429,5 +438,16 @@ class Sprite
             i = animdata[i].load(sprites[id], target, data);
         }
         sprites[id].setAnimation(animdata, target);
+    }
+    void spclr(int id)
+    {
+        sprites[id].clear;
+    }
+    void spclr()
+    {
+        for(int i = 0; i < sprites.length; i++)
+        {
+            spclr(i);
+        }
     }
 }

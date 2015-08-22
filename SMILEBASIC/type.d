@@ -78,6 +78,10 @@ struct Value
         return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray ||
             this.type == ValueType.StringArray || this.type == ValueType.String;
     }
+    bool isNumberArray()
+    {
+        return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray;
+    }
     bool isNumber()
     {
         return this.type == ValueType.Integer || this.type == ValueType.Double;

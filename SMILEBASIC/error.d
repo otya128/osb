@@ -1,11 +1,13 @@
 module otya.smilebasic.error;
 import std.exception;
 import std.string;
+import std.conv;
 class SmileBasicError : Exception
 {
     int errnum;
     int errline;
     int errprg;
+    string message2;
     this(int slot, int line, string message)
     {
         super(format("%s in %d:%d", message, slot, line));
@@ -18,6 +20,11 @@ class SmileBasicError : Exception
     {
         super(message);
     }
+    this(string message, string message2)
+    {
+        super(message);
+        this.message2 = message2;
+    }
 }
 class SyntaxError : SmileBasicError
 {
@@ -26,13 +33,18 @@ class SyntaxError : SmileBasicError
         this.errnum = 3;
         super("Syntax error");
     }
+    this(wstring func)
+    {
+        this();
+        this.message2 = "Undefine function (" ~ func.to!string ~ ")";
+    }
 }
 class IllegalFunctionCall : SmileBasicError
 {
-    this()
+    this(string func)
     {
         this.errnum = 4;
-        super("Illegal function call");
+        super("Illegal function call(" ~ func ~ ")");
     }
 }
 class TypeMismatch : SmileBasicError

@@ -11,6 +11,7 @@ import std.c.stdio;
 import core.sync.mutex;
 import otya.smilebasic.parser;
 import otya.smilebasic.sprite;
+import otya.smilebasic.error;
 enum Button
 {
     NONE = 0,
@@ -89,7 +90,7 @@ class PetitComputer
 {
     this()
     {
-        new Test();
+        //new Test();
     }
     static const string resourceDirName = "resources";
     static const string resourcePath = "./resources";
@@ -99,10 +100,16 @@ class PetitComputer
     static const string fontTableFile = resourcePath ~ "/fonttable.txt";
     int screenWidth;
     int screenHeight;
+    int screenWidthDisplay1;
+    int screenHeightDisplay1;
     int fontWidth;
     int fontHeight;
     int consoleWidth;
     int consoleHeight;
+    int consoleWidthDisplay1;
+    int consoleHeightDisplay1;
+    int consoleHeightC, consoleWidthC;
+    ConsoleCharacter[][] consoleC;
     int[] consoleColor = 
     [
         0x00000000,
@@ -141,6 +148,7 @@ class PetitComputer
     }
     Button button;
     ConsoleCharacter[][] console;
+    ConsoleCharacter[][] consoleDisplay1;
     bool visibleGRP = true;
     int showGRP;
     int useGRP;
@@ -426,17 +434,41 @@ class PetitComputer
         writeln("OK");
         screenWidth = 400;
         screenHeight = 240;
+        screenWidthDisplay1 = 320;
+        screenHeightDisplay1 = 240;
         fontWidth = 8;
         fontHeight = 8;
         consoleWidth = screenWidth / fontWidth;
         consoleHeight = screenHeight / fontHeight;
+        consoleWidthDisplay1 = screenWidthDisplay1 / fontWidth;
+        consoleHeightDisplay1 = screenHeightDisplay1 / fontHeight;
         console = new ConsoleCharacter[][consoleHeight];
+        consoleDisplay1 = new ConsoleCharacter[][consoleHeightDisplay1];
         consoleForeColor = 15;//#T_WHITE
         for(int i = 0; i < console.length; i++)
         {
             console[i] = new ConsoleCharacter[consoleWidth];
             console[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
+        for(int i = 0; i < consoleDisplay1.length; i++)
+        {
+            consoleDisplay1[i] = new ConsoleCharacter[consoleWidthDisplay1];
+            consoleDisplay1[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+        }
+        display(0);
+    }
+    void display(int number)
+    {
+        if(number)
+        {
+            consoleHeightC = consoleHeightDisplay1;
+            consoleWidthC = consoleWidthDisplay1;
+            consoleC = consoleDisplay1;
+            return;
+        }
+        consoleHeightC = consoleHeight;
+        consoleWidthC = consoleWidth;
+        consoleC = console;
     }
     void cls()
     {
@@ -470,6 +502,7 @@ class PetitComputer
     }
     Mutex grpmutex;
     otya.smilebasic.draw.Draw draw;
+    bool displaynum;
     void renderGraphic()
     {
         //grpmutex.lock();
@@ -504,6 +537,24 @@ class PetitComputer
     }
     Button[] buttonTable;
     Sprite sprite;
+    int xscreenmode = 0;
+    void xscreen(int mode, int sprite, int bg)
+    {
+        int mode2 = mode / 2;
+        if(mode2 == 0)
+        {
+            SDL_SetWindowSize(window, 400, 240);
+        }
+        if(mode2 == 1)
+        {
+            SDL_SetWindowSize(window, 400, 480);
+        }
+        if(mode == 4)
+        {
+            SDL_SetWindowSize(window, 320, 240);
+        }
+        xscreenmode = mode2;
+    }
     void render()
     {
         buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
@@ -512,7 +563,7 @@ class PetitComputer
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile = true;
+        bool renderprofile;// = true;
         try
         {
             version(Windows)
@@ -556,7 +607,7 @@ class PetitComputer
             glEnable(GL_ALPHA_TEST);
             draw = new otya.smilebasic.draw.Draw(this);
            // sprite.spset(0, 0);
-           // sprite.spofs(0, 9, 8);
+            // sprite.spofs(0, 9, 8);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -570,10 +621,18 @@ class PetitComputer
                         loopcnt = 0;
                     }
                 }
+                if(xscreenmode == 1)
+                {
+                    glViewport(0, 240, 400, 240);
+                }
                 renderGraphic();
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 renderGraphicPage();
                 renderConsoleGL();
+                if(xscreenmode == 1)
+                {
+                    glViewport(0, 240, 400, 240);
+                }
                 sprite.render();
 /*                if(this.sprite.sprites[0].define)
                     if(this.sprite.sprites[0].u == 0)
@@ -653,6 +712,7 @@ class PetitComputer
         }
     }
     SDL_Window* window;
+    otya.smilebasic.vm.VM vm;
     void run()
     {
         init();
@@ -675,11 +735,12 @@ class PetitComputer
         //とりあえず
         auto parser = new Parser(
                                  //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                 readText("./SYS/GAME2RPG.TXT").to!wstring
                                  //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
-                                 readText("TEST.TXT").to!wstring
+                                 //readText("TEST.TXT").to!wstring
                                  /*"?ABS(-1)
                                  LOCATE 0,10
                                  COLOR 5
@@ -722,6 +783,8 @@ class PetitComputer
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
+        vm.dump;
+        this.vm = vm;
         //gpset(0, 10, 10, 0xFF00FF00);
         //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
         //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
@@ -734,7 +797,11 @@ class PetitComputer
             {
                 try
                 {
-                    if(!vsyncFrame && running) running = vm.runStep();
+                    if(!vsyncFrame && running)
+                    {
+                        //writefln("%04X:%s", vm.pc, vm.getCurrent);
+                        running = vm.runStep();
+                    }
                 }
                 catch(SmileBasicError sbe)
                 {
@@ -786,6 +853,8 @@ class PetitComputer
     }
     wstring input(wstring prompt, bool useClipBoard)
     {
+        auto olddisplay = displaynum;
+        displaynum = 0;
         printConsole(prompt);
         clearKeyBuffer();
         wstring buffer;
@@ -836,6 +905,7 @@ class PetitComputer
             }
         }
         showCursor = false;
+        display = olddisplay;
         return buffer;
     }
     int CSRX;
@@ -1028,6 +1098,55 @@ class PetitComputer
                 glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
             }
         glEnd();
+        if(xscreenmode != 1)
+        {
+            return;
+        }
+        //下画面
+        glViewport(40, 0, 400, 240);
+        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
+        glDisable(GL_TEXTURE_2D);
+        glBegin(GL_QUADS);
+        for(int y = 0; y < consoleHeightDisplay1; y++)
+            for(int x = 0; x < consoleWidthDisplay1; x++)
+            {
+                auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
+                glColor4ubv(cast(ubyte*)&back);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
+            }
+        if(showCursor && animationCursor)
+        {
+            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
+            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+        }
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+
+        //glAlphaFunc(GL_GEQUAL, 0.5);
+        //glEnable(GL_ALPHA_TEST);
+        glBegin(GL_QUADS);
+        for(int y = 0; y < consoleHeightDisplay1; y++)
+            for(int x = 0; x < consoleWidthDisplay1; x++)
+            {
+                auto fore = consoleColorGL[consoleDisplay1[y][x].foreColor];
+                auto rect = &fontTable[consoleDisplay1[y][x].character];
+                glColor4ubv(cast(ubyte*)&fore);
+                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+            }
+        glEnd();
        // glFlush();
     }
     void printConsole(T...)(T args)
@@ -1039,115 +1158,39 @@ class PetitComputer
     }
     void printConsoleString(wstring text)
     {
-        consolem.lock();
-        scope(exit) consolem.unlock();
+        //consolem.lock();
+        //scope(exit) consolem.unlock();
         //write(text);
         foreach(wchar c; text)
         {
-            if(CSRY >= consoleHeight)
+            if(CSRY >= consoleHeightC)
             {
-                CSRY = consoleHeight - 1;
+                CSRY = consoleHeightC - 1;
             }
             if(c != '\r' && c != '\n')
             {
-                console[CSRY][CSRX].character = c;
-                console[CSRY][CSRX].foreColor = consoleForeColor;
-                console[CSRY][CSRX].backColor = consoleBackColor;
+                consoleC[CSRY][CSRX].character = c;
+                consoleC[CSRY][CSRX].foreColor = consoleForeColor;
+                consoleC[CSRY][CSRX].backColor = consoleBackColor;
             }
             CSRX++;
-            if(CSRX >= consoleWidth || c == '\n' || c == '\r')
+            if(CSRX >= consoleWidthC || c == '\n' || c == '\r')
             {
                 CSRX = 0;
                 CSRY++;
             }
-            if(CSRY >= consoleHeight)
+            if(CSRY >= consoleHeightC)
             {
-                auto tmp = console[0];
-                for(int i = 0; i < consoleHeight - 1; i++)
+                auto tmp = consoleC[0];
+                for(int i = 0; i < consoleHeightC - 1; i++)
                 {
-                    console[i] = console[i + 1];
+                    consoleC[i] = consoleC[i + 1];
                 }
-                console[consoleHeight - 1] = tmp;
+                consoleC[consoleHeightC - 1] = tmp;
                 tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
                 //assert(console[0] != console[2]);
-                CSRY = consoleHeight - 1;
+                CSRY = consoleHeightC - 1;
             }
         }
-    }
-}
-import std.typecons;
-import std.typetuple;
-import std.traits;
-import otya.smilebasic.error;
-import otya.smilebasic.type;
-static string func;
-class Test
-{
-    import otya.smilebasic.type;
-    int a;/*
-    static Value abs(Value[] a)
-    {
-        return Value((a[0].castDouble < 0 ? -a[0].castDouble : a[0].castDouble));
-    }*/
-    static double ABS(double a)
-    {
-        return a < 0 ? -a : a;
-    }
-    wstring[] ah;
-    void*[] ahe;
-    alias void function(Value[], Value[]) BuiltinFunc;
-    BuiltinFunc[] builtinFunctions;
-    this()
-    {
-        foreach(name; __traits(derivedMembers, Test))
-        {
-            //writeln(name);
-            ah ~= name;
-            // foreach (t; __traits(getVirtualFunctions, Test, name))
-            {
-                static if(__traits(isStaticFunction, __traits(getMember, Test, name)))
-                {
-                    ahe ~= cast(void*)&__traits(getMember, Test, name);
-                    writeln(name);
-                    auto m = typeid(typeof(__traits(getMember, Test, name)));
-                    writeln(m);
-                    writeln(AddFunc!(Test,name));
-                    builtinFunctions ~= mixin(AddFunc!(Test,name));
-                }
-            }
-        }
-    }
-
-}
-template AddFunc(T, string N)
-{
-    static if(is(ReturnType!(__traits(getMember, T, N)) == double))
-    {
-       const string AddFunc = "function void(Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall();}ret[0] = Value(" ~ N ~ "(" ~
-           AddFuncArg!(Tuple!(ParameterTypeTuple!(__traits(getMember, T, N))), 0) ~ "));}";
-    }
-    else
-    {
-        const string AddFunc = "";
-    }
-}
-template AddFuncArg(P, int N = 0)
-{
-    static if(is(typeof(P[N]) == double))
-    {
-        const string arg = "arg[" ~ N.to!string ~ "].castDouble";
-    }
-    else
-    {
-        const string arg = "";
-        static assert(false, "Invalid type");
-    }
-    static if(N + 1 == P.length)
-    {
-        const string AddFuncArg = arg;
-    }
-    else
-    {
-        const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(P, N + 1);
     }
 }

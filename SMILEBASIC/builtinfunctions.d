@@ -11,6 +11,7 @@ import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
 import otya.smilebasic.sprite;
+import otya.smilebasic.vm;
 //プチコンの引数省略は特殊なので
 //LOCATE ,,0のように省略できる
 struct DefaultValue(T, bool skippable = true)
@@ -52,14 +53,16 @@ class BuiltinFunction
     void function(PetitComputer, Value[], Value[]) func;
     int startskip;
     bool variadic;
+    string name;
     this(BuiltinFunctionArgument[] argments, ValueType result, void function(PetitComputer, Value[], Value[]) func, int startskip,
-         bool variadic)
+         bool variadic, string name)
     {
         this.argments = argments;
         this.result = result;
         this.func = func;
         this.startskip = startskip;
         this.variadic = variadic;
+        this.name = name;
     }
     bool hasSkipArgument()
     {
@@ -99,6 +102,11 @@ class BuiltinFunction
         time.setDefaultValue(1);
         p.vsync(cast(int)time);
     }
+    static void WAIT(PetitComputer p, DefaultValue!int time)
+    {
+        time.setDefaultValue(1);
+        p.vsync(cast(int)time);
+    }
     //TODO:プチコンのCLSには引数の個数制限がない
     static void CLS(PetitComputer p/*vaarg*/)
     {
@@ -121,9 +129,13 @@ class BuiltinFunction
     }
     static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
     {
+        a.setDefaultValue(512);
+        b.setDefaultValue(512);
+        p.xscreen(mode, cast(int)a, cast(int)b);
     }
-    static void DISPLAY(PetitComputer p, DefaultValue!(int, false) display)
+    static void DISPLAY(PetitComputer p, int display)
     {
+        p.display(display);
     }
     static void GCLS(PetitComputer p, DefaultValue!(int, false) color)
     {
@@ -157,6 +169,11 @@ class BuiltinFunction
     static void GPRIO(PetitComputer p, int z)
     {
     }
+    static void GPAGE(PetitComputer p, int showPage, int usePage)
+    {
+        p.showGRP = showPage;
+        p.useGRP = usePage;
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
@@ -181,7 +198,7 @@ class BuiltinFunction
     static int RND(int max)
     {
         import std.random;
-        return uniform(0, max - 1);
+        return uniform(0, max - 1 + 1);
     }
     static void DTREAD(DefaultValue!(wstring, false) date, out int Y, out int M, out int D/*W*/)
     {
@@ -207,12 +224,19 @@ class BuiltinFunction
     }
     static double VAL(wstring str)
     {
-        if(str[0..2] == "&H")
+        try
         {
-            return str[2..$].to!int(16);
+            if(str[0..2] == "&H")
+            {
+                return str[2..$].to!int(16);
+            }
+            double val = str.to!double;
+            return val;
         }
-        double val = str.to!double;
-        return val;
+        catch(Exception e)
+        {
+            return 0;//toriaezu
+        }
     }
     static double FLOOR(double val)
     {
@@ -220,8 +244,62 @@ class BuiltinFunction
     }
     static wstring MID(wstring str, int i, int len)
     {
+        if(i + len > str.length)
+        {
+            return "";//範囲外で空文字
+        }
         //挙動未定
         return str[i..i + len];
+    }
+    //INSTRSUSBTLEFT
+    static wstring LEFT(wstring str, int len)
+    {
+        return str[0..len];
+    }
+    static wstring SUBST(wstring str, int i, Value alen, DefaultValue!(Value,false) areplace)
+    {
+        int len = 1;
+        wstring replace = "";
+        if(alen.isNumber)
+        {
+            len = alen.castInteger;
+            replace = areplace.castString;
+        }
+        else
+        {
+            replace = alen.castString;
+            //省略されたらi以降の全文字を置換
+            return str[0..i] ~ replace;
+        }
+        if(str.length <= i + len)
+        {
+            return str[0..i] ~ replace;
+        }
+        str.replaceInPlace(i, i + len, replace);
+        return str;
+    }
+    static int INSTR(Value vstart, Value vstr1, DefaultValue!(wstring, false) vstr2)
+    {
+        import std.string;
+        int start = 0;
+        wstring str1, str2;
+        if(!vstr2.isDefault)
+        {
+            start = vstart.castInteger;
+            str1 = vstr1.castString;
+            str2 = cast(wstring)vstr2;
+        }
+        else
+        {
+            str1 = vstart.castString;
+            str2 = vstr1.castString;
+        }
+        int aaa = str1[start..$].indexOf(str2, CaseSensitive.no);
+        return str1[start..$].indexOf(str2, CaseSensitive.no);
+    }
+    static int ASC(wstring str)
+    {
+        return cast(int)str[0];
     }
     static void SPSET(PetitComputer p, int id, int defno)
     {
@@ -241,7 +319,7 @@ class BuiltinFunction
     }
     static void SPANIM(PetitComputer p, Value[] va_args)
     {
-        writeln("NOTIMPL:SPANIM");
+        //TODO:配列
         auto args = retro(va_args);
         int no = args[0].castInteger;
         double[] animdata = new double[args.length - 2];
@@ -254,6 +332,79 @@ class BuiltinFunction
             p.sprite.spanim(no, args[1].castString, animdata);
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
+    }
+    static void SPDEF(PetitComputer p, Value[] va_args)
+    {
+        switch(va_args.length)
+        {
+            case 1://array
+                {
+                    if(va_args[0].isNumberArray)
+                    {
+                        writeln("NOTIMPL:SPDEF ARRAY");
+                        //return;
+                    }
+                    if(va_args[0].isString)
+                    {
+                        VM vm = p.vm;
+                        vm.pushDataIndex();
+                        vm.restoreData(va_args[0].castString);
+                        auto count = vm.readData().castInteger;//読み込むスプライト数
+                        int defno = 0;//?
+                        for(int i = 0; i < count; i++)
+                        {
+                            int U = vm.readData().castInteger;
+                            int V = vm.readData().castInteger;
+                            int W = vm.readData().castInteger;
+                            int H = vm.readData().castInteger;
+                            int HX = vm.readData().castInteger;
+                            int HY = vm.readData().castInteger;
+                            int ATTR = vm.readData().castInteger;
+                            p.sprite.SPDEFTable[defno] = SpriteDef(U, V, W, H, HX, HY, cast(SpriteAttr)ATTR);
+                            defno++;
+                        }
+                        vm.popDataIndex();
+                        return;
+                    }
+                    throw new IllegalFunctionCall("SPDEF");
+                    return;
+                }
+            default:
+        }
+        {
+            int defno = va_args[0].castInteger;
+            int U = va_args[1].castInteger;
+            int V = va_args[2].castInteger;
+            int W = 16, H = 16, HX = 0, HY = 0, ATTR = 1;
+            if(va_args.length > 3)
+            {
+                W = va_args[3].castInteger;
+            }
+            if(va_args.length > 4)
+            {
+                H = va_args[4].castInteger;
+            }
+            if(va_args.length > 5)
+            {
+                HX = va_args[5].castInteger;
+            }
+            if(va_args.length > 6)
+            {
+                HY = va_args[6].castInteger;
+            }
+            if(va_args.length > 7)
+            {
+                ATTR = va_args[7].castInteger;
+            }
+            p.sprite.SPDEFTable[defno] = SpriteDef(U, V, W, H, HX, HY, cast(SpriteAttr)ATTR);
+        }
+    }
+    static void SPCLR(PetitComputer p, DefaultValue!(int, false) i)
+    {
+        if(i.isDefault)
+            p.sprite.spclr();
+        else
+            p.sprite.spclr(cast(int)i);
     }
     static void BGMSTOP(PetitComputer p)
     {
@@ -341,6 +492,7 @@ class BuiltinFunction
     {
         return sqrt(a1);
     }
+    //GalateaTalk利用面倒くさい...
     static void TALK(wstring a1)
     {
     }
@@ -365,6 +517,7 @@ class BuiltinFunction
                                                                   mixin(AddFunc!(BuiltinFunction, name)),
                                                                   GetStartSkip!(BuiltinFunction, name),
                                                                   IsVariadic!(BuiltinFunction, name),
+                                                                  name,
                                                                   );
                 writeln(AddFunc!(BuiltinFunction, name));
             }
@@ -381,6 +534,14 @@ template GetStartSkip(T, string N)
             enum SkipSkip = I - is(P[0] == PetitComputer);
         }
         else static if(is(P[I] == DefaultValue!(int, false)))
+        {
+            enum SkipSkip = I - is(P[0] : PetitComputer);
+        }
+        else static if(is(P[I] == DefaultValue!(wstring, false)))
+        {
+            enum SkipSkip = I - is(P[0] : PetitComputer);
+        }
+        else static if(is(P[I] == DefaultValue!(Value, false)))
         {
             enum SkipSkip = I - is(P[0] : PetitComputer);
         }
@@ -419,7 +580,7 @@ template AddFunc(T, string N)
 {
     static if(is(ReturnType!(__traits(getMember, T, N)) == double) || is(ReturnType!(__traits(getMember, T, N)) == int))
     {
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall();}ret[0] = Value(" ~ N ~ "(" ~
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ N ~ "\");}ret[0] = Value(" ~ N ~ "(" ~
             AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N
                         , ParameterTypeTuple!(__traits(getMember, T, N))) ~ "));}";
     }
@@ -427,13 +588,13 @@ template AddFunc(T, string N)
     {
 
         pragma(msg, GetArgumentCount!(T,N));
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){/*if(ret.length != 0){throw new IllegalFunctionCall();}*/" ~ OutArgsInit!(T,N) ~ N ~ "(" ~
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){/*if(ret.length != 0){throw new IllegalFunctionCall(\"" ~ N ~ "\");}*/" ~ OutArgsInit!(T,N) ~ N ~ "(" ~
             AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N,
                         ParameterTypeTuple!(__traits(getMember, T, N))) ~ ");}";
     }
     else static if(is(ReturnType!(__traits(getMember, T, N)) == wstring))
     {
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall();}ret[0] = Value(" ~ N ~ "(" ~
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ N ~ "\");}ret[0] = Value(" ~ N ~ "(" ~
             AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N
                         , ParameterTypeTuple!(__traits(getMember, T, N))) ~ "));}";
     }
@@ -470,6 +631,20 @@ DefaultValue!(wstring, false) fromStringToSkip(Value v)
         return DefaultValue!(wstring, false)(v.castString());
     else
         return DefaultValue!(wstring, false)(true);
+}
+DefaultValue!Value fromValueToDefault(Value v)
+{
+    if(v.type != ValueType.Void)
+        return DefaultValue!Value(v);
+    else
+        return DefaultValue!Value(true);
+}
+DefaultValue!(Value, false) fromValueToSkip(Value v)
+{
+    if(v.type != ValueType.Void)
+        return DefaultValue!(Value, false)(v);
+    else
+        return DefaultValue!(Value, false)(true);
 }
 template GetFunctionParamType(T, string N)
 {
@@ -514,6 +689,14 @@ template GetFunctionParamType(T, string N)
             else static if(is(P[0] == Value[]))
             {
                 const string arg = "";
+            }
+            else static if(is(P[0] == DefaultValue!(Value)) || is(P[0] == Value))
+            {
+                const string arg = "ValueType.Void, false";
+            }
+            else static if(is(P[0] == DefaultValue!(Value, false)))
+            {
+                const string arg = "ValueType.Void, true";
             }
             else static if(is(P[0] == PetitComputer))
             {
@@ -602,10 +785,29 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
     {
         const string arg = "arg";
     }
+    else static if(is(P[0] == Value))
+    {
+        enum add = 1;
+        enum outadd = 0;
+        const string arg = "arg[" ~ I.to!string ~ "]";
+    }
+    else static if(is(P[0] == DefaultValue!Value))
+    {
+        enum add = 1;
+        enum outadd = 0;
+        const string arg = "fromValueToDefault(arg[" ~ I.to!string ~ "])";
+    }
+    else static if(is(P[0] == DefaultValue!(Value, false)))
+    {
+        enum add = 1;
+        enum outadd = 0;
+        const string arg = "fromValueToSkip(arg[" ~ I.to!string ~ "])";
+    }
     else
     {
         enum add = 1;
         enum outadd = 0;
+        pragma(msg, P[0]);
         static assert(false, "Invalid type");
         const string arg = "";
     }

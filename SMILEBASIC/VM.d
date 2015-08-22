@@ -49,6 +49,10 @@ class VM
         this.functions = functions;
         this.globalDataTable = gdt;
     }
+    Code getCurrent()
+    {
+        return code[pc];
+    }
     void run()
     {
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
@@ -110,6 +114,38 @@ class VM
     {
         pc = code.length;
     }
+    void dump()
+    {
+        foreach(i, c; code)
+            writefln("%04X:%s", i, c.toString(this));
+    }
+    wstring getGlobalVarName(int index)
+    {
+        foreach(k, v; globalTable)
+        {
+            if(v.index == index) return k;
+        }
+        return "undefined variable";
+    }
+    Value readData()
+    {
+        Value value;
+        this.globalDataTable.read(value, this);
+        return value;
+    }
+    void restoreData(wstring label)
+    {
+        this.globalDataTable.dataIndex = this.globalDataTable.label[label];
+    }
+    int olddti;
+    void pushDataIndex()
+    {
+        olddti = this.globalDataTable.dataIndex;
+    }
+    void popDataIndex()
+    {
+       this.globalDataTable.dataIndex = olddti;
+    }
 }
 enum CodeType
 {
@@ -135,6 +171,10 @@ abstract class Code
 {
     CodeType type;
     abstract void execute(VM vm);
+    string toString(VM vm)
+    {
+        return super.toString();
+    }
 }
 class PrintCode : Code
 {
@@ -174,6 +214,10 @@ class PrintCode : Code
         }
         stdout.flush();
     }
+    override string toString(VM vm)
+    {
+        return "print";
+    }
 }
 /*
 * スタックにPush
@@ -190,6 +234,10 @@ class Push : Code
     {
         vm.push(imm);
     }
+    override string toString(VM vm)
+    {
+        return "push " ~ imm.toString;
+    }
 }
 
 class PushG : Code
@@ -203,6 +251,10 @@ class PushG : Code
     override void execute(VM vm)
     {
         vm.push(vm.global[var]);
+    }
+    override string toString(VM vm)
+    {
+        return "pushglobal " ~ vm.getGlobalVarName(var).to!string;
     }
 }
 class PopG : Code
@@ -239,6 +291,10 @@ class PopG : Code
         }
         vm.global[var] = v;
     }
+    override string toString(VM vm)
+    {
+        return "popglobal " ~ vm.getGlobalVarName(var).to!string;
+    }
 }
 class PushL : Code
 {
@@ -251,6 +307,10 @@ class PushL : Code
     override void execute(VM vm)
     {
         vm.push(vm.stack[vm.bp + var]);
+    }
+    override string toString(VM vm)
+    {
+        return "pushlocal " ~ var.to!string;
     }
 }
 class PopL : Code
@@ -286,6 +346,10 @@ class PopL : Code
             throw new TypeMismatch();
         }
         vm.stack[vm.bp + var] = v;
+    }
+    override string toString(VM vm)
+    {
+        return "poplocal " ~ var.to!string;
     }
 }
 class Operate : Code
@@ -479,6 +543,10 @@ class Operate : Code
         l.doubleValue = ld;
         vm.push(l);
     }
+    override string toString(VM vm)
+    {
+        return "operate " ~ operator.to!string;
+    }
 }
 class GotoAddr : Code
 {
@@ -491,6 +559,10 @@ class GotoAddr : Code
     override void execute(VM vm)
     {
         vm.pc = address - 1;
+    }
+    override string toString(VM vm)
+    {
+        return "goto " ~ address.to!string(16);
     }
 }
 class GotoS : Code
@@ -523,6 +595,10 @@ class GotoTrue : Code
         if(cond.boolValue)
             vm.pc = address - 1;
     }
+    override string toString(VM vm)
+    {
+        return "gototrue " ~ address.to!string(16);
+    }
 }
 class GotoFalse : Code
 {
@@ -539,6 +615,10 @@ class GotoFalse : Code
         if(!cond.boolValue)
             vm.pc = address - 1;
     }
+    override string toString(VM vm)
+    {
+        return "gotofalse " ~ address.to!string(16);
+    }
 }
 class GosubAddr : Code
 {
@@ -552,6 +632,10 @@ class GosubAddr : Code
     {
         vm.push(Value(vm.pc));
         vm.pc = address - 1;
+    }
+    override string toString(VM vm)
+    {
+        return "gosub " ~ address.to!string(16);
     }
 }
 class GosubS : Code
@@ -591,6 +675,10 @@ class ReturnSubroutine : Code
         }
         vm.pc = pc.integerValue;
     }
+    override string toString(VM vm)
+    {
+        return "returnsubroutine ";
+    }
 }
 class EndVM : Code
 {
@@ -600,6 +688,10 @@ class EndVM : Code
     override void execute(VM vm)
     {
         vm.end();
+    }
+    override string toString(VM vm)
+    {
+        return "endvm";
     }
 }
 class NewArray : Code
@@ -651,6 +743,10 @@ class NewArray : Code
                 break;
         }
         vm.push(array);
+    }
+    override string toString(VM vm)
+    {
+        return "newarray " ~ dim.to!string;
     }
 }
 class PushArray : Code
@@ -711,6 +807,10 @@ class PushArray : Code
             return;
         }
         throw new TypeMismatch();
+    }
+    override string toString(VM vm)
+    {
+        return "pusharray " ~ dim.to!string;
     }
 }
 class PopArray : Code
@@ -787,6 +887,10 @@ class PopArray : Code
         }
         throw new TypeMismatch();
     }
+    override string toString(VM vm)
+    {
+        return "poparray " ~ dim.to!string ~ ", " ~ var.to!string ~ ", " ~ local.to!string;
+    }
 }
 class ReturnFunction : Code
 {
@@ -823,6 +927,10 @@ class ReturnFunction : Code
         vm.pc = pc.integerValue;
         vm.bp = bp.integerValue;
     }
+    override string toString(VM vm)
+    {
+        return "returnfunc " ~ func.name.to!string;
+    }
 }
 class CallFunctionCode : Code
 {
@@ -846,15 +954,15 @@ class CallFunctionCode : Code
         Function func = vm.functions.get(name, null);
         if(!func)
         {
-            throw new SyntaxError();
+            throw new SyntaxError(name);
         }
         if(func.argCount != this.argCount)
         {
-            throw new IllegalFunctionCall();
+            throw new IllegalFunctionCall(name.to!string);
         }
         if(func.outArgCount != this.outArgCount)
         {
-            throw new IllegalFunctionCall();
+            throw new IllegalFunctionCall(name.to!string);
         }
         //TODO:args
         auto bp = vm.stacki;
@@ -870,6 +978,10 @@ class CallFunctionCode : Code
                 vm.stack[bp + v.index] = Value(v.type);
             }
         }
+    }
+    override string toString(VM vm)
+    {
+        return "callfunc " ~ name.to!string;
     }
 }
 import otya.smilebasic.builtinfunctions;
@@ -914,6 +1026,10 @@ class CallBuiltinFunction : Code
             vm.push(result[i]);
         }
     }
+    override string toString(VM vm)
+    {
+        return "callbuiltin " ~ func.name.to!string;
+    }
 }
 class IncCodeG : Code
 {
@@ -952,6 +1068,10 @@ class IncCodeG : Code
             vm.global[var] = Value(l ~ r);
         }
     }
+    override string toString(VM vm)
+    {
+        return "incglobal " ~ var.to!string;
+    }
 }
 class IncCodeL : Code
 {
@@ -989,6 +1109,10 @@ class IncCodeL : Code
             wstring r = v.stringValue;
             *g = Value(l ~ r);
         }
+    }
+    override string toString(VM vm)
+    {
+        return "inclocal " ~ var.to!string;
     }
 }
 class OnBase : Code
@@ -1043,6 +1167,10 @@ class OnGoto : OnBase
         if(index < 0) return;
         vm.pc = index - 1;
     }
+    override string toString(VM vm)
+    {
+        return "ongoto " ~ labels.to!string;
+    }
 }
 class OnGosub : OnBase
 {
@@ -1056,6 +1184,10 @@ class OnGosub : OnBase
         if(index < 0) return;
         vm.push(Value(vm.pc));
         vm.pc = index - 1;
+    }
+    override string toString(VM vm)
+    {
+        return "ongosub " ~ labels.to!string;
     }
 }
 import std.string;
@@ -1141,6 +1273,10 @@ class InputCode : Code
             }
         } while(error);
     }
+    override string toString(VM vm)
+    {
+        return "input " ~ count.to!string;
+    }
 }
 class ReadCode : Code
 {
@@ -1157,6 +1293,10 @@ class ReadCode : Code
             vm.globalDataTable.read(data, vm);
             vm.push(data);
         }
+    }
+    override string toString(VM vm)
+    {
+        return "read " ~ count.to!string;
     }
 }
 class RestoreCodeS : Code
@@ -1185,6 +1325,10 @@ class RestoreCode : Code
     {
         datatable.dataIndex = label;
     }
+    override string toString(VM vm)
+    {
+        return "restore " ~ label.to!string;
+    }
 }
 class PushSystemVariable : Code
 {
@@ -1196,6 +1340,10 @@ class PushSystemVariable : Code
     override void execute(VM vm)
     {
         vm.push(var.value);
+    }
+    override string toString(VM vm)
+    {
+        return "pushsysvar " ~ var.to!string;
     }
 }
 class PopSystemVariable : Code
@@ -1210,5 +1358,9 @@ class PopSystemVariable : Code
         Value v;
         vm.pop(v);
         var.value = v;
+    }
+    override string toString(VM vm)
+    {
+        return "popsysvar " ~ var.to!string;
     }
 }
