@@ -152,7 +152,7 @@ class PetitComputer
     bool visibleGRP = true;
     int showGRP;
     int useGRP;
-    uint gcolor;
+    uint gcolor = -1;
     GraphicPage[] GRP;
     GraphicPage GRPF;
     GraphicPage[] GRPFColor;
