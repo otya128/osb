@@ -301,6 +301,15 @@ class BuiltinFunction
     {
         return cast(int)str[0];
     }
+    static wstring STR(int val)
+    {
+        return val.to!wstring;
+    }
+    static wstring HEX(int val)
+    {
+        //ひどい
+        return val.to!string(16).to!wstring;
+    }
     static void SPSET(PetitComputer p, int id, int defno)
     {
         p.sprite.spset(id, defno);
@@ -405,6 +414,14 @@ class BuiltinFunction
             p.sprite.spclr();
         else
             p.sprite.spclr(cast(int)i);
+    }
+    static void SPHOME(PetitComputer p, int i, int hx, int hy)
+    {
+        p.sprite.sphome(i, hx, hy);
+    }
+    static void SPSCALE(PetitComputer p, int i, int x, int y)
+    {
+        p.sprite.spscale(i, x, y);
     }
     static void BGMSTOP(PetitComputer p)
     {

@@ -74,9 +74,8 @@ struct SpriteAnimData
     bool interpolation;//線形補完するかどうか
     SpriteAnimState data;
     SpriteAnimState old;
-    int load(ref SpriteData sprite, SpriteAnimTarget target, double[] data)
+    int load(int i, ref SpriteData sprite, SpriteAnimTarget target, double[] data)
     {
-        int i = 0;
         this.frame = -cast(int)data[i];
         i++;
         switch(target)
@@ -132,6 +131,8 @@ struct SpriteData
     double[8] var;
     SpriteAttr attr;
     bool define;//定義されてればtrue
+    double scalex;
+    double scaley;
     this(bool flag)
     {
         define = false;
@@ -145,6 +146,8 @@ struct SpriteData
         this.color = -1;
         this.attr = SpriteAttr.show;
         this.define = true;
+        scalex = 1;
+        scaley = 1;
     }
     this(int id, int u, int v, int w, int h)
     {
@@ -158,6 +161,8 @@ struct SpriteData
         this.color = -1;
         this.attr = SpriteAttr.show;
         this.define = true;
+        scalex = 1;
+        scaley = 1;
     }
     this(int id, ref SpriteDef spdef)
     {
@@ -173,6 +178,8 @@ struct SpriteData
         this.homex = spdef.hx;
         this.homey = spdef.hy;
         this.define = true;
+        scalex = 1;
+        scaley = 1;
     }
     SpriteAnimData[][SpriteAnimTarget.V] anim;
     void setAnimation(SpriteAnimData[] anim, SpriteAnimTarget sat)
@@ -183,6 +190,7 @@ struct SpriteData
     void clear()
     {
         this.define = false;
+        this.attr = SpriteAttr.none;
     }
 }
 struct SpriteDef
@@ -289,8 +297,8 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
-                int x = cast(int)sprite.x - sprite.homex;
-                int y = cast(int)sprite.y - sprite.homey;
+                int x = cast(int)sprite.x - cast(int)(sprite.homex * sprite.scalex);
+                int y = cast(int)sprite.y - cast(int)(sprite.homey * sprite.scaley);
                 int w = sprite.w;
                 int h = sprite.h;
                 if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
@@ -303,20 +311,20 @@ class Sprite
                 int v = cast(int)sprite.v;
                 int u2 = cast(int)sprite.u + sprite.w;//-1
                 int v2 = cast(int)sprite.v + sprite.h;
-                int flipx = 1, flipy = 1, flipx2 = x, flipy2 = y;
+                float flipx = cast(float)sprite.scalex, flipy = cast(float)sprite.scaley, flipx2 = x, flipy2 = y;
                 if(sprite.attr & SpriteAttr.hflip)
                 {
-                    flipx = -1;
+                    flipx = -flipx;
                     flipx2 = x2;
                 }
                 if(sprite.attr & SpriteAttr.hflip)
                 {
-                    flipy = -1;
+                    flipy = -flipy;
                     flipy2 = y2;
                 }
                 glTranslatef((flipx2) / 200f - 1,1 - ((flipy2) / 120f), z);
-                glRotatef(d, 0.0f, 0.0f, 1.0f );
                 glScalef(flipx, flipy, 1f);
+                glRotatef(d, 0.0f, 0.0f, 1.0f );
                 glBegin(GL_QUADS);
                 glColor3f(1.0, 1.0, 1.0);
                 if(sprite.attr == SpriteAttr.show)
@@ -433,9 +441,15 @@ class Sprite
         }
         int animcount = data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
         SpriteAnimData[] animdata = new SpriteAnimData[animcount];
+        int j;
         for(int i = 0; i < data.length;)
         {
-            i = animdata[i].load(sprites[id], target, data);
+            i = animdata[j++].load(i, sprites[id], target, data);
+            if(data.length - i == 1)
+            {
+                //loop
+                break;
+            }
         }
         sprites[id].setAnimation(animdata, target);
     }
@@ -449,5 +463,15 @@ class Sprite
         {
             spclr(i);
         }
+    }
+    void sphome(int i, int hx, int hy)
+    {
+        sprites[i].homex = hx;
+        sprites[i].homey = hy;
+    }
+    void spscale(int i, int x, int y)
+    {
+        sprites[i].scalex = x;
+        sprites[i].scaley = y;
     }
 }
