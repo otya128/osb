@@ -226,9 +226,13 @@ class BuiltinFunction
     {
         try
         {
-            if(str[0..2] == "&H")
+            if(str.length > 2 && str[0..2] == "&H")
             {
                 return str[2..$].to!int(16);
+            }
+            if(str.length > 2 && str[0..2] == "&B")
+            {
+                return str[2..$].to!int(2);
             }
             double val = str.to!double;
             return val;
