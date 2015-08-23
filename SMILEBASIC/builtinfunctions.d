@@ -588,6 +588,44 @@ class BuiltinFunction
     static void TALK(wstring a1)
     {
     }
+    static void BGCLR(PetitComputer p, DefaultValue!(int, false) layer)
+    {
+        if(layer.isDefault)
+        {
+            foreach(bg; p.bg)
+            {
+                bg.clear;
+            }
+            return;
+        }
+        p.bg[cast(int)layer].clear;
+    }
+    static void BGSCREEN(PetitComputer p, int layer, int w, int h)
+    {
+        p.bg[layer].screen(w, h);
+    }
+    static void BGOFS(PetitComputer p, int layer, int x, int y, DefaultValue!(int, false) z)
+    {
+        z.setDefaultValue(p.bg[layer].offsetz);
+        p.bg[layer].ofs(x, y, cast(int)z);
+    }
+    static void BGCLIP(PetitComputer p, int layer, DefaultValue!(int, false) x, DefaultValue!(int, false) y,
+                       DefaultValue!(int, false) x2, DefaultValue!(int, false) y2)
+    {
+        if(x.isDefault && y.isDefault && x2.isDefault && y2.isDefault)
+        {
+            p.bg[layer].clip();
+        }
+        if(x.isDefault || y.isDefault || x2.isDefault || y2.isDefault)
+        {
+            throw new IllegalFunctionCall("BGCLIP");
+        }
+        p.bg[layer].clip(cast(int)x, cast(int)y, cast(int)x2, cast(int)y2);
+    }
+    static void BGPUT(PetitComputer p, int layer, int x, int y, int screendata)
+    {
+        p.bg[layer].put(x, y, screendata);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()

@@ -12,6 +12,7 @@ import core.sync.mutex;
 import otya.smilebasic.parser;
 import otya.smilebasic.sprite;
 import otya.smilebasic.error;
+import otya.smilebasic.bg;
 enum Button
 {
     NONE = 0,
@@ -155,35 +156,6 @@ class PetitComputer
     uint gcolor = -1;
     GraphicPage[] GRP;
     GraphicPage GRPF;
-    GraphicPage[] GRPFColor;
-    GraphicPage[][] GRPFColorFore;
-    SDL_Surface* s8x8;
-    SDL_Texture* t8x8;
-    SDL_Surface* createSurfaceFromFile(string file)
-    {
-        SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
-        auto surfacesrc = IMG_LoadPNG_RW(stream);
-        SDL_RWclose(stream);
-        return surfacesrc;
-    }
-    //PNG画像から透過色のpixelを指定して透過しGRPを作る
-    GraphicPage createGraphicPage(string file, int pixel)
-    {
-        SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
-        auto surfacesrc = IMG_LoadPNG_RW(stream);
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, surfacesrc.w, surfacesrc.h, 32, 0, 0, 0, 0);
-        SDL_Rect rect;
-        rect.x = 0;
-        rect.y = 0;
-        rect.w = surfacesrc.w;
-        rect.h = surfacesrc.h;
-        SDL_SetColorKey(surfacesrc, SDL_TRUE, (cast(uint*)surface.pixels)[pixel]);
-        int i = SDL_BlitSurface(surfacesrc, &rect, surface, &rect);
-        auto grp = new GraphicPage(surface);
-        SDL_FreeSurface(surfacesrc);
-        SDL_RWclose(stream);
-        return grp;
-    }
     GraphicPage createGRPF(string file)
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
@@ -227,67 +199,6 @@ class PetitComputer
         }
         SDL_RWclose(stream);
         SDL_FreeSurface(src);
-        return new GraphicPage(surface);
-    }
-    GraphicPage createGRPF(int color, SDL_Surface *src)
-    {
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0, 0, 0, 0);
-        auto srcpixels = (cast(uint*)src.pixels);
-        auto pixels = (cast(uint*)surface.pixels);
-        for(int x = 0; x < src.w; x++)
-        {
-            for(int y = 0; y < src.h; y++)
-            {
-                ubyte r, g, b, a;
-                SDL_GetRGBA(*srcpixels, src.format, &r, &g, &b, &a);
-                //if(a == 0)
-                {
-                    auto back = consoleColor[color];
-                    r = back >> 16 & 0xFF;
-                    g = back >> 8 & 0xFF;
-                    b = back & 0xFF;
-                    a = back >> 24 & 0xFF;
-                }
-                *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
-                pixels++;
-                srcpixels++;
-            }
-        }
-        return new GraphicPage(surface);
-    }
-    GraphicPage createGRPF(int color, int colorFore, SDL_Surface *src)
-    {
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0, 0, 0, 0);
-        auto srcpixels = (cast(uint*)src.pixels);
-        auto pixels = (cast(uint*)surface.pixels);
-        for(int x = 0; x < src.w; x++)
-        {
-            for(int y = 0; y < src.h; y++)
-            {
-                ubyte r, g, b, a;
-                SDL_GetRGBA(*srcpixels, src.format, &r, &g, &b, &a);
-                if(r == 158 && g == 0 && b == 93 && a == 255)
-                {
-                    auto back = consoleColor[color];
-                    r = back >> 16 & 0xFF;
-                    g = back >> 8 & 0xFF;
-                    b = back & 0xFF;
-                    a = back >> 24 & 0xFF;
-                }
-                else
-                {
-                    //雑
-                    auto fore = consoleColor[colorFore];
-                    r = fore >> 16 & 0xFF;
-                    g = fore >> 8 & 0xFF;
-                    b = fore & 0xFF;
-                    a = fore >> 24 & 0xFF;
-                }
-                *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
-                pixels++;
-                srcpixels++;
-            }
-        }
         return new GraphicPage(surface);
     }
     GraphicPage createEmptyPage()
@@ -555,6 +466,7 @@ class PetitComputer
         }
         xscreenmode = mode2;
     }
+    BG[4] bg;
     void render()
     {
         buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
@@ -563,7 +475,7 @@ class PetitComputer
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile;// = true;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -634,6 +546,11 @@ class PetitComputer
                     glViewport(0, 240, 400, 240);
                 }
                 sprite.render();
+                glBindTexture(GL_TEXTURE_2D, GRP[bgpage].glTexture);
+                for(int i = 0; i < bg.length; i++)
+                {
+                    bg[i].render(400f, 240f);
+                }
 /*                if(this.sprite.sprites[0].define)
                     if(this.sprite.sprites[0].u == 0)
                     {
@@ -731,6 +648,8 @@ class PetitComputer
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
         sprite = new Sprite(this);
+        for(int i = 0; i < bg.length; i++)
+            bg[i] = new BG(this);
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
@@ -738,9 +657,10 @@ class PetitComputer
                                  //readText("./SYS/GAME2RPG.TXT").to!wstring
                                  //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
+                                 readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
-                                 readText("TEST.TXT").to!wstring
+                                 //readText("TEST.TXT").to!wstring
                                  /*"?ABS(-1)
                                  LOCATE 0,10
                                  COLOR 5
@@ -783,8 +703,9 @@ class PetitComputer
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
-        vm.dump;
+        //vm.dump;
         this.vm = vm;
+        bg[0].put(0,0,1);
         //gpset(0, 10, 10, 0xFF00FF00);
         //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
         //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));

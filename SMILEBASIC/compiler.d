@@ -895,13 +895,21 @@ class Compiler
                 int[] addresses = new int[label.labels.length];
                 foreach(int index, wstring l; label.labels)
                 {
-                    if(label.sc.func)
+                    try
                     {
-                        addresses[index] =label.sc.func.label[l];
+                        if(label.sc.func)
+                        {
+                            addresses[index] =label.sc.func.label[l];
+                        }
+                        else
+                        {
+                            addresses[index] = globalLabel[l];
+                        }
                     }
-                    else
+                    catch(Error re)
                     {
-                        addresses[index] = globalLabel[l];
+                        //undefined labelは実行時に出る(TECDEMOが動かない)
+                        addresses[index] = int.min;
                     }
                 }
                 if(label.isGosub)

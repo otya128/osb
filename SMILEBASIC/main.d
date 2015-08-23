@@ -122,15 +122,15 @@ END
         writeln(t);
     }
     }
-    try
+    //try
     {
         auto pc = new PetitComputer();
         pc.run();
     }
-    catch(Throwable t)
+    /*(Throwable t)
     {
         writeln(std.windows.charset.toMBSz(t.to!string).to!string);
         readln();
-    }
+    }*/
     return 0;
 }
