@@ -80,6 +80,26 @@ class BuiltinFunction
     {
         return sin(arg1);
     }
+    static double COS(double arg1)
+    {
+        return cos(arg1);
+    }
+    static double TAN(double arg1)
+    {
+        return tan(arg1);
+    }
+    static double RAD(double arg1)
+    {
+        return arg1 * std.math.PI / 180;
+    }
+    static double DEG(double arg1)
+    {
+        return arg1 * 180 / std.math.PI;
+    }
+    static double PI()
+    {
+        return std.math.PI;
+    }
     //static ABS = function double(double x) => abs(this.result == ValueType.Double ? 1 : 0);
     static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, DefaultValue!(int, false) z)
     {
@@ -752,101 +772,108 @@ template GetFunctionParamType(T, string N)
 template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
 {
     enum I = L - N;
-    enum storage = ParameterStorageClassTuple!(__traits(getMember, T, NAME))[M];
-    static if(is(P[0] == double))
+    static if(ParameterStorageClassTuple!(__traits(getMember, T, NAME)).length <= M)
     {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "arg[" ~ I.to!string ~ "].castDouble";
+        const string AddFuncArg = "";
     }
-    else static if(is(P[0] == PetitComputer))
+    else
     {
-        enum add = 0;
-        enum outadd = 0;
-        const string arg = "p";
-    }
-    else static if(is(P[0] == int))
-    {
-        static if(storage & ParameterStorageClass.out_)
+        enum storage = ParameterStorageClassTuple!(__traits(getMember, T, NAME))[M];
+        static if(is(P[0] == double))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "arg[" ~ I.to!string ~ "].castDouble";
+        }
+        else static if(is(P[0] == PetitComputer))
         {
             enum add = 0;
-            enum outadd = 1;
-            const string arg = "ret[" ~ O.to!string ~ "].integerValue";
+            enum outadd = 0;
+            const string arg = "p";
+        }
+        else static if(is(P[0] == int))
+        {
+            static if(storage & ParameterStorageClass.out_)
+            {
+                enum add = 0;
+                enum outadd = 1;
+                const string arg = "ret[" ~ O.to!string ~ "].integerValue";
+            }
+            else
+            {
+                enum add = 1;
+                enum outadd = 0;
+                const string arg = "arg[" ~ I.to!string ~ "].castInteger";
+            }
+        }
+        else static if(is(P[0] == wstring))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "arg[" ~ I.to!string ~ "].castString";
+        }
+        else static if(is(P[0] == DefaultValue!int))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromIntToDefault(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!(int, false)))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromIntToSkip(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!wstring))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromStringToDefault(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!(wstring, false)))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromStringToSkip(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == Value[]))
+        {
+            const string arg = "arg";
+        }
+        else static if(is(P[0] == Value))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "arg[" ~ I.to!string ~ "]";
+        }
+        else static if(is(P[0] == DefaultValue!Value))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromValueToDefault(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!(Value, false)))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromValueToSkip(arg[" ~ I.to!string ~ "])";
         }
         else
         {
             enum add = 1;
             enum outadd = 0;
-            const string arg = "arg[" ~ I.to!string ~ "].castInteger";
+            pragma(msg, P[0]);
+            static assert(false, "Invalid type");
+            const string arg = "";
         }
-    }
-    else static if(is(P[0] == wstring))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "arg[" ~ I.to!string ~ "].castString";
-    }
-    else static if(is(P[0] == DefaultValue!int))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromIntToDefault(arg[" ~ I.to!string ~ "])";
-    }
-    else static if(is(P[0] == DefaultValue!(int, false)))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromIntToSkip(arg[" ~ I.to!string ~ "])";
-    }
-    else static if(is(P[0] == DefaultValue!wstring))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromStringToDefault(arg[" ~ I.to!string ~ "])";
-    }
-    else static if(is(P[0] == DefaultValue!(wstring, false)))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromStringToSkip(arg[" ~ I.to!string ~ "])";
-    }
-    else static if(is(P[0] == Value[]))
-    {
-        const string arg = "arg";
-    }
-    else static if(is(P[0] == Value))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "arg[" ~ I.to!string ~ "]";
-    }
-    else static if(is(P[0] == DefaultValue!Value))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromValueToDefault(arg[" ~ I.to!string ~ "])";
-    }
-    else static if(is(P[0] == DefaultValue!(Value, false)))
-    {
-        enum add = 1;
-        enum outadd = 0;
-        const string arg = "fromValueToSkip(arg[" ~ I.to!string ~ "])";
-    }
-    else
-    {
-        enum add = 1;
-        enum outadd = 0;
-        pragma(msg, P[0]);
-        static assert(false, "Invalid type");
-        const string arg = "";
-    }
-    static if(1 == P.length)
-    {
-        const string AddFuncArg = arg;
-    }
-    else
-    {
-        const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(L - !add, N + add, M + 1, O + outadd, T, NAME, P[1..$]);
+        static if(1 == P.length)
+        {
+            const string AddFuncArg = arg;
+        }
+        else
+        {
+            const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(L - !add, N + add, M + 1, O + outadd, T, NAME, P[1..$]);
+        }
     }
 }
 template OutArgsInit(T, string N, int I = 0, int J = 0)
@@ -886,30 +913,37 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
 }
 template GetArgumentCount(T, string N, int I = 0)
 {
-    enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
     alias param = ParameterTypeTuple!(__traits(getMember, T, N));
-    static if(is(param[I] == PetitComputer))
+    static if(param.length <= I)
     {
-        enum add = 0 + 1;
+        enum GetArgumentCount = 0;
     }
     else
     {
-        static if(tuple & ParameterStorageClass.out_)
+        enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
+        static if(is(param[I] == PetitComputer))
         {
-            enum add = 0;
+            enum add = 0 + 1;
         }
         else
         {
-            enum add = 1;
+            static if(tuple & ParameterStorageClass.out_)
+            {
+                enum add = 0;
+            }
+            else
+            {
+                enum add = 1;
+            }
         }
-    }
-    static if(param.length > I + 1)
-    {
-        enum GetArgumentCount = add + GetArgumentCount!(T, N, I + 1);
-    }
-    else
-    {
-        enum GetArgumentCount = add;
+        static if(param.length > I + 1)
+        {
+            enum GetArgumentCount = add + GetArgumentCount!(T, N, I + 1);
+        }
+        else
+        {
+            enum GetArgumentCount = add;
+        }
     }
 }
 template IsVariadic(T, string N, int I = 0)
