@@ -365,10 +365,25 @@ class BuiltinFunction
     {
         return val.to!wstring;
     }
-    static wstring HEX(int val)
+    static wstring HEX(int val, DefaultValue!(int, false) digits)
     {
-        //ひどい
-        return val.to!string(16).to!wstring;
+        import std.format;
+        if(digits.isDefault)
+        {
+            //ひどい
+            return val.to!string(16).to!wstring;
+        }
+        if(digits > 8)
+        {
+            throw new OutOfRange();
+        }
+        FormatSpec!char f;
+        f.spec = 'X';
+        f.flZero = true;
+        f.width = cast(int)digits;
+        auto w = appender!wstring();
+        formatValue(w, val, f);
+        return cast(immutable)(w.data);
     }
     static void SPSET(PetitComputer p, int id, int defno)
     {

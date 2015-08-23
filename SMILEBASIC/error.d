@@ -64,6 +64,14 @@ class TypeMismatch : SmileBasicError
         super("Type mismatch");
     }
 }
+class OutOfRange : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 10;
+        super("Out of range");
+    }
+}
 class OutOfDATA : SmileBasicError
 {
     this()
