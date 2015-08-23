@@ -80,6 +80,10 @@ class BuiltinFunction
     {
         return sin(arg1);
     }
+    static double ASIN(double arg1)
+    {
+        return asin(arg1);
+    }
     static double SINH(double arg1)
     {
         return sinh(arg1);
@@ -88,6 +92,10 @@ class BuiltinFunction
     {
         return cos(arg1);
     }
+    static double ACOS(double arg1)
+    {
+        return acos(arg1);
+    }
     static double COSH(double arg1)
     {
         return cosh(arg1);
@@ -95,6 +103,14 @@ class BuiltinFunction
     static double TAN(double arg1)
     {
         return tan(arg1);
+    }
+    static double ATAN(double arg1, DefaultValue!(double, false) arg2)
+    {
+        if(arg2.isDefault)
+        {
+            return atan(arg1);
+        }
+        return atan2(arg1, cast(double)arg2);
     }
     static double TANH(double arg1)
     {
@@ -679,6 +695,20 @@ DefaultValue!(int, false) fromIntToSkip(Value v)
     else
         return DefaultValue!(int, false)(true);
 }
+DefaultValue!double fromDoubleToDefault(Value v)
+{
+    if(v.isNumber)
+        return DefaultValue!double(v.castDouble());
+    else
+        return DefaultValue!double(true);
+}
+DefaultValue!(double, false) fromDoubleToSkip(Value v)
+{
+    if(v.isNumber)
+        return DefaultValue!(double, false)(v.castDouble());
+    else
+        return DefaultValue!(double, false)(true);
+}
 DefaultValue!wstring fromStringToDefault(Value v)
 {
     if(v.type == ValueType.String)
@@ -738,6 +768,14 @@ template GetFunctionParamType(T, string N)
             else static if(is(P[0] == DefaultValue!(int, false)))
             {
                 const string arg = "ValueType.Integer, true";
+            }
+            else static if(is(P[0] == DefaultValue!double))
+            {
+                const string arg = "ValueType.Double, true";
+            }
+            else static if(is(P[0] == DefaultValue!(double, false)))
+            {
+                const string arg = "ValueType.Double, true";
             }
             else static if(is(P[0] == DefaultValue!(wstring)))
             {
@@ -835,6 +873,18 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
             enum add = 1;
             enum outadd = 0;
             const string arg = "fromIntToSkip(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!double))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromIntDoubleToDefault(arg[" ~ I.to!string ~ "])";
+        }
+        else static if(is(P[0] == DefaultValue!(double, false)))
+        {
+            enum add = 1;
+            enum outadd = 0;
+            const string arg = "fromDoubleToSkip(arg[" ~ I.to!string ~ "])";
         }
         else static if(is(P[0] == DefaultValue!wstring))
         {
