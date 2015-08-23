@@ -657,14 +657,12 @@ class PetitComputer
                             return;
                         case SDL_KEYUP:
                             {
-                                if(event.key.repeat) break;
                                 auto key = event.key.keysym.sym;
                                 button &= ~buttonTable[event.key.keysym.scancode];
                             }
                             break;
                         case SDL_KEYDOWN:
                             {
-                                if(event.key.repeat) break;
                                 auto key = event.key.keysym.sym;
                                 button |= buttonTable[event.key.keysym.scancode];
                                 if(key == SDLK_BACKSPACE)
