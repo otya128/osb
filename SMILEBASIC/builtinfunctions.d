@@ -80,13 +80,25 @@ class BuiltinFunction
     {
         return sin(arg1);
     }
+    static double SINH(double arg1)
+    {
+        return sinh(arg1);
+    }
     static double COS(double arg1)
     {
         return cos(arg1);
     }
+    static double COSH(double arg1)
+    {
+        return cosh(arg1);
+    }
     static double TAN(double arg1)
     {
         return tan(arg1);
+    }
+    static double TANH(double arg1)
+    {
+        return tanh(arg1);
     }
     static double RAD(double arg1)
     {
