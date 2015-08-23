@@ -1339,7 +1339,7 @@ class PushSystemVariable : Code
     }
     override void execute(VM vm)
     {
-        vm.push(var.value);
+        vm.push(var.value(vm));
     }
     override string toString(VM vm)
     {

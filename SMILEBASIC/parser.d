@@ -248,11 +248,48 @@ class Lexical
                 i += 2;
                 break;
             }
-            if(c == '&' && i + 1 < code.length && code[i + 1] == '&')
+            if(c == '&' && i + 1 < code.length)
             {
-                token = Token(TokenType.LogicalAnd);
-                i += 2;
-                break;
+                if(code[i + 1].toUpper == 'H')
+                {
+                    i += 2;
+                    int start = i;
+                    for(;i < code.length;i++)
+                    {
+                        c = cast(wchar)(code[i].toUpper);
+                        if(!c.isDigit() && (c < 'A' || c > 'F'))
+                        {
+                            break;
+                        }
+                    }
+                    wstring numstr = code[start..i];
+                    int num = numstr.to!int(16);
+                    token = Token(TokenType.Integer, Value(num));
+                    break;
+                }
+                if(code[i + 1].toUpper == 'B')
+                {
+                    i += 2;
+                    int start = i;
+                    for(;i < code.length;i++)
+                    {
+                        c = code[i];
+                        if(c != '1' && c != '0')
+                        {
+                            break;
+                        }
+                    }
+                    wstring numstr = code[start..i];
+                    int num = numstr.to!int(2);
+                    token = Token(TokenType.Integer, Value(num));
+                    break;
+                }
+                if(code[i + 1] == '&')
+                {
+                    token = Token(TokenType.LogicalAnd);
+                    i += 2;
+                    break;
+                }
             }
             if(c == '|' && i + 1 < code.length && code[i + 1] == '|')
             {

@@ -160,6 +160,14 @@ class Compiler
         sysVariable["DATE$"] = new Date();
         global["TIME$"] = VMVariable(-1);
         sysVariable["TIME$"] = new Time();
+        global["MAINCNT"] = VMVariable(-1);
+        sysVariable["MAINCNT"] = new Maincnt();
+        global["CSRX"] = VMVariable(-1);
+        sysVariable["CSRX"] = new CSRX();
+        global["CSRY"] = VMVariable(-1);
+        sysVariable["CSRY"] = new CSRY();
+        global["CSRZ"] = VMVariable(-1);
+        sysVariable["CSRZ"] = new CSRZ();
     }
 
     SystemVariable[wstring] sysVariable;

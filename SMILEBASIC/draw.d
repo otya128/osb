@@ -18,6 +18,9 @@ class Draw
     void gline(int page, int x, int y, int x2, int y2, uint color)
     {
         import std.math;
+        color = PetitComputer.toGLColor(petitcom.GRP[page].textureFormat, color);
+        glBindTexture(GL_TEXTURE_2D, petitcom.GRP[page].glTexture);
+        auto tf = petitcom.GRP[page].textureFormat;
         int dx = abs(x2 - x);
         int dy = abs(y2 - y);
         int sx, sy;
@@ -27,7 +30,7 @@ class Draw
         while(true)
         {
             if(x < 0 || y < 0 || x >= 512 || y >= 512) break;
-            gpset(page, x, y, color);
+            glTexSubImage2D(GL_TEXTURE_2D , 0, x, y, 1, 1, tf, GL_UNSIGNED_BYTE, &color);
             if(x == x2 && y == y2) break;
             int e2 = 2*err;
             if(e2 > -dy)

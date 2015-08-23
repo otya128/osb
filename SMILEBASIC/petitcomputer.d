@@ -2,6 +2,7 @@ module otya.smilebasic.petitcomputer;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl;
+import derelict.opengl3.gl3;
 import std.net.curl;
 import std.file;
 import std.stdio;
@@ -76,6 +77,27 @@ class GraphicPage
         glTexImage2D( GL_TEXTURE_2D, 0, nOfColors, surface.w, surface.h, 0,
                       texture_format, GL_UNSIGNED_BYTE, surface.pixels );
         textureFormat = texture_format;
+    }
+    GLuint render;
+    GLuint buffer;
+    void createBuffer()
+    {
+        GLint old;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
+        glBindTexture(GL_TEXTURE_2D, glTexture);
+        glGenRenderbuffersEXT(1, &render);
+        glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, render);
+        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, 512, 512);
+        glGenFramebuffersEXT(1, &buffer);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, buffer);
+        glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, glTexture, 0);
+        glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, render);
+        glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            writeln("!?");
+        }
+        glBindFramebufferEXT(GL_FRAMEBUFFER, old);
     }
 }
 
@@ -272,7 +294,7 @@ class PetitComputer
     {
         DerelictSDL2.load();
         DerelictSDL2Image.load();
-        DerelictGL.load();
+     //   DerelictGL.load();
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = toGLColor(consoleColor[i]);
         if(!exists(resourcePath))
@@ -416,6 +438,7 @@ class PetitComputer
     bool displaynum;
     void renderGraphic()
     {
+        if(!drawMessageLength) return;
         //grpmutex.lock();
         //scope(exit)
         //    grpmutex.unlock();
@@ -423,28 +446,69 @@ class PetitComputer
         //betuni kouzoutai demo sonnnani sokudo kawaranasasou
         auto len = drawMessageLength;
         drawMessageLength = 0;
-        for(int i = 0; i < len; i++)
+        int s = 0;
+        GLint old;
+        auto a = & glBindFramebuffer;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[showGRP].buffer);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_DEPTH_TEST);
+        glViewport(0, 0, 512, 512);
+        for(int i = s; i < len; i++)
         {
             DrawMessage dm = drawMessageQueue[i];
             switch(dm.type)
             {
                 case DrawType.PSET:
-                    draw.gpset(dm.page, dm.x, dm.y ,dm.color);
+                    glBegin(GL_POINTS);
+                    glColor3ubv(cast(ubyte*)&dm.color);
+                    glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
+                    glEnd();
+                    //draw.gpset(dm.page, dm.x, dm.y ,dm.color);
                     break;
                 case DrawType.LINE:
-                    draw.gline(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    {
+                        glBegin(GL_LINES);
+                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
+                        glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
+                        //glFlush();
+                        glEnd();
+                    }
+                    //draw.gline(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
                     break;
                 case DrawType.FILL:
-                    draw.gfill(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    {
+                        glBegin(GL_QUADS);
+                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
+                        glVertex2f((dm.x) / 256f - 1, (dm.y2 + 1) / 256f - 1);
+                        glVertex2f((dm.x2 + 1) / 256f - 1, (dm.y2 + 1) / 256f - 1);
+                        glVertex2f((dm.x2 + 1) / 256f - 1, (dm.y) / 256f - 1);
+                        glEnd();
+                    }
+                    //draw.gfill(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
                     break;
                 case DrawType.BOX:
-                    draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
+                    {
+                        glBegin(GL_LINE_LOOP);
+                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
+                        glVertex2f((dm.x) / 256f - 1, (dm.y2) / 256f - 1);
+                        glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
+                        glVertex2f((dm.x2) / 256f - 1, (dm.y) / 256f - 1);
+                        glEnd();
+                    }
+                    //draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
                     break;
                 default:
             }
         }
+        glFlush();
+        glBindFramebufferEXT(GL_FRAMEBUFFER, old);
+        glEnable(GL_DEPTH_TEST);
         drawflag = false;
-
+        glViewport(0, 0, 400, 240);
     }
     Button[] buttonTable;
     Sprite sprite;
@@ -469,13 +533,15 @@ class PetitComputer
     BG[4] bg;
     void render()
     {
+        DerelictGL.load();
+        DerelictGL3.load();
         buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
         buttonTable[SDL_SCANCODE_UP] = Button.UP;
         buttonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile = true;
+        bool renderprofile;// = true;
         try
         {
             version(Windows)
@@ -508,9 +574,11 @@ class PetitComputer
                 }
             }
             int loopcnt;
+            DerelictGL3.reload();
             foreach(g; GRP)
             {
                 g.createTexture(renderer);
+                g.createBuffer();
             }
             //GRP[0] = GRPF;
             //glEnable(GL_BLEND);
@@ -551,15 +619,6 @@ class PetitComputer
                 {
                     bg[i].render(400f, 240f);
                 }
-/*                if(this.sprite.sprites[0].define)
-                    if(this.sprite.sprites[0].u == 0)
-                    {
-                        writeln("WHATW");
-                    }
-                    else
-                    {
-                        writeln(this.sprite.sprites[0].u);
-                    }*/
 
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
@@ -609,6 +668,10 @@ class PetitComputer
                             break;
                     }
                 }
+                if(drawMessageLength)
+                {
+                    //renderGraphic;
+                }
                 while(true)
                 {
                     long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
@@ -630,6 +693,7 @@ class PetitComputer
     }
     SDL_Window* window;
     otya.smilebasic.vm.VM vm;
+    int maincnt;
     void run()
     {
         init();
@@ -710,6 +774,7 @@ class PetitComputer
         //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
         //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
         //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
+        int startcnt = SDL_GetTicks();
         while (true)
         {
             uint elapse;
@@ -718,7 +783,7 @@ class PetitComputer
             {
                 try
                 {
-                    if(!vsyncFrame && running)
+                    for(int i = 0; i < 128 && !vsyncFrame && running; i++)
                     {
                         //writefln("%04X:%s", vm.pc, vm.getCurrent);
                         running = vm.runStep();
@@ -751,16 +816,8 @@ class PetitComputer
                     }
                 }
                 elapse = SDL_GetTicks() - startTicks;
-                /*if(this.sprite.sprites[0].define)
-                    if(this.sprite.sprites[0].u == 0)
-                {
-                    writeln("WHATW");
-                }
-                else
-                {
-                    writeln(this.sprite.sprites[0].u);
-                }*/
             } while(elapse <= 1000 / 60);
+            maincnt = (SDL_GetTicks() - startcnt) / (1000 / 60);
             vsyncCount++;
             if(vsyncFrame <= vsyncCount) vsyncFrame = 0;
         }
@@ -855,7 +912,7 @@ class PetitComputer
     {
         if(format == GL_BGRA)
         {
-            return petitcolor;
+            return (petitcolor & 0xFF00FF00) | (petitcolor & 0xFF) << 16 | petitcolor >> 16 & 0xFF;
         }
         if(format == GL_RGBA)
         {
@@ -922,21 +979,25 @@ class PetitComputer
         drawMessageQueue[drawMessageLength].page = page;
         drawMessageQueue[drawMessageLength].x = x;
         drawMessageQueue[drawMessageLength].y = y;
-        drawMessageQueue[drawMessageLength].color = color;
+        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color);
         drawMessageLength++;
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
     {
-        grpmutex.lock();
-        scope(exit)
-            grpmutex.unlock();
+        if(drawMessageLength >= dmqqueuelen)
+        {
+            while(drawMessageLength)
+            {
+                SDL_Delay(1);
+            }
+        }
         drawMessageQueue[drawMessageLength].type = type;
         drawMessageQueue[drawMessageLength].page = page;
         drawMessageQueue[drawMessageLength].x = x;
         drawMessageQueue[drawMessageLength].y = y;
         drawMessageQueue[drawMessageLength].x2 = x2;
         drawMessageQueue[drawMessageLength].y2 = y2;
-        drawMessageQueue[drawMessageLength].color = color;
+        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color);
         drawMessageLength++;
     }
     //TODO:範囲チェック
