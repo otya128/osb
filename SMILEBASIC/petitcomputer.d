@@ -808,7 +808,9 @@ class PetitComputer
                     running = false;
                     try
                     {
-                        printConsole(sbe.to!string);
+                        printConsole(sbe.getErrorMessage, "\n");
+                        printConsole(sbe.getErrorMessage2, "\n");
+                        //printConsole(sbe.to!string);
                         writeln(sbe.to!string);
                     }
                     catch

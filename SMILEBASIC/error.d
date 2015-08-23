@@ -25,6 +25,15 @@ class SmileBasicError : Exception
         super(message);
         this.message2 = message2;
     }
+    string getErrorMessage()
+    {
+        return this.msg;
+    }
+    //詳細
+    string getErrorMessage2()
+    {
+        return message2;
+    }
 }
 class SyntaxError : SmileBasicError
 {
