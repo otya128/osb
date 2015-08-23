@@ -242,6 +242,14 @@ class BuiltinFunction
     {
         return val.floor;
     }
+    static double ROUND(double val)
+    {
+        return val.round;
+    }
+    static double CEIL(double val)
+    {
+        return val.ceil;
+    }
     static wstring MID(wstring str, int i, int len)
     {
         if(i + len > str.length)
