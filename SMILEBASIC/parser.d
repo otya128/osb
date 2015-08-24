@@ -52,6 +52,7 @@ class Lexical
         reserved["FOR"] = TokenType.For;
         reserved["NEXT"] = TokenType.Next;
         reserved["MOD"] = TokenType.Mod;
+        reserved["DIV"] = TokenType.IntDiv;
         reserved["GOSUB"] = TokenType.Gosub;
         reserved["RETURN"] = TokenType.Return;
         reserved["END"] = TokenType.End;
@@ -303,13 +304,14 @@ class Lexical
             }
             token = Token(table[cast(char)c]);
             i++;
+            //CRLFだった
             if(token.type == TokenType.NewLine)
             {
                 line++;
-                if(c == '\n')
+                if(c == '\r')
                 {
                     //CRLF
-                    if(i < code.length && code[i] == '\r')
+                    if(i < code.length && code[i] == '\n')
                     {
                         i++;
                     }
@@ -744,7 +746,6 @@ class Parser
     {
         auto token = lex.front();
         Statement node = null;
-        writeln(token.type);
         switch(token.type)
         {
             case TokenType.Print:

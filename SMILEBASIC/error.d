@@ -45,7 +45,7 @@ class SyntaxError : SmileBasicError
     this(wstring func)
     {
         this();
-        this.message2 = "Undefine function (" ~ func.to!string ~ ")";
+        this.message2 = "Undefined function (" ~ func.to!string ~ ")";
     }
 }
 class IllegalFunctionCall : SmileBasicError

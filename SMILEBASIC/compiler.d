@@ -410,7 +410,6 @@ class Compiler
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
-                    writeln(func.name);
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
@@ -433,6 +432,7 @@ class Compiler
                     }
                     else
                     {
+                        writeln(func.name);
                         genCode(new CallFunctionCode(func.name, func.args.length));
                     }
                 }
@@ -801,7 +801,6 @@ class Compiler
             case NodeType.CallFunctionStatement:
                 {
                     auto func = cast(CallFunctionStatement)i;
-                    writeln(func.name);
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
@@ -821,6 +820,7 @@ class Compiler
                     }
                     else
                     {
+                        writeln(func.name);
                         genCode(new CallFunctionCode(func.name, func.args.length, func.outVariable.length));
                     }
                     //TODO:OUT

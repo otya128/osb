@@ -216,6 +216,7 @@ class BuiltinFunction
     }
     static void GPRIO(PetitComputer p, int z)
     {
+        p.gprio = z;
     }
     static void GPAGE(PetitComputer p, int showPage, int usePage)
     {
@@ -380,9 +381,65 @@ class BuiltinFunction
         formatValue(w, val, f);
         return cast(immutable)(w.data);
     }
-    static void SPSET(PetitComputer p, int id, int defno)
+    static void SPSET(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
+        if(!V.isDefault && !W.isDefault)
+        {
+            int u = defno;
+            int v = cast(int)V;
+            int w = 16, h = 16, attr = 1;
+            if(!ATTR.isDefault)
+            {
+                w = cast(int)W;
+                h = cast(int)H;
+                attr = cast(int)ATTR;
+            }
+            else
+            {
+                if(!W.isDefault && !H.isDefault)
+                {
+                    w = cast(int)W;
+                    h = cast(int)H;
+                }
+                if(!W.isDefault && H.isDefault)
+                {
+                    attr = cast(int)W;
+                }
+            }
+            p.sprite.spset(id, u, v, w, h, cast(SpriteAttr)attr);
+            return;
+        }
         p.sprite.spset(id, defno);
+    }
+    static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
+    {
+        if(!V.isDefault && !W.isDefault)
+        {
+            int u = defno;
+            int v = cast(int)V;
+            int w = 16, h = 16, attr = 1;
+            if(!ATTR.isDefault)
+            {
+                w = cast(int)W;
+                h = cast(int)H;
+                attr = cast(int)ATTR;
+            }
+            else
+            {
+                if(!W.isDefault && !H.isDefault)
+                {
+                    w = cast(int)W;
+                    h = cast(int)H;
+                }
+                if(!W.isDefault && H.isDefault)
+                {
+                    attr = cast(int)W;
+                }
+            }
+            p.sprite.spchr(id, u, v, w, h, cast(SpriteAttr)attr);
+            return;
+        }
+        p.sprite.spchr(id, defno);
     }
     static void SPHIDE(PetitComputer p, int id)
     {
@@ -394,7 +451,7 @@ class BuiltinFunction
     }
     static void SPOFS(PetitComputer p, int id, int x, int y, DefaultValue!(int, false) z)
     {
-        p.sprite.spofs(id, x, y);
+        p.sprite.spofs(id, x, y, cast(int)z);
     }
     static void SPANIM(PetitComputer p, Value[] va_args)
     {
@@ -489,9 +546,13 @@ class BuiltinFunction
     {
         p.sprite.sphome(i, hx, hy);
     }
-    static void SPSCALE(PetitComputer p, int i, int x, int y)
+    static void SPSCALE(PetitComputer p, int i, double x, double y)
     {
         p.sprite.spscale(i, x, y);
+    }
+    static void SPROT(PetitComputer p, int i, double rot)
+    {
+        p.sprite.sprot(i, rot);
     }
     static void BGMSTOP(PetitComputer p)
     {
@@ -535,8 +596,8 @@ class BuiltinFunction
                 if(d != -1)
                 {
                     auto spec = singleSpec(format[i .. d + 1]);
-                    spec.spec = 'x';
-                    formatValue(w, args[j].castDouble, spec);
+                    spec.spec = cast(char)format[d];
+                    formatValue(w, args[j].castInteger, spec);
                     j++;
                     i = d;
                     continue;
@@ -620,6 +681,10 @@ class BuiltinFunction
     static void BGPUT(PetitComputer p, int layer, int x, int y, int screendata)
     {
         p.bg[layer].put(x, y, screendata);
+    }
+    static void BGHOME(PetitComputer p, int layer, int x, int y)
+    {
+        p.bg[layer].home(x, y);
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;

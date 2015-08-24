@@ -74,7 +74,7 @@ struct SpriteAnimData
     bool interpolation;//線形補完するかどうか
     SpriteAnimState data;
     SpriteAnimState old;
-    int load(int i, ref SpriteData sprite, SpriteAnimTarget target, double[] data)
+    int load(int i, ref SpriteData sprite, SpriteAnimTarget target, double[] data, SpriteAnimData* old)
     {
         this.frame = cast(int)data[i];
         if(this.frame < 0)
@@ -92,31 +92,32 @@ struct SpriteAnimData
             case SpriteAnimTarget.XY:
                 this.data.x = cast(int)data[i++];
                 this.data.y = cast(int)data[i++];
-                this.old.x = sprite.x;
-                this.old.y = sprite.y;
+                this.old.x = old ? old.data.x : sprite.x;
+                this.old.y = old ? old.data.y : sprite.y;
                 break;
             case SpriteAnimTarget.Z:
                 this.data.z = cast(int)data[i++];
-                this.old.z = sprite.z;
+                this.old.z = old ? old.data.z : sprite.z;
                 break;
             case SpriteAnimTarget.UV:
                 this.data.u = cast(int)data[i++];
                 this.data.v = cast(int)data[i++];
-                this.old.u = sprite.u;
-                this.old.v = sprite.v;
+                this.old.u = old ? old.data.u : sprite.u;
+                this.old.v = old ? old.data.v : sprite.v;
                 break;
             case SpriteAnimTarget.I:
                 this.data.i = cast(int)data[i++];
-                this.old.i = sprite.defno;
+                this.old.i = old ? old.data.i : sprite.defno;
                 break;
             case SpriteAnimTarget.R:
                 this.data.r = data[i++];
+                this.old.r = old ? old.data.r : sprite.r;
                 break;
             case SpriteAnimTarget.S:
                 this.data.scalex = data[i++];
                 this.data.scaley = data[i++];
-                this.old.scalex = sprite.scalex;
-                this.old.scaley = sprite.scaley;
+                this.old.scalex = old ? old.data.scalex : sprite.scalex;
+                this.old.scaley = old ? old.data.scaley : sprite.scaley;
                 break;
             case SpriteAnimTarget.C:
                 this.data.c = cast(uint)data[i++];
@@ -150,6 +151,7 @@ struct SpriteData
     bool define;//定義されてればtrue
     double scalex;
     double scaley;
+    double r;
     this(bool flag)
     {
         define = false;
@@ -158,6 +160,8 @@ struct SpriteData
     {
         x = 0;
         y = 0;
+        z = 0;
+        r = 0;
         this.id = id;
         this.defno = defno;
         this.color = -1;
@@ -170,6 +174,8 @@ struct SpriteData
     {
         x = 0;
         y = 0;
+        z = 0;
+        r = 0;
         this.id = id;
         this.u = u;
         this.v = v;
@@ -185,6 +191,8 @@ struct SpriteData
     {
         x = 0;
         y = 0;
+        z = 0;
+        r = 0;
         this.id = id;
         this.u = spdef.u;
         this.v = spdef.v;
@@ -263,6 +271,11 @@ class Sprite
     {
         sprites[i].change(SPDEFTable[d]);
     }
+    void spchr(int id, int u, int v, int w, int h, SpriteAttr attr)
+    {
+        auto spdef = SpriteDef(u, v, w, h, sprites[id].homex, sprites[id].homey, attr);
+        sprites[id].change(spdef);
+    }
     this(PetitComputer petitcom)
     {
         sprites = new SpriteData[512];
@@ -280,41 +293,7 @@ class Sprite
             SpriteAnimData* data = &d[index];
             data.elapse = data.elapse + 1;
             auto frame = data.elapse;
-            if(data.interpolation)
-            {
-                //線形補完する奴
-                switch(target)
-                {
-                    case SpriteAnimTarget.XY:
-                        sprite.x = data.old.x + ((data.data.x - data.old.x) / data.frame) * frame;
-                        sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.Z:
-                        sprite.z = data.old.z + ((data.data.z - data.old.z) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.UV:
-                        sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
-                        sprite.v = data.old.v + ((data.data.v - data.old.v) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.I:
-                        sprite.defno = data.old.i + ((data.data.i - data.old.i) / data.frame) * frame;
-                        spchr(sprite.id, sprite.defno);
-                        break;
-                    case SpriteAnimTarget.R:
-                        break;
-                    case SpriteAnimTarget.S:
-                        sprite.scalex = data.old.scalex + ((data.data.scalex - data.old.scalex) / data.frame) * frame;
-                        sprite.scaley = data.old.scaley + ((data.data.scaley - data.old.scaley) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.C:
-                        break;
-                    case SpriteAnimTarget.V:
-                        break;
-                    default:
-                        break;
-                }
-            }
-            if(frame >= data.frame)
+            if(frame == 1)
             {
                 if(!data.interpolation)
                 {
@@ -336,6 +315,7 @@ class Sprite
                             spchr(sprite.id, sprite.defno);
                             break;
                         case SpriteAnimTarget.R:
+                            sprite.r = data.data.r;
                             break;
                         case SpriteAnimTarget.S:
                             sprite.scalex = data.data.scalex;
@@ -349,6 +329,44 @@ class Sprite
                             break;
                     }
                 }
+            }
+            if(data.interpolation)
+            {
+                //線形補完する奴
+                switch(target)
+                {
+                    case SpriteAnimTarget.XY:
+                        sprite.x = data.old.x + ((data.data.x - data.old.x) / data.frame) * frame;
+                        sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
+                        break;
+                    case SpriteAnimTarget.Z:
+                        sprite.z = data.old.z + ((data.data.z - data.old.z) / data.frame) * frame;
+                        break;
+                    case SpriteAnimTarget.UV:
+                        sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
+                        sprite.v = data.old.v + ((data.data.v - data.old.v) / data.frame) * frame;
+                        break;
+                    case SpriteAnimTarget.I:
+                        sprite.defno = data.old.i + ((data.data.i - data.old.i) / data.frame) * frame;
+                        spchr(sprite.id, sprite.defno);
+                        break;
+                    case SpriteAnimTarget.R:
+                        sprite.r = data.old.r + ((data.data.r - data.old.r) / data.frame) * frame;
+                        break;
+                    case SpriteAnimTarget.S:
+                        sprite.scalex = data.old.scalex + ((data.data.scalex - data.old.scalex) / data.frame) * frame;
+                        sprite.scaley = data.old.scaley + ((data.data.scaley - data.old.scaley) / data.frame) * frame;
+                        break;
+                    case SpriteAnimTarget.C:
+                        break;
+                    case SpriteAnimTarget.V:
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if(frame >= data.frame)
+            {
                 sprite.animindex[i] = (sprite.animindex[i] + 1) % d.length;
                 data.elapse = 0;
                 if(sprite.animloop[i] == 0)
@@ -366,15 +384,17 @@ class Sprite
         }
     }
     bool lll;
-    double d = 0;
     import std.algorithm;
     void render()
     {
         auto texture = petitcom.GRP[petitcom.sppage].glTexture;
+        float aspect = 400f / 240f;
         float z = -0.01f;
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
-       // glDisable(GL_TEXTURE_2D);
+        // glDisable(GL_TEXTURE_2D);
+        version(test) glLoadIdentity();
+        glLoadIdentity();
         foreach(i,ref sprite; sprites)
         {
             //定義されてたら動かす
@@ -384,10 +404,13 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
-                int x = cast(int)sprite.x - cast(int)(sprite.homex * sprite.scalex);
-                int y = cast(int)sprite.y - cast(int)(sprite.homey * sprite.scaley);
+                int x = cast(int)sprite.x;// - cast(int)(sprite.homex * sprite.scalex);
+                int y = cast(int)sprite.y;// - cast(int)(sprite.homey * sprite.scaley);
+                auto homex2 = ((sprite.w / 2 ) - sprite.homex) / 200f;
+                auto homey2 = ((sprite.h / 2 ) - sprite.homey) / 120f;
                 int w = sprite.w;
                 int h = sprite.h;
+                
                 if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
                 {
                     swap(w, h);
@@ -398,47 +421,76 @@ class Sprite
                 int v = cast(int)sprite.v;
                 int u2 = cast(int)sprite.u + sprite.w;//-1
                 int v2 = cast(int)sprite.v + sprite.h;
+                z = sprite.z / 1025f;
                 float flipx = cast(float)sprite.scalex, flipy = cast(float)sprite.scaley, flipx2 = x, flipy2 = y;
                 if(sprite.attr & SpriteAttr.hflip)
                 {
                     flipx = -flipx;
-                    flipx2 = x2;
+                    flipx2 = x2 - cast(int)(sprite.homex * sprite.scalex);//sprite.homex * sprite.scalex);
                 }
-                if(sprite.attr & SpriteAttr.hflip)
+                if(sprite.attr & SpriteAttr.vflip)
                 {
                     flipy = -flipy;
-                    flipy2 = y2;
+                    flipy2 = y2 - cast(int)(sprite.homey * sprite.scaley);
                 }
-                glTranslatef((flipx2) / 200f - 1,1 - ((flipy2) / 120f), z);
-                glScalef(flipx, flipy, 1f);
-                glRotatef(d, 0.0f, 0.0f, 1.0f );
+                version(test) glRotatef(45f, 1f, 0f, 0.5f);
+
+                glTranslatef((flipx2) / 200f - 1,
+                             1 - ((flipy2) / 120f), 0);
+                //glTranslatef((flipx2) / 200f - 1,1 - ((flipy2) / 120f), 0);
+                //glScalef(flipx, flipy, 1f); 
+                //アスペクト比を調節しないといけないらしい
+                //https://groups.google.com/forum/#!topic/android-group-japan/45mjecPSY4s
+                //http://www.tnksoft.com/blog/?p=2889
+                glScalef(1.0f / aspect, 1.0f, 1.0f);
+                glRotatef(360 - sprite.r, 0.0f, 0.0f, 1.0f );
+                glScalef(flipx * aspect, flipy, 1f);
                 glBegin(GL_QUADS);
                 glColor3f(1.0, 1.0, 1.0);
-                if(sprite.attr == SpriteAttr.show)
+                if((sprite.attr& 0b111) == SpriteAttr.show)
                 {
                     //d+=0.01;
-                    glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                    /*glTexCoord2f(u / 512f - 1, v / 512f - 1);
                     glVertex3f(0, 0, z);//1
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
                     glVertex3f(0, -(sprite.h / 120f), z);//2
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
                     glVertex3f(sprite.w / 200f, -(sprite.h / 120f), z);//3
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
-                    glVertex3f(sprite.w / 200f, 0, z);//4
+                    glVertex3f(sprite.w / 200f, 0, z);//4*/
+                    
+                    //glColor3f(0,1,0);
+                    glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                    glVertex3f(-((sprite.w) / 400f - homex2) , ((sprite.h) / 240f - homey2), z);//1
+                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
+                    glVertex3f(-((sprite.w) / 400f - homex2), -((sprite.h) / 240f + homey2), z);//2
+                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
+                    glVertex3f((sprite.w) / 400f + homex2, -((sprite.h) / 240f + homey2), z);//3//y+--+x--++
+                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
+                    glVertex3f((sprite.w) / 400f + homex2, ((sprite.h) / 240f - homey2), z);//4
                     glEnd();
+                    /*
+                    glDisable(GL_TEXTURE_2D);
+                    glColor3f(1,0,0);
+                    glBegin(GL_POINTS);
+                    glVertex3f(0,0,-0.9);
+                    glColor3f(0,1,0);
+                    glVertex3f(-((sprite.w) / 400f),((sprite.h) / 240f),-0.9);
+                    glEnd();
+                    glEnable(GL_TEXTURE_2D);*/
                     glLoadIdentity();
                     continue;
                 }
                 if((sprite.attr & SpriteAttr.rotate270) == SpriteAttr.rotate270)
                 {
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
-                    glVertex3f(0, 0, z);//1
+                    glVertex3f(-((sprite.w) / 400f - homex2), ((sprite.h) / 240f - homey2), z);//1
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
-                    glVertex3f(0, -(h / 120f), z);//
+                    glVertex3f(-((sprite.w) / 400f - homex2), -((sprite.h) / 240f + homey2), z);//2
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
-                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glVertex3f((sprite.w) / 400f + homex2, -((sprite.h) / 240f + homey2), z);//3
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
-                    glVertex3f(w / 200f, 0, z);//4
+                    glVertex3f((sprite.w) / 400f + homex2, ((sprite.h) / 240f - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
                     continue;
@@ -446,13 +498,13 @@ class Sprite
                 if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
                 {
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
-                    glVertex3f(0, 0, z);//1
+                    glVertex3f(-((sprite.w) / 400f - homex2), ((sprite.h) / 240f - homey2), z);//1
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//3
-                    glVertex3f(0, -(h / 120f), z);//2
+                    glVertex3f(-((sprite.w) / 400f - homex2), -((sprite.h) / 240f + homey2), z);//2
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//4
-                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glVertex3f((sprite.w) / 400f + homex2, -((sprite.h) / 240f + homey2), z);//3
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
-                    glVertex3f(w / 200f, 0, z);//4
+                    glVertex3f((sprite.w) / 400f + homex2, ((sprite.h) / 240f - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
                     continue;
@@ -460,17 +512,25 @@ class Sprite
                 if((sprite.attr & SpriteAttr.rotate180) == SpriteAttr.rotate180)
                 {
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
-                    glVertex3f(0, 0, z);//1
+                    glVertex3f(-((sprite.w) / 400f - homex2), ((sprite.h) / 240f - homey2), z);//1
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
-                    glVertex3f(0, -(h / 120f), z);//2
+                    glVertex3f(-((sprite.w) / 400f - homex2), -((sprite.h) / 240f + homey2), z);//2
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
-                    glVertex3f(w / 200f, -(h / 120f), z);//3
+                    glVertex3f((sprite.w) / 400f + homex2, -((sprite.h) / 240f + homey2), z);//3
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
-                    glVertex3f(w / 200f, 0, z);//4
+                    glVertex3f((sprite.w) / 400f + homex2, ((sprite.h) / 240f - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
                     continue;
                 }
+                glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                glVertex3f(-((sprite.w) / 400f - homex2), ((sprite.h) / 240f - homey2), z);//1
+                glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
+                glVertex3f(-((sprite.w) / 400f - homex2), -((sprite.h) / 240f + homey2), z);//2
+                glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
+                glVertex3f((sprite.w) / 400f + homex2, -((sprite.h) / 240f + homey2), z);//3
+                glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
+                glVertex3f((sprite.w) / 400f + homex2, ((sprite.h) / 240f - homey2), z);//4
                 glEnd();
                 glLoadIdentity();
                 continue;
@@ -481,10 +541,21 @@ class Sprite
     {
         sprites[id] = SpriteData(id, SPDEFTable[defno], defno);
     }
+    void spset(int id, int u, int v, int w, int h, SpriteAttr attr)
+    {
+        auto spdef = SpriteDef(u, v, w, h, 0, 0, attr);
+        sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
+    }
     void spofs(int id, int x, int y)
     {
         sprites[id].x = x;
         sprites[id].y = y;
+    }
+    void spofs(int id, int x, int y, int z)
+    {
+        sprites[id].x = x;
+        sprites[id].y = y;
+        sprites[id].z = z;
     }
     void sphide(int id)
     {
@@ -531,9 +602,11 @@ class Sprite
         SpriteAnimData[] animdata = new SpriteAnimData[animcount];
         int j;
         int loop = 1;
+        SpriteAnimData* old;
         for(int i = 0; i < data.length;)
         {
-            i = animdata[j++].load(i, sprites[id], target, data);
+            i = animdata[j].load(i, sprites[id], target, data, old);
+            old = &animdata[j++];
             if(data.length - i == 1)
             {
                 //loop
@@ -559,9 +632,13 @@ class Sprite
         sprites[i].homex = hx;
         sprites[i].homey = hy;
     }
-    void spscale(int i, int x, int y)
+    void spscale(int i, double x, double y)
     {
         sprites[i].scalex = x;
         sprites[i].scaley = y;
+    }
+    void sprot(int i, double rot)
+    {
+        sprites[i].r = rot;
     }
 }

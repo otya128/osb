@@ -16,6 +16,7 @@ class BG
     BGChip[16384] chip;
     int offsetx, offsety, offsetz;
     int clipx, clipy, clipx2, clipy2;
+    int homex, homey;
     int width, height;
     int rendermax = 899;
     PetitComputer petitcom;
@@ -30,10 +31,11 @@ class BG
     {
         disw/=2;
         dish/=2;
-        int z = 0;
+        float z = offsetz / 1025f;
         glColor3f(1.0, 1.0, 1.0);
         glLoadIdentity();
-        glTranslatef(offsetx / disw, -(offsety / dish), z);
+        glTranslatef((-offsetx + homex) / disw, -((-offsety + homey) / dish), z);
+        version(test) glRotatef(45f, 1f, 0f, 0.5f);
         //viewport
         //clipx,clipy
         glBegin(GL_QUADS);
@@ -106,5 +108,10 @@ class BG
         this.clipy = 0;
         this.clipx2 = 400;
         this.clipy2 = 240;
+    }
+    void home(int x, int y)
+    {
+        homex = x;
+        homey = y;
     }
 }

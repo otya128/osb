@@ -39,6 +39,27 @@ class GraphicPage
     this(SDL_Surface* s)
     {
         surface = s;
+
+        GLenum texture_format;
+        GLint  nOfColors;
+        nOfColors = surface.format.BytesPerPixel;
+        if (nOfColors == 4)     // contains an alpha channel
+        {
+            if (surface.format.Rmask == 0x000000ff)
+                texture_format = GL_RGBA;
+            else
+                texture_format = GL_BGRA;
+        } else if (nOfColors == 3)     // no alpha channel
+        {
+            if (surface.format.Rmask == 0x000000ff)
+                texture_format = GL_RGB;
+            else
+                texture_format = GL_BGR;
+        } else {
+            //printf("warning: the image is not truecolor..  this will probably break\n");
+            // this error should not go unhandled
+        }
+        textureFormat = texture_format;
     }
     GLuint glTexture;
     GLenum textureFormat;
@@ -225,13 +246,23 @@ class PetitComputer
     }
     GraphicPage createEmptyPage()
     {
-        auto surface = SDL_CreateRGBSurface(0, 512, 512, 32, 0xff000000, 0x00ff0000, 0x0000ff00,  0xff);
+        auto surface = SDL_CreateRGBSurface(0, 512, 512, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
         auto pixels = (cast(uint*)surface.pixels);
         for(int x = 0; x < surface.w; x++)
         {
             for(int y = 0; y < surface.h; y++)
             {
-                *pixels++ = 0;
+                ubyte r, g, b, a;
+                SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
+                {
+                    r = 0;
+                    g = 0;
+                    b = 0;
+                    a = 0;
+                    *pixels = 0;
+                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
+                }
+                pixels++;
             }
         }
         return new GraphicPage(surface);
@@ -452,7 +483,10 @@ class PetitComputer
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[showGRP].buffer);
         glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
+        //
+        //glAlphaFunc(GL_GEQUAL, 0.0);
         glViewport(0, 0, 512, 512);
         for(int i = s; i < len; i++)
         {
@@ -461,7 +495,7 @@ class PetitComputer
             {
                 case DrawType.PSET:
                     glBegin(GL_POINTS);
-                    glColor3ubv(cast(ubyte*)&dm.color);
+                    glColor4ubv(cast(ubyte*)&dm.color);
                     glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
                     glEnd();
                     //draw.gpset(dm.page, dm.x, dm.y ,dm.color);
@@ -469,7 +503,7 @@ class PetitComputer
                 case DrawType.LINE:
                     {
                         glBegin(GL_LINES);
-                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glColor4ubv(cast(ubyte*)&dm.color);
                         glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
                         glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
                         //glFlush();
@@ -480,7 +514,7 @@ class PetitComputer
                 case DrawType.FILL:
                     {
                         glBegin(GL_QUADS);
-                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glColor4ubv(cast(ubyte*)&dm.color);
                         glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
                         glVertex2f((dm.x) / 256f - 1, (dm.y2 + 1) / 256f - 1);
                         glVertex2f((dm.x2 + 1) / 256f - 1, (dm.y2 + 1) / 256f - 1);
@@ -492,7 +526,7 @@ class PetitComputer
                 case DrawType.BOX:
                     {
                         glBegin(GL_LINE_LOOP);
-                        glColor3ubv(cast(ubyte*)&dm.color);
+                        glColor4ubv(cast(ubyte*)&dm.color);
                         glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
                         glVertex2f((dm.x) / 256f - 1, (dm.y2) / 256f - 1);
                         glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
@@ -504,17 +538,19 @@ class PetitComputer
                 default:
             }
         }
-        glFlush();
         glBindFramebufferEXT(GL_FRAMEBUFFER, old);
         glEnable(GL_DEPTH_TEST);
         drawflag = false;
         glViewport(0, 0, 400, 240);
+        glEnable(GL_ALPHA_TEST);
     }
     Button[] buttonTable;
     Sprite sprite;
     int xscreenmode = 0;
     void xscreen(int mode, int sprite, int bg)
     {
+        this.sprite.spclr();
+        //BG
         int mode2 = mode / 2;
         if(mode2 == 0)
         {
@@ -583,11 +619,14 @@ class PetitComputer
             //GRP[0] = GRPF;
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glAlphaFunc(GL_GEQUAL, 0.5);
-            glEnable(GL_ALPHA_TEST);
+            //glAlphaFunc(GL_GEQUAL, 0.5);
+            //glEnable(GL_ALPHA_TEST);
             draw = new otya.smilebasic.draw.Draw(this);
            // sprite.spset(0, 0);
             // sprite.spofs(0, 9, 8);
+            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glAlphaFunc(GL_GEQUAL, 0.5);
+            glEnable(GL_ALPHA_TEST);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -605,20 +644,29 @@ class PetitComputer
                 {
                     glViewport(0, 240, 400, 240);
                 }
+                glLoadIdentity();
                 renderGraphic();
+                //描画の順位
+                //sprite>GRP>console>BG
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                renderGraphicPage();
-                renderConsoleGL();
+                version(test) glLoadIdentity();
+                version(test) glRotatef(45f, 1f, 0f, 0.5f);
                 if(xscreenmode == 1)
                 {
                     glViewport(0, 240, 400, 240);
                 }
                 sprite.render();
+                renderGraphicPage();
+                renderConsoleGL();
+                version(test) glLoadIdentity();
+                version(test) glRotatef(45f, 1f, 0f, 0.5f);
                 glBindTexture(GL_TEXTURE_2D, GRP[bgpage].glTexture);
                 for(int i = 0; i < bg.length; i++)
                 {
                     bg[i].render(400f, 240f);
                 }
+                version(test) glLoadIdentity();
+                version(test) glRotatef(45f, 1f, 0f, 0.5f);
 
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
@@ -912,6 +960,7 @@ class PetitComputer
     {
         if(format == GL_BGRA)
         {
+            //ARGB->BGRA
             return (petitcolor & 0xFF00FF00) | (petitcolor & 0xFF) << 16 | petitcolor >> 16 & 0xFF;
         }
         if(format == GL_RGBA)
@@ -1017,9 +1066,10 @@ class PetitComputer
     {
         sendDrawMessage(DrawType.FILL, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
     }
+    int gprio;
     void renderGraphicPage()
     {
-        float z = 0.01f;
+        float z = gprio / 1025f;
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showGRP].glTexture);
         glEnable(GL_TEXTURE_2D);
@@ -1047,10 +1097,10 @@ class PetitComputer
             {
                 auto back = consoleColorGL[console[y][x].backColor];
                 glColor4ubv(cast(ubyte*)&back);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 1f);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 1f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 1f);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 1f);
             }
         if(showCursor && animationCursor)
         {

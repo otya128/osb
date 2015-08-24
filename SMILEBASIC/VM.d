@@ -443,9 +443,11 @@ class Operate : Code
                     //数値 * 文字列だとエラー
                     case TokenType.Mul:
                         {
-                            wstring delegate(wstring, wstring, int) mul;
-                            mul = (x, y, z) => z > 0 ? x ~ mul(x , y, z - 1) : "";
-                            vm.push(Value(mul(ls, ls, cast(int)rd)));
+                            //wstring delegate(wstring, wstring, int) mul;
+                            //mul = (x, y, z) => z > 0 ? x ~ mul(x , y, z - 1) : "";
+                            //vm.push(Value(mul(ls, ls, cast(int)rd)));
+                            import std.array : replicate;
+                            vm.push(Value(replicate(ls, cast(int)rd)));
                         }
                         return;
                     //3.1から?文字列と数値を比較すると3を返す
@@ -512,22 +514,22 @@ class Operate : Code
                 vm.push(Value(li ^ ri));
                 return;
             case TokenType.Equal:
-                vm.push(Value(li == ri));
+                vm.push(Value(ld == rd));
                 return;
             case TokenType.NotEqual:
-                vm.push(Value(li != ri));
+                vm.push(Value(ld != rd));
                 return;
             case TokenType.Less:
-                vm.push(Value(li < ri));
+                vm.push(Value(ld < rd));
                 return;
             case TokenType.LessEqual:
-                vm.push(Value(li <= ri));
+                vm.push(Value(ld <= rd));
                 return;
             case TokenType.Greater:
-                vm.push(Value(li > ri));
+                vm.push(Value(ld > rd));
                 return;
             case TokenType.GreaterEqual:
-                vm.push(Value(li >= ri));
+                vm.push(Value(ld >= rd));
                 return;
             case TokenType.LeftShift:
                 vm.push(Value(li << ri));
