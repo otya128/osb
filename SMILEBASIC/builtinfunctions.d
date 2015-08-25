@@ -178,7 +178,12 @@ class BuiltinFunction
     static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
     {
         a.setDefaultValue(512);
-        b.setDefaultValue(512);
+        b.setDefaultValue(4);
+        if(mode == 2 || mode == 3)
+        {
+            a.setDefaultValue(256);
+            b.setDefaultValue(2);
+        }
         p.xscreen(mode, cast(int)a, cast(int)b);
     }
     static void DISPLAY(PetitComputer p, int display)
@@ -648,51 +653,51 @@ class BuiltinFunction
     {
         if(layer.isDefault)
         {
-            foreach(bg; p.bg)
+            foreach(bg; p.allBG)
             {
                 bg.clear;
             }
             return;
         }
-        p.bg[cast(int)layer].clear;
+        p.getBG(cast(int)layer).clear;
     }
     static void BGSCREEN(PetitComputer p, int layer, int w, int h)
     {
-        p.bg[layer].screen(w, h);
+        p.getBG(layer).screen(w, h);
     }
     static void BGOFS(PetitComputer p, int layer, int x, int y, DefaultValue!(int, false) z)
     {
-        z.setDefaultValue(p.bg[layer].offsetz);
-        p.bg[layer].ofs(x, y, cast(int)z);
+        z.setDefaultValue(p.getBG(layer).offsetz);
+        p.getBG(layer).ofs(x, y, cast(int)z);
     }
     static void BGCLIP(PetitComputer p, int layer, DefaultValue!(int, false) x, DefaultValue!(int, false) y,
                        DefaultValue!(int, false) x2, DefaultValue!(int, false) y2)
     {
         if(x.isDefault && y.isDefault && x2.isDefault && y2.isDefault)
         {
-            p.bg[layer].clip();
+            p.getBG(layer).clip();
         }
         if(x.isDefault || y.isDefault || x2.isDefault || y2.isDefault)
         {
             throw new IllegalFunctionCall("BGCLIP");
         }
-        p.bg[layer].clip(cast(int)x, cast(int)y, cast(int)x2, cast(int)y2);
+        p.getBG(layer).clip(cast(int)x, cast(int)y, cast(int)x2, cast(int)y2);
     }
     static void BGPUT(PetitComputer p, int layer, int x, int y, int screendata)
     {
-        p.bg[layer].put(x, y, screendata);
+        p.getBG(layer).put(x, y, screendata);
     }
     static void BGHOME(PetitComputer p, int layer, int x, int y)
     {
-        p.bg[layer].home(x, y);
+        p.getBG(layer).home(x, y);
     }
     static void BGSCALE(PetitComputer p, int layer, double x, double y)
     {
-        p.bg[layer].scale(x, y);
+        p.getBG(layer).scale(x, y);
     }
     static void BGROT(PetitComputer p, int layer, double rot)
     {
-        p.bg[layer].rot(rot);
+        p.getBG(layer).rot(rot);
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;

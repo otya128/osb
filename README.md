@@ -1,5 +1,12 @@
 # otyaSMILEBASIC
 SMILEBASIC 3.x互換BASIC
+## 速度
+実行環境によるものの3DSよりは速い。
+SYS/EX8TECDEMOのSPEED TEST括弧は旧3DS
+たしざん 732293(153860)
+PRINTぶん 351160(34391)
+スプライトいどう 623998(67960)
+ラインびょうが 394808(17720)
 ## コンパイルするのに必要なもの
 + DerelictSDL2
 + DerelictGL3

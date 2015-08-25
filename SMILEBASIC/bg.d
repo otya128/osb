@@ -66,13 +66,13 @@ class BG
                 int w = 16;
                 int h = 16;
                 glTexCoord2f((u) / 512f - 1 , (v2) / 512f - 1);
-                glVertex3f((x * w) / 200f - 1, 1 - (y * h + h) / 120f, 0);
+                glVertex3f((x * w) / disw - 1, 1 - (y * h + h) / dish, 0);
                 glTexCoord2f((u) / 512f - 1, (v) / 512f - 1);
-                glVertex3f((x * w) / 200f - 1, 1 - (y * h) / 120f, 0);
+                glVertex3f((x * w) / disw - 1, 1 - (y * h) / dish, 0);
                 glTexCoord2f((u2) / 512f - 1, (v) / 512f - 1);
-                glVertex3f((x * w + w) / 200f - 1, 1 - (y * h) / 120f, 0);
+                glVertex3f((x * w + w) / disw - 1, 1 - (y * h) / dish, 0);
                 glTexCoord2f((u2) / 512f - 1, (v2) / 512f - 1);
-                glVertex3f((x * w + w) / 200f - 1, 1 - (y * h + h) / 120f, 0);
+                glVertex3f((x * w + w) / disw - 1, 1 - (y * h + h) / dish, 0);
                 rendercount++;
                 if(rendercount >= 899)
                 {

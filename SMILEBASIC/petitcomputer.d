@@ -194,8 +194,24 @@ class PetitComputer
     ConsoleCharacter[][] console;
     ConsoleCharacter[][] consoleDisplay1;
     bool visibleGRP = true;
-    int showGRP;
-    int useGRP;
+    private int[2] showPage = [0, 1];
+    private int[2] usePage = [0, 1];
+    @property int useGRP()
+    {
+        return usePage[displaynum];
+    }
+    @property int showGRP()
+    {
+        return showPage[displaynum];
+    }
+    @property void useGRP(int page)
+    {
+        usePage[displaynum] = page;
+    }
+    @property void showGRP(int page)
+    {
+        showPage[displaynum] = page;
+    }
     uint gcolor = -1;
     GraphicPage[] GRP;
     GraphicPage GRPF;
@@ -423,6 +439,7 @@ class PetitComputer
     }
     void display(int number)
     {
+        displaynum = number;
         if(number)
         {
             consoleHeightC = consoleHeightDisplay1;
@@ -466,7 +483,7 @@ class PetitComputer
     }
     Mutex grpmutex;
     otya.smilebasic.draw.Draw draw;
-    bool displaynum;
+    int displaynum;
     void renderGraphic()
     {
         if(!drawMessageLength) return;
@@ -481,7 +498,8 @@ class PetitComputer
         GLint old;
         auto a = & glBindFramebuffer;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
-        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[showGRP].buffer);
+        int oldpage = drawMessageQueue[0].page;
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
@@ -491,6 +509,11 @@ class PetitComputer
         for(int i = s; i < len; i++)
         {
             DrawMessage dm = drawMessageQueue[i];
+            if(oldpage != dm.page)
+            {
+                oldpage = dm.page;
+                glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
+            }
             switch(dm.type)
             {
                 case DrawType.PSET:
@@ -547,9 +570,12 @@ class PetitComputer
     Button[] buttonTable;
     Sprite sprite;
     int xscreenmode = 0;
+    int bgmax;
     void xscreen(int mode, int sprite, int bg)
     {
         this.sprite.spclr();
+        this.sprite.spmax = sprite;
+        this.bgmax = bg;
         //BG
         int mode2 = mode / 2;
         if(mode2 == 0)
@@ -566,7 +592,19 @@ class PetitComputer
         }
         xscreenmode = mode2;
     }
-    BG[4] bg;
+    BG getBG(int layer)
+    {
+        if(displaynum)
+        {
+            return bg[layer + bgmax];
+        }
+        return bg[layer];
+    }
+    BG[] allBG()
+    {
+        return bg;
+    }
+    protected BG[4] bg;
     void render()
     {
         DerelictGL.load();
@@ -640,12 +678,12 @@ class PetitComputer
                         loopcnt = 0;
                     }
                 }
+                glLoadIdentity();
+                renderGraphic();
                 if(xscreenmode == 1)
                 {
                     glViewport(0, 240, 400, 240);
                 }
-                glLoadIdentity();
-                renderGraphic();
                 //描画の順位
                 //sprite>GRP>console>BG
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -656,18 +694,45 @@ class PetitComputer
                     glViewport(0, 240, 400, 240);
                 }
                 sprite.render();
-                renderGraphicPage();
+                if(xscreenmode == 1)
+                {
+                    glViewport(0, 240, 400, 240);
+                }
+                renderGraphicPage(0, 400, 240);
+                if(xscreenmode == 1)
+                {
+                    glViewport(40, 0, 320, 240);
+                    renderGraphicPage(1, 320, 240);
+                    glViewport(0, 240, 400, 240);
+                }
                 renderConsoleGL();
+                if(xscreenmode == 1)
+                {
+                    glViewport(0, 240, 400, 240);
+                }
                 version(test) glLoadIdentity();
                 version(test) glRotatef(45f, 1f, 0f, 0.5f);
                 glBindTexture(GL_TEXTURE_2D, GRP[bgpage].glTexture);
-                for(int i = 0; i < bg.length; i++)
+                for(int i = 0; i < bgmax; i++)
                 {
                     bg[i].render(400f, 240f);
+                }
+                if(xscreenmode == 1)
+                {
+                    glViewport(40, 0, 320, 240);
+                    for(int i = bgmax; i < bg.length; i++)
+                    {
+                        bg[i].render(320f, 240f);
+                    }
+                    glViewport(0, 240, 400, 240);
                 }
                 version(test) glLoadIdentity();
                 version(test) glRotatef(45f, 1f, 0f, 0.5f);
 
+                if(xscreenmode == 1)
+                {
+                    glViewport(0, 240, 400, 240);
+                }
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
@@ -1068,21 +1133,21 @@ class PetitComputer
         sendDrawMessage(DrawType.FILL, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
     }
     int gprio;
-    void renderGraphicPage()
+    void renderGraphicPage(int display, float w, float h)
     {
         float z = gprio / 1025f;
         glColor3f(1.0, 1.0, 1.0);
-        glBindTexture(GL_TEXTURE_2D, GRP[showGRP].glTexture);
+        glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
-        glTexCoord2f(0 / 512f - 1 , 240 / 512f - 1);
-        glVertex3f(0 / 200f - 1, 1 - 240 / 120f, z);
+        glTexCoord2f(0 / 512f - 1 , h / 512f - 1);
+        glVertex3f(-1, -1, z);
         glTexCoord2f(0 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(0 / 200f - 1, 1 - 0 / 120f, z);
-        glTexCoord2f(400 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(400 / 200f - 1, 1 - 0 / 120f, z);
-        glTexCoord2f(400 / 512f - 1, 240 / 512f - 1);
-        glVertex3f(400 / 200f - 1, 1 - 240 / 120f, z);
+        glVertex3f(-1, 1, z);
+        glTexCoord2f(w / 512f - 1, 0 / 512f - 1);
+        glVertex3f(1, 1, z);
+        glTexCoord2f(w / 512f - 1, h / 512f - 1);
+        glVertex3f(1, -1, z);
         glEnd();
         //glFlush();
     }
