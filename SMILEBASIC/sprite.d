@@ -391,6 +391,13 @@ class Sprite
     void render()
     {
         float disw = 200f, dish = 120f, disw2 = 400f, dish2 = 240f;
+        if(petitcom.xscreenmode == 2)
+        {
+            disw = 160f;
+            disw2 = 320f;
+            dish = 240f;
+            dish2 = 480f;
+        }
         auto texture = petitcom.GRP[petitcom.sppage].glTexture;
         float aspect = disw2 / dish2;
         float z = -0.01f;
