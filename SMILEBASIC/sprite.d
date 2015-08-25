@@ -461,17 +461,6 @@ class Sprite
                 glColor3f(1.0, 1.0, 1.0);
                 if((sprite.attr& 0b111) == SpriteAttr.show)
                 {
-                    //d+=0.01;
-                    /*glTexCoord2f(u / 512f - 1, v / 512f - 1);
-                    glVertex3f(0, 0, z);//1
-                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
-                    glVertex3f(0, -(sprite.h / dish), z);//2
-                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
-                    glVertex3f(sprite.w / dish, -(sprite.h / dish), z);//3
-                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
-                    glVertex3f(sprite.w / dish, 0, z);//4*/
-                    
-                    //glColor3f(0,1,0);
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);
                     glVertex3f(-((sprite.w) / disw2 - homex2) , ((sprite.h) / dish2 - homey2), z);//1
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
@@ -481,15 +470,6 @@ class Sprite
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
                     glVertex3f((sprite.w) / disw2 + homex2, ((sprite.h) / dish2 - homey2), z);//4
                     glEnd();
-                    /*
-                    glDisable(GL_TEXTURE_2D);
-                    glColor3f(1,0,0);
-                    glBegin(GL_POINTS);
-                    glVertex3f(0,0,-0.9);
-                    glColor3f(0,1,0);
-                    glVertex3f(-((sprite.w) / dish2),((sprite.h) / dish2),-0.9);
-                    glEnd();
-                    glEnable(GL_TEXTURE_2D);*/
                     glLoadIdentity();
                     continue;
                 }
