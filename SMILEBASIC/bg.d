@@ -35,8 +35,8 @@ class BG
     void render(float disw, float dish)
     {
         float aspect = disw / dish;
-        disw/=2;
-        dish/=2;
+        disw /= 2;
+        dish /= 2;
         float z = offsetz / 1025f;
         glColor3f(1.0, 1.0, 1.0);
         glLoadIdentity();
