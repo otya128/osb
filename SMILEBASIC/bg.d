@@ -16,6 +16,8 @@ class BG
     BGChip[16384] chip;
     int offsetx, offsety, offsetz;
     int clipx, clipy, clipx2, clipy2;
+    double scalex, scaley;
+    double r;
     int homex, homey;
     int width, height;
     int rendermax = 899;
@@ -26,15 +28,22 @@ class BG
         width = 25;
         height = 35;
         petitcom = pc;
+        scalex = 1;
+        scaley = 1;
+        r = 0;
     }
     void render(float disw, float dish)
     {
+        float aspect = disw / dish;
         disw/=2;
         dish/=2;
         float z = offsetz / 1025f;
         glColor3f(1.0, 1.0, 1.0);
         glLoadIdentity();
         glTranslatef((-offsetx + homex) / disw, -((-offsety + homey) / dish), z);
+        glScalef(1.0f / aspect, 1.0f, 1.0f);
+        glRotatef(360 - r, 0.0f, 0.0f, 1.0f );
+        glScalef(scalex * aspect, scaley, 1f);
         version(test) glRotatef(45f, 1f, 0f, 0.5f);
         //viewport
         //clipx,clipy
@@ -113,5 +122,14 @@ class BG
     {
         homex = x;
         homey = y;
+    }
+    void scale(double x, double y)
+    {
+        this.scalex = x;
+        this.scaley = y;
+    }
+    void rot(double rot)
+    {
+        this.r = rot;
     }
 }

@@ -846,6 +846,7 @@ class PetitComputer
                         printConsole(sbe.getErrorMessage2, "\n");
                         //printConsole(sbe.to!string);
                         writeln(sbe.to!string);
+                        writeln(sbe.getErrorMessage2);
                     }
                     catch
                     {

@@ -686,6 +686,14 @@ class BuiltinFunction
     {
         p.bg[layer].home(x, y);
     }
+    static void BGSCALE(PetitComputer p, int layer, double x, double y)
+    {
+        p.bg[layer].scale(x, y);
+    }
+    static void BGROT(PetitComputer p, int layer, double rot)
+    {
+        p.bg[layer].rot(rot);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
