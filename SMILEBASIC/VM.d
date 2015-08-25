@@ -1332,6 +1332,26 @@ class RestoreCode : Code
         return "restore " ~ label.to!string;
     }
 }
+class RestoreExprCode : Code
+{
+    DataTable datatable;
+    this(DataTable datatable)
+    {
+        this.datatable = datatable;
+    }
+    override void execute(VM vm)
+    {
+        Value label;
+        vm.pop(label);
+        if(!label.isString)
+            throw new TypeMismatch();
+        datatable.dataIndex = datatable.label[label.stringValue];
+    }
+    override string toString(VM vm)
+    {
+        return "restore expr";
+    }
+}
 class PushSystemVariable : Code
 {
     SystemVariable var;

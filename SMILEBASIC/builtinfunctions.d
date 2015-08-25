@@ -699,6 +699,18 @@ class BuiltinFunction
     {
         p.getBG(layer).rot(rot);
     }
+    static void EFCON()
+    {
+    }
+    static void EFCOFF()
+    {
+    }
+    static void EFCSET(Value[])
+    {
+    }
+    static void EFCWET(Value[])
+    {
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
@@ -1066,7 +1078,6 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
 }
 template OutArgsInit(T, string N, int I = 0, int J = 0)
 {
-    enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
     alias param = ParameterTypeTuple!(__traits(getMember, T, N));
     static if(!param.length)
     {
@@ -1074,6 +1085,7 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
     }
     else
     {
+        enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
         static if(tuple & ParameterStorageClass.out_)
         {
             enum add = 1;

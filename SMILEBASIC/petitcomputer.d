@@ -856,10 +856,11 @@ class PetitComputer
         //とりあえず
         auto parser = new Parser(
                                  //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                 readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                  //readText("./SYS/GAME2RPG.TXT").to!wstring
                                  //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                 readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                 //readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
                                  //readText("TEST.TXT").to!wstring

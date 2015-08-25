@@ -847,7 +847,22 @@ class Compiler
                 compileRead(cast(Read)i, s);
                 break;
             case NodeType.Restore:
-                genCode(new RestoreCodeS((cast(Constant)(cast(Restore)i).label).value.stringValue));
+                {
+                    Restore restore = cast(Restore)i;
+                    Expression label = restore.label;
+                    if(label.type == NodeType.Constant)
+                    {
+                        Constant cons = cast(Constant)label;
+                        if(cons.value.isString)
+                        {
+                            genCode(new RestoreCodeS(cons.value.stringValue));
+                            break;
+                            //文字列じゃないならば定数でも実行時エラー
+                        }
+                    }
+                    compileExpression(label, s);
+                    genCode(new RestoreExprCode(s.data));
+                }
                 break;
             case NodeType.On:
                 compileOn(cast(On)i, s);
