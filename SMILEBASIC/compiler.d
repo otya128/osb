@@ -385,7 +385,7 @@ class Compiler
                         IndexExpressions ie = cast(IndexExpressions)binop.item2;
                         if(ie)
                         {
-                            genCode(new PushArray(ie.expressions.length));
+                            genCode(new PushArray(cast(int)ie.expressions.length));
                         }
                         else
                         {
@@ -428,12 +428,12 @@ class Compiler
                     }
                     if(bfun)
                     {
-                        genCode(new CallBuiltinFunction(bfun, func.args.length, 1));
+                        genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, 1));
                     }
                     else
                     {
                         writeln(func.name);
-                        genCode(new CallFunctionCode(func.name, func.args.length));
+                        genCode(new CallFunctionCode(func.name, cast(int)func.args.length));
                     }
                 }
                 break;
@@ -481,7 +481,7 @@ class Compiler
                         getVarIndex(var.name, sc, index, local);
                         if(ie)
                         {
-                            genCode(new PopArray(index, ie.expressions.length, local));
+                            genCode(new PopArray(index, cast(int)ie.expressions.length, local));
                         }
                         else
                         {
@@ -508,14 +508,14 @@ class Compiler
         if(node.hasElse)
         {
             then = genCodeGoto();
-            else_.address = code.length;
+            else_.address = cast(int)code.length;
             compileStatements(node.else_, sc);
-            then.address = code.length;
+            then.address = cast(int)code.length;
         }
         else
         {
             //endifに飛ばす
-            else_.address = code.length;
+            else_.address = cast(int)code.length;
         }
     }
     void compileFor(For node, Scope s)
@@ -540,7 +540,7 @@ class Compiler
         genCodeOP(TokenType.Greater);
         auto breakAddr = genCodeGotoTrue();
         auto forAddr = genCodeGoto();
-        positiveZero.address = code.length;
+        positiveZero.address = cast(int)code.length;
         //stepが正の値の時の処理
         //toよりcounterが大きい場合はBREAK
         //t c
@@ -551,7 +551,7 @@ class Compiler
         genCodePushVar(node.initExpression.name, s);
         genCodeOP(TokenType.Less);
         genCode(breakAddr);
-        forAddr.address = code.length;
+        forAddr.address = cast(int)code.length;
         s = new Scope(new GotoAddr(-1), new GotoAddr(-1), s);
         compileStatements(node.statements, s);
         s.continueAddr.address = code.length;

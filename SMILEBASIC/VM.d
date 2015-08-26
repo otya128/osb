@@ -112,7 +112,7 @@ class VM
     }
     void end()
     {
-        pc = code.length;
+        pc = cast(int)code.length;
     }
     void dump()
     {

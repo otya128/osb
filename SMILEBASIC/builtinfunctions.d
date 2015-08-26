@@ -274,7 +274,7 @@ class BuiltinFunction
     //hairetuha?
     static int LEN(wstring str)
     {
-        return str.length;
+        return cast(int)str.length;
     }
     static double VAL(wstring str)
     {
@@ -360,8 +360,7 @@ class BuiltinFunction
             str1 = vstart.castString;
             str2 = vstr1.castString;
         }
-        int aaa = str1[start..$].indexOf(str2, CaseSensitive.no);
-        return str1[start..$].indexOf(str2, CaseSensitive.no);
+        return cast(int)(str1[start..$].indexOf(str2, CaseSensitive.no));
     }
     static int ASC(wstring str)
     {
@@ -508,7 +507,6 @@ class BuiltinFunction
                         return;
                     }
                     throw new IllegalFunctionCall("SPDEF");
-                    return;
                 }
             default:
         }
@@ -587,7 +585,7 @@ class BuiltinFunction
             auto f = format[i];
             if(f == '%')
             {
-                int d = indexOf(format, 'D', CaseSensitive.yes);
+                int d = cast(int)indexOf(format, 'D', CaseSensitive.yes);
                 if(d != -1)
                 {
                     auto spec = singleSpec(format[i .. d + 1]);
@@ -597,7 +595,7 @@ class BuiltinFunction
                     i = d;
                     continue;
                 }
-                d = indexOf(format, 'X', CaseSensitive.yes);
+                d = cast(int)indexOf(format, 'X', CaseSensitive.yes);
                 if(d != -1)
                 {
                     auto spec = singleSpec(format[i .. d + 1]);
@@ -607,7 +605,7 @@ class BuiltinFunction
                     i = d;
                     continue;
                 }
-                d = indexOf(format, 'S', CaseSensitive.yes);
+                d = cast(int)indexOf(format, 'S', CaseSensitive.yes);
                 if(d != -1)
                 {
                     auto spec = singleSpec(format[i .. d + 1]);
@@ -617,7 +615,7 @@ class BuiltinFunction
                     i = d;
                     continue;
                 }
-                d = indexOf(format, 'F', CaseSensitive.yes);
+                d = cast(int)indexOf(format, 'F', CaseSensitive.yes);
                 if(d != -1)
                 {
                     auto spec = singleSpec(format[i .. d + 1]);

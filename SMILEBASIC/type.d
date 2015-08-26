@@ -151,7 +151,7 @@ class Array(T)
         {
             array[] = 0;
         }
-        dimCount = dim.length;
+        dimCount = cast(int)dim.length;
     }
     T opIndexAssign(T v, int[] dim)
     {
