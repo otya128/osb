@@ -339,8 +339,6 @@ class PetitComputer
     }
     void init()
     {
-        DerelictSDL2.load();
-        DerelictSDL2Image.load();
      //   DerelictGL.load();
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = toGLColor(consoleColor[i]);
@@ -354,8 +352,7 @@ class PetitComputer
             writeln("download font");
             download("http://smileboom.com/special/ptcm3/download/unicode/image/res_font_table-320.png",
                      fontFile);
-        }
-        GRPF = createGRPF(fontFile);//createGraphicPage(fontFile, 0);
+        }//createGraphicPage(fontFile, 0);
         //s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
         /*auto pixels = (cast(uint*)s8x8.pixels);
         for(int x = 0; x < 8; x++)
@@ -402,15 +399,6 @@ class PetitComputer
         {
             loadFontTable();
         }
-        GRP = new GraphicPage[6];
-        for(int i = 0; i < 4; i++)
-        {
-            GRP[i] = createEmptyPage();
-        }
-        sppage = 4;
-        GRP[4] = createGRPF(spriteFile);
-        bgpage = 5;
-        GRP[5] = createGRPF(BGFile);
         writeln("OK");
         screenWidth = 400;
         screenHeight = 240;
@@ -606,6 +594,20 @@ class PetitComputer
     protected BG[4] bg;
     void render()
     {
+        DerelictSDL2.load();
+        DerelictSDL2Image.load();
+        GRPF = createGRPF(fontFile);
+        GRP = new GraphicPage[6];
+        for(int i = 0; i < 4; i++)
+        {
+            GRP[i] = createEmptyPage();
+        }
+        sppage = 4;
+        GRP[4] = createGRPF(spriteFile);
+        bgpage = 5;
+        GRP[5] = createGRPF(BGFile);
+        SDL_Init(SDL_INIT_VIDEO);
+
         DerelictGL.load();
         DerelictGL3.load();
         buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
@@ -834,7 +836,6 @@ class PetitComputer
     {
         keybuffer = new wchar[128];
         init();
-        SDL_Init(SDL_INIT_VIDEO);
         /+for(int i = 0; i < GRPFColor.length; i++)
         {
             for(int j = 0; j < GRPFColor.length; j++)
@@ -847,10 +848,11 @@ class PetitComputer
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
         sprite = new Sprite(this);
-        core.thread.Thread thread = new core.thread.Thread(&render);
-        thread.start();
         for(int i = 0; i < bg.length; i++)
             bg[i] = new BG(this);
+        core.thread.Thread thread = new core.thread.Thread(&render);
+        thread.start();
+        while(!buttonTable){}
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
