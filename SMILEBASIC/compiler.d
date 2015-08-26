@@ -41,7 +41,7 @@ class DataTable
     }
     void addLabel(wstring label)
     {
-        this.label[label] = data.length;
+        this.label[label] = cast(int)data.length;
     }
     void read(out Value value, VM vm)
     {
@@ -554,26 +554,26 @@ class Compiler
         forAddr.address = cast(int)code.length;
         s = new Scope(new GotoAddr(-1), new GotoAddr(-1), s);
         compileStatements(node.statements, s);
-        s.continueAddr.address = code.length;
+        s.continueAddr.address = cast(int)code.length;
         //counterに加算する
         genCodePushVar(node.initExpression.name, s);
         compileExpression(node.stepExpression, s);
         genCodeOP(TokenType.Plus);
         genCodePopVar(node.initExpression.name, s);
-        genCodeGoto(forstart);
-        breakAddr.address = code.length;
-        s.breakAddr.address = code.length;
+        genCodeGoto(cast(int)forstart);
+        breakAddr.address = cast(int)code.length;
+        s.breakAddr.address = cast(int)code.length;
     }
     void compileWhile(While node, Scope s)
     {
         auto whilestart = code.length;
-        s = new Scope(new GotoAddr(-1), new GotoAddr(whilestart), s);
+        s = new Scope(new GotoAddr(-1), new GotoAddr(cast(int)whilestart), s);
         compileExpression(node.condExpression, s);
         auto breakAddr = genCodeGotoFalse();
         compileStatements(node.statements, s);
         genCode(s.continueAddr);
-        s.breakAddr.address = code.length;
-        breakAddr.address = code.length;
+        s.breakAddr.address = cast(int)code.length;
+        breakAddr.address = cast(int)code.length;
     }
     void compileVar(Var node, Scope sc)
     {
@@ -597,7 +597,7 @@ class Compiler
                         break;//4次元まで(パーサーで除去するけど万が一に備えて
                 }
                 defineVarIndexVoid(var.name, sc);
-                genCode(new NewArray(getType(var.name), var.dim.expressions.length));
+                genCode(new NewArray(getType(var.name), cast(int)var.dim.expressions.length));
                 genCodePopVar(var.name, sc);
                 continue;
             }
@@ -626,7 +626,7 @@ class Compiler
     void compileDefineFunction(DefineFunction node)
     {
         auto skip = genCodeGoto();
-        Function func = new Function(this.code.length, node.name, node.returnExpr, node.arguments.length);
+        Function func = new Function(cast(int)this.code.length, node.name, node.returnExpr, cast(int)node.arguments.length);
         Scope sc = new Scope(func);
         foreach(wstring arg; node.arguments)
         {
@@ -637,12 +637,12 @@ class Compiler
             func.defineLocalVarIndexVoid(arg, this);
         }
         if(!func.returnExpr)
-            func.outArgCount = node.outArguments.length;
+            func.outArgCount = cast(int)node.outArguments.length;
         compileStatements(node.functionBody, sc);
         if(func.returnExpr)
             genCodeImm(Value(ValueType.Void));
         genCode(new ReturnFunction(func));
-        skip.address = this.code.length;
+        skip.address = cast(int)this.code.length;
         this.functions[func.name] = func;
     }
     void compileOn(On on, Scope sc)
@@ -665,7 +665,7 @@ class Compiler
         {
             compileExpression(i, sc);
         }
-        genCode(new InputCode(input.variables.length));
+        genCode(new InputCode(cast(int)input.variables.length));
         foreach_reverse(i; input.variables)
         {
             compilePopVar(i, sc);
@@ -673,7 +673,7 @@ class Compiler
     }
     void compileRead(Read read, Scope sc)
     {
-        genCode(new ReadCode(read.variables.length));
+        genCode(new ReadCode(cast(int)read.variables.length));
         foreach_reverse(i; read.variables)
         {
             compilePopVar(i, sc);
@@ -703,7 +703,7 @@ class Compiler
                                 break;
                         }
                     }
-                    code ~= new PrintCode(print.args.length);
+                    code ~= new PrintCode(cast(int)print.args.length);
                 }
                 break;
             case NodeType.Assign:
@@ -718,11 +718,11 @@ class Compiler
                     auto label = cast(Label)i;
                     if(s.func)
                     {
-                        s.func.label[label.label] = code.length;
+                        s.func.label[label.label] = cast(int)code.length;
                     }
                     else
                     {
-                        globalLabel[label.label] = code.length;
+                        globalLabel[label.label] = cast(int)code.length;
                     }
                     s.data.addLabel(label.label);
                 }
@@ -796,7 +796,7 @@ class Compiler
                     auto assign = cast(ArrayAssign)i;
                     compileExpression(assign.assignExpression, s);
                     compileExpression(assign.indexExpression, s);
-                    genCode(new PopArray(getGlobalVarIndex(assign.name), assign.indexExpression.expressions.length, !(s.func is null)));
+                    genCode(new PopArray(getGlobalVarIndex(assign.name), cast(int)assign.indexExpression.expressions.length, !(s.func is null)));
                 }
                 break;
             case NodeType.CallFunctionStatement:
@@ -805,7 +805,7 @@ class Compiler
                     auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
                     if(bfun)
                     {
-                        int k = bfun.argments.length - func.args.length;
+                        int k = cast(int)bfun.argments.length - cast(int)func.args.length;
                         foreach(l;0..k)
                         {
                             genCodeImm(Value(ValueType.Void));
@@ -817,12 +817,12 @@ class Compiler
                     }
                     if(bfun)
                     {
-                        genCode(new CallBuiltinFunction(bfun, func.args.length, func.outVariable.length));
+                        genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, cast(int)func.outVariable.length));
                     }
                     else
                     {
                         writeln(func.name);
-                        genCode(new CallFunctionCode(func.name, func.args.length, func.outVariable.length));
+                        genCode(new CallFunctionCode(func.name, cast(int)func.args.length, cast(int)func.outVariable.length));
                     }
                     //TODO:OUT
                     foreach_reverse(wstring var; func.outVariable)
