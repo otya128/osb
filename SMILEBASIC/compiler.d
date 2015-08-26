@@ -490,6 +490,7 @@ class Compiler
                         break;
                     }
                 }
+                goto default;
                 default:
                     stderr.writeln("ERROR");
                     break;

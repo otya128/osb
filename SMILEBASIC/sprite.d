@@ -425,7 +425,7 @@ class Sprite
             {
                 int x = cast(int)sprite.x;// - cast(int)(sprite.homex * sprite.scalex);
                 int y = cast(int)sprite.y;// - cast(int)(sprite.homey * sprite.scaley);
-                auto homex2 = ((sprite.w / 2 ) - sprite.homex) / dish;
+                auto homex2 = ((sprite.w / 2 ) - sprite.homex) / disw;
                 auto homey2 = ((sprite.h / 2 ) - sprite.homey) / dish;
                 int w = sprite.w;
                 int h = sprite.h;

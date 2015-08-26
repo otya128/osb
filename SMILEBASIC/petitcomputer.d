@@ -472,7 +472,7 @@ class PetitComputer
     int keybufferpos;
     int keybufferlen;
     //解析した結果キー入力のバッファは127くらい
-    wchar[] keybuffer = new wchar[128];
+    wchar[] keybuffer;// = new wchar[128];//Linuxだとこうやって確保した場合書き込むとSEGV
     void sendKey(wchar key)
     {
         keybuffer[keybufferpos] = cast(wchar)key;
@@ -482,7 +482,6 @@ class PetitComputer
         keybufferpos = (keybufferpos + 1) % keybuffer.length;
     }
     Mutex grpmutex;
-    otya.smilebasic.draw.Draw draw;
     int displaynum;
     void renderGraphic()
     {
@@ -659,7 +658,6 @@ class PetitComputer
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             //glAlphaFunc(GL_GEQUAL, 0.5);
             //glEnable(GL_ALPHA_TEST);
-            draw = new otya.smilebasic.draw.Draw(this);
            // sprite.spset(0, 0);
             // sprite.spofs(0, 9, 8);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -834,6 +832,7 @@ class PetitComputer
     int maincnt;
     void run()
     {
+        keybuffer = new wchar[128];
         init();
         SDL_Init(SDL_INIT_VIDEO);
         /+for(int i = 0; i < GRPFColor.length; i++)
@@ -847,20 +846,20 @@ class PetitComputer
         consolem = new Mutex();
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
+        sprite = new Sprite(this);
         core.thread.Thread thread = new core.thread.Thread(&render);
         thread.start();
-        sprite = new Sprite(this);
         for(int i = 0; i < bg.length; i++)
             bg[i] = new BG(this);
         auto startTicks = SDL_GetTicks();
         //とりあえず
         auto parser = new Parser(
                                  //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                 readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                 //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                  //readText("./SYS/GAME2RPG.TXT").to!wstring
                                  //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                  //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                 //readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                 readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                  //readText("./SYS/EX1TEXT.TXT").to!wstring
                                  //readText("FIZZBUZZ.TXT").to!wstring
                                  //readText("TEST.TXT").to!wstring
