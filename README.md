@@ -1,4 +1,4 @@
-# otyaSMILEBASIC
+﻿# otyaSMILEBASIC
 SMILEBASIC 3.x互換BASIC
 ## 速度
 実行環境によるものの3DSよりは速い。
@@ -10,7 +10,17 @@ SYS/EX8TECDEMOのSPEED TEST括弧は旧3DS
 |PRINTぶん|351160(34391)|
 |スプライトいどう|623998(67960)|
 |ラインびょうが|394808(17720)|
+
+# ビルド方法
+```sh
+git clone git@github.com:otya128/otyaSMILEBASIC.git
+cd otyaSMILEBASIC
+dub run
+```
+
 ## コンパイルするのに必要なもの
++ Dコンパイラ
++ dub
 + DerelictSDL2
 + DerelictGL3
 + curl
