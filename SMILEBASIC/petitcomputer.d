@@ -186,7 +186,7 @@ class PetitComputer
         int backColor;
         byte attr;
     }
-    SDL_Color PetitColor(byte r, byte g, byte b, byte a)
+    SDL_Color PetitColor(ubyte r, ubyte g, ubyte b, ubyte a)
     {
         return SDL_Color(r >> 5 << 5, g >> 5 << 5, b >> 5 << 5, a == 255 ? 255 : 0);
     }
@@ -302,19 +302,19 @@ class PetitComputer
         std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
         while(true)
         {
-            pos = html.indexOf("<tr><th>U+");
+            pos = cast(int)html.indexOf("<tr><th>U+");
             if(pos == -1) break;
             pos += "<tr><th>U+".length;
             html = html[pos..$];
             writeln(index = html.parse!int(16));
             file.write(index, ',');
-            pos = html.indexOf("</td><td>(");
+            pos = cast(int)html.indexOf("</td><td>(");
             if(pos == -1) break;
             pos += "</td><td>(".length;
             html = html[pos..$];
             writeln(fontTable[index].x = html.parse!int);
             file.write(fontTable[index].x, ',');
-            pos = html.indexOf(',');
+            pos = cast(int)html.indexOf(',');
             html = html[pos + 1..$];
             munch(html, " ");
             writeln(fontTable[index].y = html.parse!int);
@@ -478,8 +478,8 @@ class PetitComputer
         keybuffer[keybufferpos] = cast(wchar)key;
         keybufferlen++;
         if(keybufferlen > keybuffer.length)
-            keybufferlen = keybuffer.length;
-        keybufferpos = (keybufferpos + 1) % keybuffer.length;
+            keybufferlen = cast(int)keybuffer.length;
+        keybufferpos = (keybufferpos + 1) % cast(int)keybuffer.length;
     }
     Mutex grpmutex;
     int displaynum;

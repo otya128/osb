@@ -370,7 +370,7 @@ class Sprite
             }
             if(frame >= data.frame)
             {
-                sprite.animindex[i] = (sprite.animindex[i] + 1) % d.length;
+                sprite.animindex[i] = (sprite.animindex[i] + 1) % cast(int)d.length;
                 data.elapse = 0;
                 if(sprite.animloop[i] == 0)
                 {
@@ -612,7 +612,7 @@ class Sprite
             relative = true;
             target ^= SpriteAnimTarget.relative;
         }
-        int animcount = data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
+        int animcount = cast(int)data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
         SpriteAnimData[] animdata = new SpriteAnimData[animcount];
         int j;
         int loop = 1;
