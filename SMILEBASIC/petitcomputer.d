@@ -15,9 +15,9 @@ import otya.smilebasic.error;
 import otya.smilebasic.bg;
 import otya.smilebasic.parser;
 const static rot_test_deg = 45f;
-const static rot_test_x = 1f;
-const static rot_test_y = 0f;
-const static rot_test_z = 0f;
+const static rot_test_x = 0f;
+const static rot_test_y = 1f;
+const static rot_test_z = 1f;
 enum Button
 {
     NONE = 0,

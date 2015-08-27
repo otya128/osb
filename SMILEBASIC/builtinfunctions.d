@@ -327,6 +327,10 @@ class BuiltinFunction
     {
         return str[0..len];
     }
+    static wstring RIGHT(wstring str, int len)
+    {
+        return str[$ - len..$];
+    }
     static wstring SUBST(wstring str, int i, Value alen, DefaultValue!(Value,false) areplace)
     {
         int len = 1;

@@ -67,4 +67,19 @@ class CSRZ : SystemVariable
             return Value(vm.petitcomputer.CSRZ);
         }
 }
-
+class Version : SystemVariable
+{
+    @property
+        override Value value(VM vm)
+        {
+            return Value(0x3010000);
+        }
+}
+class FreeMem : SystemVariable
+{
+    @property
+        override Value value(VM vm)
+        {
+            return Value(8327164);
+        }
+}

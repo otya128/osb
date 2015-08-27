@@ -168,8 +168,14 @@ class Compiler
         sysVariable["CSRY"] = new CSRY();
         global["CSRZ"] = VMVariable(-1);
         sysVariable["CSRZ"] = new CSRZ();
+        addSystemVariable("VERSION", new Version());
+        addSystemVariable("FREEMEM", new FreeMem());
     }
-
+    void addSystemVariable(wstring name, SystemVariable var)
+    {
+        global[name] = VMVariable(-1);
+        sysVariable[name] = var;
+    }
     SystemVariable[wstring] sysVariable;
     Code[] code;
     VMVariable[wstring] global;
