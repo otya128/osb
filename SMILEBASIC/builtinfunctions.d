@@ -228,6 +228,11 @@ class BuiltinFunction
         p.showGRP = showPage;
         p.useGRP = usePage;
     }
+    static void GPAINT(PetitComputer p, int x, int y, DefaultValue!(int, false) color, DefaultValue!(int, false) color2)
+    {
+        color.setDefaultValue(p.gcolor);
+        p.gpaint(p.useGRP, x, y, cast(int)color);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
@@ -477,6 +482,9 @@ class BuiltinFunction
     {
         switch(va_args.length)
         {
+            case 0:
+                p.sprite.spdef();//初期化
+                return;
             case 1://array
                 {
                     if(va_args[0].isNumberArray)
@@ -556,6 +564,10 @@ class BuiltinFunction
     static void SPROT(PetitComputer p, int i, double rot)
     {
         p.sprite.sprot(i, rot);
+    }
+    static void SPCOLOR(PetitComputer p, int id, int color)
+    {
+        p.sprite.spcolor(id, cast(uint)color);
     }
     static void BGMSTOP(PetitComputer p)
     {
@@ -709,16 +721,46 @@ class BuiltinFunction
     static void EFCWET(Value[])
     {
     }
+    static void COPY(PetitComputer p, Value[] rawargs)
+    {
+        auto args = retro(rawargs);
+        //文字列はリテラル渡すとType mismatch
+        if(args.length > 5 || args.length < 2 || !args[0].isArray)
+        {
+            throw new IllegalFunctionCall("COPY");
+        }
+        //COPY string, string->文字列COPY
+        //COPY array, string->DATA COPY
+        Value dst = args[0];
+        int dstoffset = 0;
+        int srcoffset = 0;
+        int len = dst.length;//省略時はコピー元の末尾まで
+        if(args[1].isString && !args[0].isString)
+        {
+            //DATAから
+            VM vm = p.vm;
+            vm.pushDataIndex();
+            vm.restoreData(args[1].castString);
+            for(int i = 0; i < len; i++)
+            {
+                Value data = vm.readData();
+                dst[dstoffset++] = data;
+            }
+            vm.popDataIndex();
+            return;
+        }
+        throw new IllegalFunctionCall("COPY (Not implemented error)");
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunction[wstring] builtinFunctions;
     static this()
     {
         foreach(name; __traits(derivedMembers, BuiltinFunction))
         {
-            writeln(name);
+            //writeln(name);
             static if(/*__traits(isStaticFunction, __traits(getMember, BuiltinFunction, name)) && */name[0].isUpper)
             {
-                pragma(msg, AddFunc!(BuiltinFunction, name));
+                //pragma(msg, AddFunc!(BuiltinFunction, name));
                 wstring suffix = "";
                 if(is(ReturnType!(__traits(getMember, BuiltinFunction, name)) == wstring))
                 {
@@ -732,7 +774,7 @@ class BuiltinFunction
                                                                   IsVariadic!(BuiltinFunction, name),
                                                                   name,
                                                                   );
-                writeln(AddFunc!(BuiltinFunction, name));
+                //writeln(AddFunc!(BuiltinFunction, name));
             }
         }
     }
@@ -799,8 +841,7 @@ template AddFunc(T, string N)
     }
     else static if(is(ReturnType!(__traits(getMember, T, N)) == void))
     {
-
-        pragma(msg, GetArgumentCount!(T,N));
+        //pragma(msg, GetArgumentCount!(T,N));
         const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){/*if(ret.length != 0){throw new IllegalFunctionCall(\"" ~ N ~ "\");}*/" ~ OutArgsInit!(T,N) ~ N ~ "(" ~
             AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N,
                         ParameterTypeTuple!(__traits(getMember, T, N))) ~ ");}";

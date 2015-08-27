@@ -143,7 +143,7 @@ class Lexical
                 wstring iden;
                 for(;i < code.length;i++)
                 {
-                    c = cast(wchar)code[i].toUpper;;
+                    c = cast(wchar)code[i].toUpper;
                     if(!c.isAlpha() && !c.isDigit() && c != '_')
                     {
                         break;
@@ -374,7 +374,7 @@ class Parser
         this.code = input;
         lex = new Lexical(input);
     }
-    const int opMax = 11;
+    const static int opMax = 11;
     int getOPRank(TokenType type)
     {
         switch(type)
@@ -460,7 +460,6 @@ class Parser
                             return - - -1;
                     }
                 }
-                break;
             case NodeType.Variable:
                 return 100;
             case NodeType.CallFunction:

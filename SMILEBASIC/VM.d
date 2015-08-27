@@ -23,10 +23,17 @@ struct VMVariable
         this.index = index;
     }
 }
+struct SourceLocation
+{
+    int line;//何行目
+    int pos;//何文字目
+    byte slot;//スロット
+}
 class VM
 {
     DataTable globalDataTable;
     Code[] code;
+    SourceLocation[] location;
     int stacki;
     int pc;
     Value[] stack;
@@ -742,7 +749,6 @@ class NewArray : Code
                 break;
             default:
                 throw new TypeMismatch();
-                break;
         }
         vm.push(array);
     }
@@ -885,7 +891,6 @@ class PopArray : Code
             //TODO:文字列の挙動
             throw new TypeMismatch();
             //array.stringValue[index[0]] = assign.stringValue[0];
-            return;
         }
         throw new TypeMismatch();
     }

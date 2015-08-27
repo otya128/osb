@@ -10,10 +10,14 @@ import std.conv;
 import std.string;
 import std.c.stdio;
 import core.sync.mutex;
-import otya.smilebasic.parser;
 import otya.smilebasic.sprite;
 import otya.smilebasic.error;
 import otya.smilebasic.bg;
+import otya.smilebasic.parser;
+const static rot_test_deg = 45f;
+const static rot_test_x = 1f;
+const static rot_test_y = 0f;
+const static rot_test_z = 0f;
 enum Button
 {
     NONE = 0,
@@ -185,6 +189,7 @@ class PetitComputer
         int foreColor;
         int backColor;
         byte attr;
+        int z;
     }
     SDL_Color PetitColor(ubyte r, ubyte g, ubyte b, ubyte a)
     {
@@ -471,6 +476,149 @@ class PetitComputer
     }
     Mutex grpmutex;
     int displaynum;
+    uint[] buffer;
+    static const MAXSIZE = 1024; /* バッファサイズ */
+
+    /* 画面サイズは 1024 X 1024 とする */
+    static const MINX = 0;
+    static const MINY = 0;
+    static const MAXX = 511;
+    static const MAXY = 511;
+
+    struct BufStr {
+        int lx; /* 領域右端のX座標 */
+        int rx; /* 領域右端のX座標 */
+        int y;  /* 領域のY座標 */
+        int oy; /* 親ラインのY座標 */
+    };
+    BufStr buff[MAXSIZE]; /* シード登録用バッファ */
+    BufStr* sIdx, eIdx;  /* buffの先頭・末尾ポインタ */
+    uint point(int x, int y)
+    {
+        return buffer.ptr[x + y * 512];
+    }
+    void pset(int x, int y, uint col)
+    {
+        buffer.ptr[x + y * 512] = col;
+    }
+    /*
+    scanLine : 線分からシードを探索してバッファに登録する
+
+    int lx, rx : 線分のX座標の範囲
+    int y : 線分のY座標
+    int oy : 親ラインのY座標
+    unsigned int col : 領域色
+    */
+    void scanLine( int lx, int rx, int y, int oy, uint col )
+    {
+        while ( lx <= rx ) {
+
+            /* 非領域色を飛ばす */
+            for ( ; lx < rx ; lx++ )
+                if ( point( lx, y ) == col ) break;
+            if ( point( lx, y ) != col ) break;
+
+            eIdx.lx = lx;
+
+            /* 領域色を飛ばす */
+            for ( ; lx <= rx ; lx++ )
+                if ( point( lx, y ) != col ) break;
+
+            eIdx.rx = lx - 1;
+            eIdx.y = y;
+            eIdx.oy = oy;
+
+            if ( ++eIdx == &buff.ptr[MAXSIZE] )
+                eIdx = buff.ptr;
+        }
+    }
+
+    /*
+    paint : 塗り潰し処理(高速版)
+
+    int x, y : 開始座標
+    unsigned int paintCol : 塗り潰す時の色(描画色)
+    */
+    void paint( int x, int y, uint paintCol , out int dx, out int dy, out int dx2, out int dy2)
+    {
+        int lx, rx; /* 塗り潰す線分の両端のX座標 */
+        int ly;     /* 塗り潰す線分のY座標 */
+        int oy;     /* 親ラインのY座標 */
+        int i;
+        uint col = point( x, y ); /* 閉領域の色(領域色) */
+        dx = int.max, dy = int.max, dx2 = int.min, dy2 = int.min;
+        if ( col == paintCol ) return;    /* 領域色と描画色が等しければ処理不要 */
+        sIdx = buff.ptr;
+        eIdx = buff.ptr + 1;
+        sIdx.lx = sIdx.rx = x;
+        sIdx.y = sIdx.oy = y;
+
+        do {
+            lx = sIdx.lx;
+            rx = sIdx.rx;
+            ly = sIdx.y;
+            oy = sIdx.oy;
+
+            int lxsav = lx - 1;
+            int rxsav = rx + 1;
+
+            if ( ++sIdx == &buff.ptr[MAXSIZE] ) sIdx = buff.ptr;
+
+            /* 処理済のシードなら無視 */
+            if ( point( lx, ly ) != col )
+                continue;
+
+            /* 右方向の境界を探す */
+            while ( rx < MAXX ) {
+                if ( point( rx + 1, ly ) != col ) break;
+                rx++;
+            }
+            /* 左方向の境界を探す */
+            while ( lx > MINX ) {
+                if ( point( lx - 1, ly ) != col ) break;
+                lx--;
+            }
+            import std.algorithm;
+            dy = min(dy, ly);
+            dy2 = max(dy2, ly);
+            dx = min(dx, lx);
+            dx2 = max(dx2, rx);
+            //
+            /* lx-rxの線分を描画 */
+            for ( i = lx; i <= rx; i++ ) pset( i, ly, paintCol );
+
+            /* 真上のスキャンラインを走査する */
+            if ( ly - 1 >= MINY ) {
+                if ( ly - 1 == oy ) {
+                    scanLine( lx, lxsav, ly - 1, ly, col );
+                    scanLine( rxsav, rx, ly - 1, ly, col );
+                } else {
+                    scanLine( lx, rx, ly - 1, ly, col );
+                }
+            }
+
+            /* 真下のスキャンラインを走査する */
+            if ( ly + 1 <= MAXY ) {
+                if ( ly + 1 == oy ) {
+                    scanLine( lx, lxsav, ly + 1, ly, col );
+                    scanLine( rxsav, rx, ly + 1, ly, col );
+                } else {
+                    scanLine( lx, rx, ly + 1, ly, col );
+                }
+            }
+
+        } while ( sIdx != eIdx );
+    }
+    void gpaintBuffer(uint* pixels, int x, int y, uint color, GLenum tf)
+    {
+        int dx, dy, dx2, dy2;
+        paint(x, y, color, dx, dy, dx2, dy2);
+        if(dx == int.max) return;
+        int h = dy2 - dy;
+        glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, 512, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * 512));
+//        glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
+    }
+    int renderstartpos;
     void renderGraphic()
     {
         if(!drawMessageLength) return;
@@ -480,20 +628,23 @@ class PetitComputer
         drawflag = true;
         //betuni kouzoutai demo sonnnani sokudo kawaranasasou
         auto len = drawMessageLength;
-        drawMessageLength = 0;
-        int s = 0;
+        int s = renderstartpos;
         GLint old;
         auto a = & glBindFramebuffer;
         glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
         int oldpage = drawMessageQueue[0].page;
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
         glDisable(GL_TEXTURE_2D);
+        //glDisable(GL_ALPHA_TEST);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
         //
         //glAlphaFunc(GL_GEQUAL, 0.0);
         glViewport(0, 0, 512, 512);
-        for(int i = s; i < len; i++)
+        DrawType dt;
+        auto start = SDL_GetTicks();
+        int i = s;
+        for(; i < len; i++)
         {
             DrawMessage dm = drawMessageQueue[i];
             if(oldpage != dm.page)
@@ -545,8 +696,37 @@ class PetitComputer
                     }
                     //draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
                     break;
+                case DrawType.PAINT:
+                    {
+                        glBindTexture(GL_TEXTURE_2D, GRP[oldpage].glTexture);
+                        if(dt != DrawType.PAINT)
+                        {
+                            glFinish();
+                            //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
+                            glReadPixels(0, 0, 512, 512, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, buffer.ptr);
+                        }
+                        gpaintBuffer(buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
+                        //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
+                        if(SDL_GetTicks() - start >= 16 && i != len - 1)
+                        {
+                            s = i + 1;
+                            goto brk;
+                        }
+                    }
+                    break;
                 default:
             }
+            dt = dm.type;
+        }
+        brk:
+        if(i == len)
+        {
+            renderstartpos = 0;
+            drawMessageLength = 0;
+        }
+        else
+        {
+            renderstartpos = s;
         }
         glBindFramebufferEXT(GL_FRAMEBUFFER, old);
         glEnable(GL_DEPTH_TEST);
@@ -592,8 +772,10 @@ class PetitComputer
         return bg;
     }
     protected BG[4] bg;
+    bool quit;
     void render()
     {
+        buffer = new uint[512 * 512];
         DerelictSDL2.load();
         DerelictSDL2Image.load();
         GRPF = createGRPF(fontFile);
@@ -616,7 +798,7 @@ class PetitComputer
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile;// = true;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -629,6 +811,11 @@ class PetitComputer
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
                                       SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+            scope(exit)
+            {
+                SDL_DestroyWindow(window);
+                SDL_Quit();
+            }
             renderer = SDL_CreateRenderer(window, -1, 0);
             SDL_Event event;
             SDL_GLContext context;
@@ -662,9 +849,9 @@ class PetitComputer
             //glEnable(GL_ALPHA_TEST);
            // sprite.spset(0, 0);
             // sprite.spofs(0, 9, 8);
-            //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glAlphaFunc(GL_GEQUAL, 0.5);
+            glAlphaFunc(GL_GEQUAL, 0.1f);
             glEnable(GL_ALPHA_TEST);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -690,18 +877,23 @@ class PetitComputer
                 }
                 //描画の順位
                 //sprite>GRP>console>BG
+                glDisable(GL_BLEND);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glEnable(GL_BLEND);
                 version(test) glLoadIdentity();
-                version(test) glRotatef(45f, 1f, 0f, 0.5f);
+                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 if(xscreenmode == 1)
                 {
                     glViewport(0, 240, 400, 240);
                 }
-                sprite.render();
+                glEnable(GL_BLEND);
                 if(xscreenmode == 1)
                 {
                     glViewport(0, 240, 400, 240);
                 }
+                glEnable(GL_BLEND);
+                version(test) glLoadIdentity();
+                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 if(xscreenmode == 2)
                 {
                     renderGraphicPage(0, 320, 480);
@@ -726,7 +918,7 @@ class PetitComputer
                     glViewport(0, 240, 400, 240);
                 }
                 version(test) glLoadIdentity();
-                version(test) glRotatef(45f, 1f, 0f, 0.5f);
+                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 glBindTexture(GL_TEXTURE_2D, GRP[bgpage].glTexture);
                 if(xscreenmode == 2)
                 {
@@ -752,12 +944,20 @@ class PetitComputer
                     }
                 }
                 version(test) glLoadIdentity();
-                version(test) glRotatef(45f, 1f, 0f, 0.5f);
+                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
                 if(xscreenmode == 1)
                 {
                     glViewport(0, 240, 400, 240);
                 }
+                //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
+                //とりあえず一番楽な方法
+                //これだと同一Zでスプライトが一番下に来てしまうのでZ値を補正する必要がある->やった
+                glEnable(GL_BLEND);
+                glDepthMask(GL_FALSE);//スプライト同士でのZバッファは半透明だと邪魔なので無効
+                sprite.render();//Zソートすべき->やった->プチコンの挙動的に安定ソートか非安定ソートか
+                glDepthMask(GL_TRUE);
+                glDisable(GL_BLEND);
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
@@ -766,8 +966,7 @@ class PetitComputer
                     switch (event.type)
                     {
                         case SDL_QUIT:
-                            SDL_DestroyWindow(window);
-                            SDL_Quit();
+                            quit = true;
                             return;
                         case SDL_KEYUP:
                             {
@@ -806,22 +1005,9 @@ class PetitComputer
                             break;
                     }
                 }
-                if(drawMessageLength)
-                {
-                    //renderGraphic;
-                }
-                while(true)
-                {
-                    long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
-                    if(delay > 0)
-                            SDL_Delay(cast(uint)delay);
-                    break;
-                    if(delay < 0) break;
-                    renderGraphic();
-                    SDL_Delay(1);
-                    //if(delay > 0)
-                //    SDL_Delay(cast(uint)delay);
-                }
+                long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
+                if(delay > 0)
+                        SDL_Delay(cast(uint)delay);
             }
         }
         catch(Throwable t)
@@ -854,56 +1040,79 @@ class PetitComputer
         thread.start();
         while(!buttonTable){}
         auto startTicks = SDL_GetTicks();
-        //とりあえず
-        auto parser = new Parser(
-                                 //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                 //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
-                                 //readText("./SYS/GAME2RPG.TXT").to!wstring
-                                 //readText("./SYS/GAME1DOTRC.TXT").to!wstring
-                                 //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                 readText("./SYS/EX8TECDEMO.TXT").to!wstring
-                                 //readText("./SYS/EX1TEXT.TXT").to!wstring
-                                 //readText("FIZZBUZZ.TXT").to!wstring
-                                 //readText("TEST.TXT").to!wstring
-                                 /*"?ABS(-1)
-                                 LOCATE 0,10
-                                 COLOR 5
-                                 FOR I=0 TO 10
-                                 ?I;\"!\",\"=\",FACT(I)
-                                 NEXT
-                                 DEF FACT(N)
-                                 IF N<=1 THEN RETURN 1
-                                 RETURN N*FACT(N-1)
-                                 END"*/
-                                 /*
-                                 `CLS : CL=0 : Z=0
-                                 WHILE 1
-                                 INC Z : IF Z>200 THEN Z=0
-                                 FOR I=0 TO 15
-                                 LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
-                                 PRINT "★ 梅雨で雨が多い季節ですね ★"
-                                 NEXT
-                                 CL=(CL+1) MOD 16 
-                                 WEND`*/
-                                 /*
-                                 `CLS : CL=0
-                                 WHILE 1
-                                 FOR I=0 TO 15
-                                 LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                 PRINT "Ё プチコン3ゴウ Ж"
-                                 NEXT
-                                 CL=(CL+1) MOD 16 : VSYNC 1
-                                 WEND`
-                                 /*
-                                 `CLS : CL=0
-                                 @LOOP
-                                 FOR I=0 TO 15
-                                 LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                 PRINT "Ё プチコン3ゴウ Ж"
-                                 NEXT
-                                 CL=(CL+1) MOD 16 : VSYNC 1
-                                 GOTO @LOOP`*/
-                                 );
+        Parser parser;
+        //デバッグ用
+        version(NDirectMode)
+        {
+            parser = new Parser(
+                                     //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     //readText("./SYS/GAME2RPG.TXT").to!wstring
+                                     //readText("./SYS/GAME1DOTRC.TXT").to!wstring
+                                     //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
+                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     //readText("./SYS/EX1TEXT.TXT").to!wstring
+                                     //readText("FIZZBUZZ.TXT").to!wstring
+                                     //readText("TEST.TXT").to!wstring
+                                     /*"?ABS(-1)
+                                     LOCATE 0,10
+                                     COLOR 5
+                                     FOR I=0 TO 10
+                                     ?I;\"!\",\"=\",FACT(I)
+                                     NEXT
+                                     DEF FACT(N)
+                                     IF N<=1 THEN RETURN 1
+                                     RETURN N*FACT(N-1)
+                                     END"*/
+                                     /*
+                                     `CLS : CL=0 : Z=0
+                                     WHILE 1
+                                     INC Z : IF Z>200 THEN Z=0
+                                     FOR I=0 TO 15
+                                     LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
+                                     PRINT "★ 梅雨で雨が多い季節ですね ★"
+                                     NEXT
+                                     CL=(CL+1) MOD 16 
+                                     WEND`*/
+                                     /*
+                                     `CLS : CL=0
+                                     WHILE 1
+                                     FOR I=0 TO 15
+                                     LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                     PRINT "Ё プチコン3ゴウ Ж"
+                                     NEXT
+                                     CL=(CL+1) MOD 16 : VSYNC 1
+                                     WEND`
+                                     /*
+                                     `CLS : CL=0
+                                     @LOOP
+                                     FOR I=0 TO 15
+                                     LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                     PRINT "Ё プチコン3ゴウ Ж"
+                                     NEXT
+                                     CL=(CL+1) MOD 16 : VSYNC 1
+                                     GOTO @LOOP`*/
+                                     );
+        }
+        else
+        {
+            do
+            {
+                auto file = input("LOAD PROGRAM:", true).to!string;
+                try
+                {
+                    parser = new Parser(readText(file).to!wstring);
+                }
+                catch(Throwable t)
+                {
+                    writeln(t);
+                    printConsole("can't open program \"", file, "\".\n");
+                    continue;
+                }
+                break;
+            } while(!quit);
+        }
+        if(quit) return;
         auto vm = parser.compile();
         bool running = true;
         vm.init(this);
@@ -915,11 +1124,12 @@ class PetitComputer
         //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
         //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
         int startcnt = SDL_GetTicks();
+        float frame = 1000f / 60f;
         while (true)
         {
             uint elapse;
             startTicks = SDL_GetTicks();
-            do
+            //do
             {
                 try
                 {
@@ -956,14 +1166,24 @@ class PetitComputer
                     {
                     }
                 }
-                elapse = SDL_GetTicks() - startTicks;
-            } while(elapse <= 1000 / 60);
-            maincnt = (SDL_GetTicks() - startcnt) / (1000 / 60);
-            vsyncCount++;
-            if(vsyncFrame <= vsyncCount) vsyncFrame = 0;
+                //elapse = SDL_GetTicks() - startTicks;
+            } //while(elapse <= 1000 / 60);
+            if(vsyncFrame)
+            {
+                SDL_Delay(cast(uint)(vsyncFrame * frame));
+                vsyncFrame = 0;
+            }
+            maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
+            if(quit)
+            {
+                quit = false;
+                break;
+            }
         }
-        SDL_DestroyWindow(window);
-        SDL_Quit();
+        scope(exit)
+        {
+            writeln("quit");
+        }
     }
     void clearKeyBuffer()
     {
@@ -982,12 +1202,12 @@ class PetitComputer
         showCursor = true;
         int oldCSRX = this.CSRX;
         int oldCSRY = this.CSRY;
-        while(true)
+        while(!quit)
         {
             auto oldpos = keybufferpos;
-            while(oldpos == keybufferpos)
+            while(oldpos == keybufferpos && !quit)
             {
-                SDL_Delay(4);//適当 ストレスを感じないくらい
+                SDL_Delay(8);//適当 ストレスを感じないくらい
             }
             auto kbp = keybufferpos;
             auto len = kbp - oldpos;
@@ -1088,6 +1308,7 @@ class PetitComputer
         BOX,
         CIRCLE,
         TRI,
+        PAINT,
     }
     struct DrawMessage
     {
@@ -1158,6 +1379,10 @@ class PetitComputer
     void gfill(int page, int x, int y, int x2, int y2, uint color)
     {
         sendDrawMessage(DrawType.FILL, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+    }
+    void gpaint(int page, int x, int y, uint color)
+    {
+        sendDrawMessage(DrawType.PAINT, cast(byte)page, cast(short)x, cast(short)y, color);
     }
     int gprio;
     void renderGraphicPage(int display, float w, float h)
@@ -1261,15 +1486,16 @@ class PetitComputer
             {
                 auto fore = consoleColorGL[console[y][x].foreColor];
                 auto rect = &fontTable[console[y][x].character];
+                float z = console[y][x].z / 1025f;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
                 glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
             }
         glEnd();
         if(xscreenmode != 1)
@@ -1310,15 +1536,16 @@ class PetitComputer
             {
                 auto fore = consoleColorGL[consoleDisplay1[y][x].foreColor];
                 auto rect = &fontTable[consoleDisplay1[y][x].character];
+                float z = consoleDisplay1[y][x].z / 1025f;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
                 glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0);
+                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
             }
         glEnd();
        // glFlush();
@@ -1330,6 +1557,7 @@ class PetitComputer
             printConsoleString(i.to!wstring);
         }
     }
+    byte consoleAttr;
     void printConsoleString(wstring text)
     {
         //consolem.lock();
@@ -1346,6 +1574,8 @@ class PetitComputer
                 consoleC[CSRY][CSRX].character = c;
                 consoleC[CSRY][CSRX].foreColor = consoleForeColor;
                 consoleC[CSRY][CSRX].backColor = consoleBackColor;
+                consoleC[CSRY][CSRX].z = CSRZ;
+                consoleC[CSRY][CSRX].attr = consoleAttr;
             }
             CSRX++;
             if(CSRX >= consoleWidthC || c == '\n' || c == '\r')
@@ -1361,7 +1591,7 @@ class PetitComputer
                     consoleC[i] = consoleC[i + 1];
                 }
                 consoleC[consoleHeightC - 1] = tmp;
-                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
                 //assert(console[0] != console[2]);
                 CSRY = consoleHeightC - 1;
             }

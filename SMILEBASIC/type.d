@@ -117,6 +117,62 @@ struct Value
                 return "default";
         }
     }
+    @property int length()
+    {
+        switch(this.type)
+        {
+            case ValueType.String:
+                return cast(int)stringValue.length;
+            case ValueType.IntegerArray:
+                return cast(int)integerArray.length;
+            case ValueType.DoubleArray:
+                return cast(int)doubleArray.length;
+            case ValueType.StringArray:
+                return cast(int)stringArray.length;
+            default:
+                throw new TypeMismatch();
+        }
+    }
+    void opIndexAssign(Value v, int i)
+    {
+        switch(this.type)
+        {
+            //とりあえず破壊的に書き換えた
+            //どのみちこれだと文字数を増やすことができないのでArray!wcharで管理させたい
+            case ValueType.String:
+                (cast(wchar[])stringValue)[i] = v.castString[0];
+                break;
+            case ValueType.IntegerArray:
+                integerArray.array[i] = v.castInteger;
+                break;
+            case ValueType.DoubleArray:
+                doubleArray.array[i] = v.castDouble;
+                break;
+            case ValueType.StringArray:
+                stringArray.array[i] = v.castString;
+                break;
+            default:
+                throw new TypeMismatch();
+        }
+    }
+    Value opIndex(int i)
+    {
+        switch(this.type)
+        {
+            //とりあえず破壊的に書き換えた
+            //どのみちこれだと文字数を増やすことができないのでArray!wcharで管理させたい
+            case ValueType.String:
+                return Value(stringValue[i]);
+            case ValueType.IntegerArray:
+                return Value(integerArray.array[i]);
+            case ValueType.DoubleArray:
+                return Value(doubleArray.array[i]);
+            case ValueType.StringArray:
+                return Value(stringArray.array[i]);
+            default:
+                throw new TypeMismatch();
+        }
+    }
 }
 class Array(T)
 {
@@ -137,6 +193,10 @@ class Array(T)
             array[] = 0;
         }
         dimCount = 1;
+    }
+    @property size_t length()
+    {
+        return array.length;
     }
     this(int[] dim)
     {

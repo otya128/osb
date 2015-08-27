@@ -143,7 +143,7 @@ struct SpriteData
     int defno;
     double x, y;
     int homex, homey;
-    double z;/*!*/
+    int z;/*!*/
     int u, v, w, h;//個々で保持してるみたい,SPSETをして後でSPDEFをしても変化しない
     uint color;
     double[8] var;
@@ -152,8 +152,10 @@ struct SpriteData
     double scalex;
     double scaley;
     double r;
-    this(bool flag)
+    this(int id)
     {
+        this.id = id;
+        z = 0;
         define = false;
     }
     this(int id, int defno)
@@ -237,9 +239,22 @@ struct SpriteData
         this.homey = s.hy;
         this.attr = s.a;
     }
+    double debugZ()
+    {
+        import std.stdio;
+       // writefln("sprite=%d, z=%f", id, z);
+        return z;
+    }
+    int opCmp(ref SpriteData spr)
+    {
+        import std.stdio;
+        writeln("WHAT!????");
+        return 0;
+    }
 }
 class Sprite
 {
+    SpriteDef[] defSPDEFTable;
     SpriteDef[] SPDEFTable;
     SpriteData[] sprites;
     PetitComputer petitcom;
@@ -248,13 +263,7 @@ class Sprite
     void initUVTable()
     {
         SPDEFTable = new SpriteDef[4096];
-        //UVTable[] = SDL_Rect(0, 0, 16, 16);//Ichigo
-        for(int i = 0; i < 4096; i++)
-        {
-            SPDEFTable[i] = SpriteDef(0, 0, 16, 16, 0, 0, SpriteAttr.show);
-        }
-        SPDEFTable[4095] = SpriteDef(192, 480, 96, 32, 48, 16, SpriteAttr.show);
-        //UVTable[] = SDL_Rect(192, 480, 96, 32);
+        defSPDEFTable = new SpriteDef[4096];
         import std.csv;
         import std.typecons;//I	X	Y	W	H	HX	HY	ATTR
         import std.file;
@@ -265,8 +274,13 @@ class Sprite
         auto csv = file.byLine.joiner("\n").csvReader!(Tuple!(int, "I", int, "X" ,int, "Y", int, "W", int, "H", int, "HX", int, "HY", int, "ATTR"));
         foreach(record; csv)
         {
-            SPDEFTable[record.I] = SpriteDef(record.X, record.Y, record.W, record.H, record.HX, record.HY, cast(SpriteAttr)record.ATTR);
+            defSPDEFTable[record.I] = SpriteDef(record.X, record.Y, record.W, record.H, record.HX, record.HY, cast(SpriteAttr)record.ATTR);
         }
+        spdef;
+    }
+    void spdef()
+    {
+        this.SPDEFTable[] = (this.defSPDEFTable)[];
     }
     void spchr(int i, int d)
     {
@@ -282,11 +296,24 @@ class Sprite
     this(PetitComputer petitcom)
     {
         sprites = new SpriteData[512];
-        sprites[] = SpriteData(false);
+        zsortedSprites = new SpriteData*[512];
+        for(int i = 0; i < sprites.length; i++)
+        {
+            zsortedSprites[i] = &sprites[i];
+            sprites[i] = SpriteData(i);
+        }
         initUVTable;
         this.petitcom = petitcom;
+        list = new SpriteBucket[512];
+        for(int i = 0; i < 512; i++)
+        {
+            list[i] = new SpriteBucket();
+        }
+        buckets = new SpriteBucket[1024 + 256];
+        listptr = list.ptr;
+        bucketsptr = buckets.ptr;
     }
-    void animation(ref SpriteData sprite)
+    void animation(SpriteData* sprite)
     {
         foreach(i, ref d; sprite.anim)
         {
@@ -307,7 +334,7 @@ class Sprite
                             sprite.y = data.data.y;
                             break;
                         case SpriteAnimTarget.Z:
-                            sprite.z = data.data.z;
+                            sprite.z = cast(int)data.data.z;
                             break;
                         case SpriteAnimTarget.UV:
                             sprite.u = data.data.u;
@@ -343,7 +370,7 @@ class Sprite
                         sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
                         break;
                     case SpriteAnimTarget.Z:
-                        sprite.z = data.old.z + ((data.data.z - data.old.z) / data.frame) * frame;
+                        sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
                         break;
                     case SpriteAnimTarget.UV:
                         sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
@@ -388,8 +415,78 @@ class Sprite
     }
     bool lll;
     import std.algorithm;
+    SpriteData*[] zsortedSprites;
+    bool zChange;
+    class SpriteBucket
+    {
+        SpriteData* sprite;
+        SpriteBucket next;
+        SpriteBucket last;
+    }
+    SpriteBucket[] list;
+    SpriteBucket[] buckets;
+    SpriteBucket* listptr;
+    SpriteBucket* bucketsptr;
     void render()
     {
+        //とりあえずZ更新されたら描画時にまとめてソート
+        //thread safe.....
+        if(zChange)
+        {
+            
+            import std.range;
+            import std.algorithm;
+            zChange = false;
+            /*//TimSortImpl!(binaryFun!("a.z < b.z"), Range).sort(zsortedSprites, null);
+            try
+            {
+                sort!("a.z > b.z", SwapStrategy.stable)(zsortedSprites);
+            }
+            catch(Throwable t)
+            {
+            }//*/
+            //バケットソートっぽい奴
+            //基本的にほぼソートされてるので挿入ソートのほうが早そう
+            //std.algorithmソートだと例外出る
+            //m = 256+1024
+            //n = 512
+            import std.stdio;
+            //writeln("=============START==========");
+            //writeln("sort");
+            foreach(i, ref s; sprites)
+            {
+                //if(!s.define) continue;
+                auto zet = s.z + 256;
+                listptr[i].sprite = &s;
+                if(bucketsptr[zet])
+                {
+                    //listptr[i].next = bucketsptr[zet].last;
+                    bucketsptr[zet].last.next = listptr[i];
+                    bucketsptr[zet].last = listptr[i];
+                    listptr[i].next = null;
+                }
+                else
+                {
+                    bucketsptr[zet] = listptr[i].last = listptr[i];
+                    listptr[i].next = null;
+                }
+            }
+            int j;
+            foreach_reverse(i, b; buckets)
+            {
+                if(b)
+                {
+                    while(b)
+                    {
+                        //writefln("z:%d, id:%d", b.sprite.z, b.sprite.id);
+                        zsortedSprites[j] = b.sprite;
+                        j++;
+                        b = b.next;
+                    }
+                    bucketsptr[i] = null;
+                }
+            }
+        }
         float disw = 200f, dish = 120f, disw2 = 400f, dish2 = 240f;
         if(petitcom.xscreenmode == 2)
         {
@@ -407,7 +504,7 @@ class Sprite
         // glDisable(GL_TEXTURE_2D);
         version(test) glLoadIdentity();
         glLoadIdentity();
-        foreach(i,ref sprite; sprites)
+        foreach(i, sprite; zsortedSprites)
         {
             if(i == spmax)
             {
@@ -440,7 +537,7 @@ class Sprite
                 int v = cast(int)sprite.v;
                 int u2 = cast(int)sprite.u + sprite.w;//-1
                 int v2 = cast(int)sprite.v + sprite.h;
-                z = sprite.z / 1025f;
+                z = (sprite.z - 1) / 1025f;//スプライトの描画順が一番上だけどスプライトは最後に描画しないといけないのでZ - 1で一番上にする
                 float flipx = cast(float)sprite.scalex, flipy = cast(float)sprite.scaley, flipx2 = x, flipy2 = y;
                 if(sprite.attr & SpriteAttr.hflip)
                 {
@@ -452,7 +549,7 @@ class Sprite
                     flipy = -flipy;
                     flipy2 = y2 - cast(int)(sprite.homey * sprite.scaley);
                 }
-                version(test) glRotatef(45f, 1f, 0f, 0.5f);
+                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
                 glTranslatef((flipx2) / disw - 1,
                              1 - ((flipy2) / dish), 0);
@@ -465,7 +562,7 @@ class Sprite
                 glRotatef(360 - sprite.r, 0.0f, 0.0f, 1.0f );
                 glScalef(flipx * aspect, flipy, 1f);
                 glBegin(GL_QUADS);
-                glColor3f(1.0, 1.0, 1.0);
+                glColor4ubv(cast(ubyte*)&sprite.color);
                 if((sprite.attr& 0b111) == SpriteAttr.show)
                 {
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);
@@ -567,6 +664,7 @@ class Sprite
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].z = z;
+        zChange = true;
     }
     void sphide(int id)
     {
@@ -658,5 +756,10 @@ class Sprite
     {
         i = spid(i);
         sprites[i].r = rot;
+    }
+    void spcolor(int id, uint color)
+    {
+        id = spid(id);
+        sprites[id].color = petitcom.toGLColor(color);
     }
 }

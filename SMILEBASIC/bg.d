@@ -44,7 +44,7 @@ class BG
         glScalef(1.0f / aspect, 1.0f, 1.0f);
         glRotatef(360 - r, 0.0f, 0.0f, 1.0f );
         glScalef(scalex * aspect, scaley, 1f);
-        version(test) glRotatef(45f, 1f, 0f, 0.5f);
+        version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
         //viewport
         //clipx,clipy
         glBegin(GL_QUADS);

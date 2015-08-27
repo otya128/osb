@@ -148,7 +148,7 @@ class Compiler
                 return ValueType.Integer;
             default:
                 return ValueType.Double;//非DEFINT時
-                return ValueType.Integer;//DEFINT時
+                //return ValueType.Integer;//DEFINT時
         }
     }
     Statements statements;
