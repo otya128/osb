@@ -39,6 +39,10 @@ struct DefaultValue(T, bool skippable = true)
     }
     mixin Proxy!value;
 }
+struct StartOptional
+{
+    const char[] name;
+}
 alias ValueType = otya.smilebasic.type.ValueType;
 struct BuiltinFunctionArgument
 {
@@ -46,23 +50,66 @@ struct BuiltinFunctionArgument
     bool optionalArg;
     bool skipArg;
 }
+//オーバーロード用
+class BuiltinFunctions
+{
+    private BuiltinFunction[] func;
+    this(BuiltinFunction f)
+    {
+        func = new BuiltinFunction[1];
+        func[0] = f;
+    }
+    void addFunction(BuiltinFunction func)
+    {
+        this.func ~= func;
+    }
+    BuiltinFunction overloadResolution(int argc, int outargc)
+    {
+        BuiltinFunction va;
+        //とりあえず引数の数で解決させる,というよりコンパイル時に型を取得する方法がない
+        foreach(f; func)
+        {
+            if(f.startskip <= argc && f.argments.length >= argc && f.outoptional <= outargc && f.results.length >= outargc)
+                return f;
+            if(f.variadic)
+                va = f;
+        }
+        //一応可変長は最後
+        if(va) return va;
+        writeln("====function overloads===");
+        foreach(f; func)
+        {
+            writefln("name=\"%s\", argments=%s, results = %s, variadic = %s, startoptional = %d, function pointer=%s", f.name, f.argments, f.results, f.variadic, f.startskip, f.func);
+        }
+        //引数数ちがうのは実行前にエラー
+        throw new IllegalFunctionCall(func[0].name);
+    }
+}
+alias DefaultValue!(int, false) optionalint;
+alias DefaultValue!(int, false) optionaldouble;
+alias DefaultValue!(int, false) optionalstring;
+/**
+ここに関数を定義すればコンパイル時にBuiltinFunctionに変換してくれる便利なクラス
+*/
 class BuiltinFunction
 {
     BuiltinFunctionArgument[] argments;
-    ValueType result;
+    BuiltinFunctionArgument[] results;
     void function(PetitComputer, Value[], Value[]) func;
     int startskip;
+    int outoptional;
     bool variadic;
     string name;
-    this(BuiltinFunctionArgument[] argments, ValueType result, void function(PetitComputer, Value[], Value[]) func, int startskip,
-         bool variadic, string name)
+    this(BuiltinFunctionArgument[] argments, BuiltinFunctionArgument[] results, void function(PetitComputer, Value[], Value[]) func, int startskip,
+         bool variadic, string name, int outoptional)
     {
         this.argments = argments;
-        this.result = result;
+        this.results = results;
         this.func = func;
         this.startskip = startskip;
         this.variadic = variadic;
         this.name = name;
+        this.outoptional = outoptional;
     }
     bool hasSkipArgument()
     {
@@ -74,8 +121,16 @@ class BuiltinFunction
     {
         return a < 0 ? -a : a;
     }*/
-    static double function(double) ABS = &abs!double;
-    static double function(double) SGN = &sgn!double;
+    //static double function(double) ABS = &abs!double;
+    //static double function(double) SGN = &sgn!double;
+    static double ABS(double arg1)
+    {
+        return abs(arg1);
+    }
+    static double SGN(double arg1)
+    {
+        return sgn(arg1);
+    }
     static double SIN(double arg1)
     {
         return sin(arg1);
@@ -168,8 +223,12 @@ class BuiltinFunction
         }
         assert(cond, message.to!string);
     }
-    static int BUTTON(PetitComputer p, DefaultValue!(int, false) mode)
+    static int BUTTON(PetitComputer p, DefaultValue!(int, false) mode, DefaultValue!(int, false) mp)
     {
+        if(!mp.isDefault)
+        {
+            writeln("NOTIMPL:BUTTON(ID, MPID)");
+        }
         return p.button;
     }
     static void VISIBLE(PetitComputer p, DefaultValue!(int) console, DefaultValue!(int) graphic, DefaultValue!(int) BG, DefaultValue!(int) sprite)
@@ -317,7 +376,11 @@ class BuiltinFunction
     {
         if(i + len > str.length)
         {
-            return "";//範囲外で空文字
+            if(i >= str.length)
+            {
+                return "";//範囲外で空文字
+            }
+            return str[i..$];//iがまだ範囲内なら最後まで
         }
         //挙動未定
         return str[i..i + len];
@@ -462,9 +525,21 @@ class BuiltinFunction
     {
         p.sprite.spshow(id);
     }
-    static void SPOFS(PetitComputer p, int id, int x, int y, DefaultValue!(int, false) z)
+    static void SPOFS(PetitComputer p, int id, double x, double y, DefaultValue!(int, false) z)
     {
-        p.sprite.spofs(id, x, y, cast(int)z);
+        if(z.isDefault)
+        {
+            p.sprite.spofs(id, x, y);
+        }
+        else
+        {
+            p.sprite.spofs(id, x, y, cast(int)z);
+        }
+    }
+    @StartOptional("z")
+    static void SPOFS(PetitComputer p, int id, out double x, out double y, out int z)
+    {
+        p.sprite.getspofs(id, x, y, z);
     }
     static void SPANIM(PetitComputer p, Value[] va_args)
     {
@@ -572,6 +647,14 @@ class BuiltinFunction
     static void SPCOLOR(PetitComputer p, int id, int color)
     {
         p.sprite.spcolor(id, cast(uint)color);
+    }
+    static void SPLINK(PetitComputer p, int child, int parent)
+    {
+        p.sprite.splink(child, parent);
+    }
+    static void SPUNLINK(PetitComputer p, int id)
+    {
+        p.sprite.spunlink(id);
     }
     static void BGMSTOP(PetitComputer p)
     {
@@ -756,7 +839,7 @@ class BuiltinFunction
         throw new IllegalFunctionCall("COPY (Not implemented error)");
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
-    static BuiltinFunction[wstring] builtinFunctions;
+    static BuiltinFunctions[wstring] builtinFunctions;
     static this()
     {
         foreach(name; __traits(derivedMembers, BuiltinFunction))
@@ -764,27 +847,74 @@ class BuiltinFunction
             //writeln(name);
             static if(/*__traits(isStaticFunction, __traits(getMember, BuiltinFunction, name)) && */name[0].isUpper)
             {
-                //pragma(msg, AddFunc!(BuiltinFunction, name));
-                wstring suffix = "";
-                if(is(ReturnType!(__traits(getMember, BuiltinFunction, name)) == wstring))
+                foreach(i, F; __traits(getOverloads, BuiltinFunction, name))
                 {
-                    suffix = "$";
+                    //pragma(msg, AddFunc!(BuiltinFunction, name));
+                    wstring suffix = "";
+                    if(is(ReturnType!(__traits(getMember, BuiltinFunction, name)) == wstring))
+                    {
+                        suffix = "$";
+                    }
+                    wstring name2 = name ~ suffix;
+                    auto func = builtinFunctions.get(name2, null);
+                    alias BFD = BuiltinFunctionData!(BuiltinFunction, name, i);
+                    pragma(msg, AddFunc!BFD);
+                    auto f = new BuiltinFunction(
+                                                 GetFunctionParamType!(BFD),
+                                                 GetFunctionReturnType!(BFD),
+                                                 mixin(AddFunc!(BFD)),
+                                                 GetStartSkip!(BFD),
+                                                 IsVariadic!(BFD),
+                                                 name,
+                                                 GetOutStartSkip!(BFD)
+                                                 );
+                    if(func)
+                    {
+                        builtinFunctions[name2].addFunction(f);
+                    }
+                    else
+                    {
+                        builtinFunctions[name2] = new BuiltinFunctions(f);
+                    }
+                    //writeln(AddFunc!(BuiltinFunction, name));
                 }
-                builtinFunctions[name ~ suffix] = new BuiltinFunction(
-                                                                  GetFunctionParamType!(BuiltinFunction, name),
-                                                                  GetFunctionReturnType!(BuiltinFunction, name),
-                                                                  mixin(AddFunc!(BuiltinFunction, name)),
-                                                                  GetStartSkip!(BuiltinFunction, name),
-                                                                  IsVariadic!(BuiltinFunction, name),
-                                                                  name,
-                                                                  );
-                //writeln(AddFunc!(BuiltinFunction, name));
             }
         }
     }
 
 }
-template GetStartSkip(T, string N)
+template GetOutStartSkip(BFD)
+{
+    static if(__traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_]).length == 1 &&
+              is(typeof(__traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_])[0]) == StartOptional))
+    {
+        enum so = __traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_])[0];
+        int GetOutStartSkip()
+        {
+            int k;
+            foreach (j, i; ParameterIdentifierTuple!(__traits(getOverloads, BFD.C_, BFD.N)[BFD.I_]))
+            {
+                if(i == so.name)
+                {
+                    return k;
+                }
+                else if(BFD.ParameterStorageClass[j] & ParameterStorageClass.out_)
+                {
+                    k++;
+                }
+            }
+            return 0;
+        }
+    }
+    else
+    {
+        int GetOutStartSkip()
+        {
+            return 0;
+        }
+    }
+}
+template GetStartSkip(BFD)
 {
     private template SkipSkip(int I, P...)
     {
@@ -792,7 +922,15 @@ template GetStartSkip(T, string N)
         {
             enum SkipSkip = I - is(P[0] == PetitComputer);
         }
+        else static if(BFD.ParameterStorageClass[I] & ParameterStorageClass.out_)
+        {
+            enum SkipSkip = I - is(P[0] : PetitComputer);
+        }
         else static if(is(P[I] == DefaultValue!(int, false)))
+        {
+            enum SkipSkip = I - is(P[0] : PetitComputer);
+        }
+        else static if(is(P[I] == DefaultValue!(double, false)))
         {
             enum SkipSkip = I - is(P[0] : PetitComputer);
         }
@@ -809,52 +947,170 @@ template GetStartSkip(T, string N)
             enum SkipSkip = SkipSkip!(I + 1, P);
         }
     }
-    enum GetStartSkip = SkipSkip!(0, ParameterTypeTuple!(__traits(getMember, T, N)));
+    enum GetStartSkip = SkipSkip!(0, BFD.ParameterType);
 }
-template GetFunctionReturnType(T, string N)
+template GetBuiltinFunctionArgment(P...)
 {
-    static if(is(ReturnType!(__traits(getMember, T, N)) == double))
+    static if(is(P[0] == double))
     {
-        enum GetFunctionReturnType = ValueType.Double;
+        const string arg = "ValueType.Double, false";
     }
-    else static if(is(ReturnType!(__traits(getMember, T, N)) == int))
+    else static if(is(P[0] == int))
     {
-        enum GetFunctionReturnType = ValueType.Integer;
+        const string arg = "ValueType.Integer, false";
     }
-    else static if(is(ReturnType!(__traits(getMember, T, N)) == void))
+    else static if(is(P[0] == wstring))
     {
-        enum GetFunctionReturnType = ValueType.Void;
+        const string arg = "ValueType.String, false";
     }
-    else static if(is(ReturnType!(__traits(getMember, T, N)) == wstring))
+    else static if(is(P[0] == DefaultValue!int))
     {
-        enum GetFunctionReturnType = ValueType.String;
+        const string arg = "ValueType.Integer, true";
+    }
+    else static if(is(P[0] == DefaultValue!(int, false)))
+    {
+        const string arg = "ValueType.Integer, true";
+    }
+    else static if(is(P[0] == OptionalOutValue!int))
+    {
+        const string arg = "ValueType.Integer, true";
+    }
+    else static if(is(P[0] == DefaultValue!double))
+    {
+        const string arg = "ValueType.Double, true";
+    }
+    else static if(is(P[0] == DefaultValue!(double, false)))
+    {
+        const string arg = "ValueType.Double, true";
+    }
+    else static if(is(P[0] == DefaultValue!(wstring)))
+    {
+        const string arg = "ValueType.String, false";
+    }
+    else static if(is(P[0] == DefaultValue!(wstring, false)))
+    {
+        const string arg = "ValueType.String, true";
+    }
+    else static if(is(P[0] == Value[]))
+    {
+        const string arg = "";
+    }
+    else static if(is(P[0] == DefaultValue!(Value)) || is(P[0] == Value))
+    {
+        const string arg = "ValueType.Void, false";
+    }
+    else static if(is(P[0] == DefaultValue!(Value, false)))
+    {
+        const string arg = "ValueType.Void, true";
+    }
+    else static if(is(P[0] == void))
+    {
+        const string arg = "";
     }
     else
     {
-        enum GetFunctionReturnType = ValueType.Void;
         static assert(false, "Invalid type");
     }
-}
-template AddFunc(T, string N)
-{
-    static if(is(ReturnType!(__traits(getMember, T, N)) == double) || is(ReturnType!(__traits(getMember, T, N)) == int))
+    static if(is(P[0] == void))
     {
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ N ~ "\");}ret[0] = Value(" ~ N ~ "(" ~
-            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N
-                        , ParameterTypeTuple!(__traits(getMember, T, N))) ~ "));}";
+        enum GetBuiltinFunctionArgment = "";
     }
-    else static if(is(ReturnType!(__traits(getMember, T, N)) == void))
+    else
+    {
+        enum GetBuiltinFunctionArgment = "BuiltinFunctionArgument(" ~ arg ~ ")";
+    }
+}
+template BuiltinFunctionData(C, string NAME, int I)
+{
+    //struct BuiltinFunctionData
+    //{
+        //enum P = ParameterStorageClassTuple!(__traits(getOverloads, C, N)[I]);
+    struct BuiltinFunctionData
+    {
+        alias P = std.traits.ParameterStorageClassTuple!(__traits(getOverloads, C, NAME)[I]);
+        alias T = std.traits.ParameterTypeTuple!(__traits(getOverloads, C, NAME)[I]);
+        alias R = std.traits.ReturnType!(__traits(getOverloads, C, NAME)[I]);
+        alias ParameterStorageClass = std.traits.ParameterStorageClassTuple!(__traits(getOverloads, C, NAME)[I]);
+        alias ParameterType = std.traits.ParameterTypeTuple!(__traits(getOverloads, C, NAME)[I]);
+        alias ReturnType = std.traits.ReturnType!(__traits(getOverloads, C, NAME)[I]);
+        enum F = &__traits(getOverloads, C, NAME)[I];
+        alias N = NAME;
+        alias C_ = C;
+        alias I_ = I;
+    }
+}
+template GetOutArgment(C, string N)
+{
+    alias T = ParameterTypeTuple!(__traits(getMember, C, N));
+    string GetOutArgment2()
+    {
+        string arg = "";
+        foreach(i, J; T)
+        {
+            enum P = ParameterStorageClassTuple!(__traits(getMember, C, N))[i];
+            static if(P & ParameterStorageClass.out_)
+            {
+                arg ~= GetBuiltinFunctionArgment!(J) ~ ",";
+            }
+        }
+        return arg;
+    }
+    enum GetOutArgment = GetOutArgment2();
+}
+template GetOutArgment2(BFD)
+{
+    alias T = BFD.T;
+    string GetOutArgment22()
+    {
+        string arg = "";
+        foreach(i, J; T)
+        {
+            //enum P = ParameterStorageClassTuple!(__traits(getMember, C, N))[i];
+            static if(BFD.P[i] & ParameterStorageClass.out_)
+            {
+                arg ~= GetBuiltinFunctionArgment!(J) ~ ",";
+            }
+        }
+        return arg;
+    }
+    enum GetOutArgment2 = GetOutArgment22();
+}
+//template GetOutArgment2(T2)
+//{
+//}
+template GetFunctionReturnType(BFD)
+{
+    static if(is(BFD.R == void))
+    {
+        enum GetFunctionReturnType = 
+           mixin("[" ~ GetOutArgment2!(BFD) ~ "]");
+    }
+    else
+    {
+        enum GetFunctionReturnType = 
+           mixin("[" ~ GetBuiltinFunctionArgment!(BFD.R) ~ "]");
+    }
+}
+template AddFunc(BFD)
+{
+    static if(is(BFD.ReturnType == double) || is(BFD.ReturnType == int))
+    {
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ BFD.N ~ "\");}ret[0] = Value(" ~ BFD.N ~ "(" ~
+            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(BFD) - 1, 0, 0, 0, BFD,
+                         BFD.ParameterType) ~ "));}";
+    }
+    else static if(is(BFD.ReturnType == void))
     {
         //pragma(msg, GetArgumentCount!(T,N));
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){/*if(ret.length != 0){throw new IllegalFunctionCall(\"" ~ N ~ "\");}*/" ~ OutArgsInit!(T,N) ~ N ~ "(" ~
-            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N,
-                        ParameterTypeTuple!(__traits(getMember, T, N))) ~ ");}";
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){/*if(ret.length != 0){throw new IllegalFunctionCall(\"" ~ BFD.N ~ "\");}*/" ~ OutArgsInit!(BFD) ~ BFD.N ~ "(" ~
+            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(BFD) - 1, 0, 0, 0, BFD,
+                        BFD.ParameterType) ~ ");}";
     }
-    else static if(is(ReturnType!(__traits(getMember, T, N)) == wstring))
+    else static if(is(BFD.ReturnType == wstring))
     {
-        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ N ~ "\");}ret[0] = Value(" ~ N ~ "(" ~
-            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(T,N) - 1, 0, 0, 0, T, N
-                        , ParameterTypeTuple!(__traits(getMember, T, N))) ~ "));}";
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ BFD.N ~ "\");}ret[0] = Value(" ~ BFD.N ~ "(" ~
+            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(BFD) - 1, 0, 0, 0, BFD,
+                        BFD.ParameterType) ~ "));}";
     }
     else
     {
@@ -918,15 +1174,26 @@ DefaultValue!(Value, false) fromValueToSkip(Value v)
     else
         return DefaultValue!(Value, false)(true);
 }
-template GetFunctionParamType(T, string N)
+template GetFunctionParamType(BFD)
 {
-    enum GetFunctionParamType = mixin("[" ~ Array!(ParameterTypeTuple!(__traits(getMember, T, N))) ~ "]");
-    private template Array(P...)
+    enum GetFunctionParamType = mixin("[" ~ Array!(0, BFD.T) ~ "]");
+    private template Array(int I, P...)
     {
         static if(P.length == 0)
         {
             const string arg = "";
             enum Array = "";
+        }
+        else static if(BFD.ParameterStorageClass[I] & ParameterStorageClass.out_)
+        {
+            static if(1 == P.length && !is(P[0] == PetitComputer))
+            {
+                enum Array = "";
+            }
+            else static if(!is(P[0] == PetitComputer))
+            {
+                enum Array = Array!(I + 1, P[1..$]);
+            }
         }
         else
         {
@@ -982,7 +1249,7 @@ template GetFunctionParamType(T, string N)
             {
                 static if(P.length != 0)
                 {
-                    enum Array = Array!(P[1..$]);
+                    enum Array = Array!(I + 1, P[1..$]);
                 }
                 else
                 {
@@ -995,26 +1262,35 @@ template GetFunctionParamType(T, string N)
             }
             else static if(!is(P[0] == PetitComputer))
             {
-                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")," ~ Array!(P[1..$]);
+                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")," ~ Array!(I + 1, P[1..$]);
             }
         }
     }
 }
-template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
+template AddFuncArg(int L, int N, int M, int O, BFD, P...)
 {
     enum I = L - N;
-    static if(ParameterStorageClassTuple!(__traits(getMember, T, NAME)).length <= M)
+    static if(BFD.ParameterStorageClass.length <= M)
     {
         const string AddFuncArg = "";
     }
     else
     {
-        enum storage = ParameterStorageClassTuple!(__traits(getMember, T, NAME))[M];
+        enum storage = BFD.ParameterStorageClass[M];
         static if(is(P[0] == double))
         {
-            enum add = 1;
-            enum outadd = 0;
-            const string arg = "arg[" ~ I.to!string ~ "].castDouble";
+            static if(storage & ParameterStorageClass.out_)
+            {
+                enum add = 0;
+                enum outadd = 1;
+                const string arg = "ret[" ~ O.to!string ~ "].doubleValue";
+            }
+            else
+            {
+                enum add = 1;
+                enum outadd = 0;
+                const string arg = "arg[" ~ I.to!string ~ "].castDouble";
+            }
         }
         else static if(is(P[0] == PetitComputer))
         {
@@ -1045,9 +1321,18 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
         }
         else static if(is(P[0] == DefaultValue!int))
         {
-            enum add = 1;
-            enum outadd = 0;
-            const string arg = "fromIntToDefault(arg[" ~ I.to!string ~ "])";
+            static if(storage & ParameterStorageClass.out_)
+            {
+                enum add = 0;
+                enum outadd = 1;
+                const string arg = "ret[" ~ O.to!string ~ "].integerValue";
+            }
+            else
+            {
+                enum add = 1;
+                enum outadd = 0;
+                const string arg = "fromIntToDefault(arg[" ~ I.to!string ~ "])";
+            }
         }
         else static if(is(P[0] == DefaultValue!(int, false)))
         {
@@ -1059,7 +1344,7 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
         {
             enum add = 1;
             enum outadd = 0;
-            const string arg = "fromIntDoubleToDefault(arg[" ~ I.to!string ~ "])";
+            const string arg = "fromDoubleToDefault(arg[" ~ I.to!string ~ "])";
         }
         else static if(is(P[0] == DefaultValue!(double, false)))
         {
@@ -1115,20 +1400,20 @@ template AddFuncArg(int L, int N, int M, int O, T, string NAME, P...)
         }
         else
         {
-            const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(L - !add, N + add, M + 1, O + outadd, T, NAME, P[1..$]);
+            const string AddFuncArg = arg ~ ", " ~ AddFuncArg!(L - !add, N + add, M + 1, O + outadd, BFD, P[1..$]);
         }
     }
 }
-template OutArgsInit(T, string N, int I = 0, int J = 0)
+template OutArgsInit(BFD, int I = 0, int J = 0)
 {
-    alias param = ParameterTypeTuple!(__traits(getMember, T, N));
+    alias param = BFD.ParameterType;
     static if(!param.length)
     {
         enum OutArgsInit = "";
     }
     else
     {
-        enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
+        enum tuple = BFD.ParameterStorageClass[I];
         static if(tuple & ParameterStorageClass.out_)
         {
             enum add = 1;
@@ -1136,6 +1421,26 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
             static if(is(param[I] == int))
             {
                 enum ret2 = "ValueType.Integer;";
+            }
+            else static if(is(param[I] == DefaultValue!int))
+            {
+                enum ret2 = "ValueType.Integer;";
+            }
+            //else static if(is(param[I] == OptionalOutValue!int))
+            //{
+            //    enum ret2 = "ValueType.Integer;";
+            //}
+            else static if(is(param[I] == double))
+            {
+                enum ret2 = "ValueType.Double;";
+            }
+            else static if(is(param[I] == Value[]))
+            {
+                enum ret2 = "ValueType.Void;";
+            }
+            else
+            {
+                static assert(false, "invalid type " ~ param[I].stringof); 
             }
             enum result = ret1 ~ ret2;
         }
@@ -1146,7 +1451,7 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
         }
         static if(param.length > I + 1)
         {
-            enum OutArgsInit = result ~ OutArgsInit!(T, N, I + 1, J + add);
+            enum OutArgsInit = result ~ OutArgsInit!(BFD, I + 1, J + add);
         }
         else
         {
@@ -1154,16 +1459,16 @@ template OutArgsInit(T, string N, int I = 0, int J = 0)
         }
     }
 }
-template GetArgumentCount(T, string N, int I = 0)
+template GetArgumentCount(BFD, int I = 0)
 {
-    alias param = ParameterTypeTuple!(__traits(getMember, T, N));
+    alias param = BFD.ParameterType;
     static if(param.length <= I)
     {
         enum GetArgumentCount = 0;
     }
     else
     {
-        enum tuple = ParameterStorageClassTuple!(__traits(getMember, T, N))[I];
+        enum tuple = BFD.ParameterStorageClass[I];
         static if(is(param[I] == PetitComputer))
         {
             enum add = 0 + 1;
@@ -1181,7 +1486,7 @@ template GetArgumentCount(T, string N, int I = 0)
         }
         static if(param.length > I + 1)
         {
-            enum GetArgumentCount = add + GetArgumentCount!(T, N, I + 1);
+            enum GetArgumentCount = add + GetArgumentCount!(BFD, I + 1);
         }
         else
         {
@@ -1189,9 +1494,9 @@ template GetArgumentCount(T, string N, int I = 0)
         }
     }
 }
-template IsVariadic(T, string N, int I = 0)
+template IsVariadic(BFD, int I = 0)
 {
-    alias param = ParameterTypeTuple!(__traits(getMember, T, N));
+    alias param = BFD.ParameterType;
     static if(param.length == 0 || param.length <= I)
     {
         enum IsVariadic = false;
@@ -1202,7 +1507,7 @@ template IsVariadic(T, string N, int I = 0)
     }
     else
     {
-        enum IsVariadic = IsVariadic!(T, N, I + 1);
+        enum IsVariadic = IsVariadic!(BFD, I + 1);
     }
 }
 

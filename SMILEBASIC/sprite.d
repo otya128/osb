@@ -239,18 +239,11 @@ struct SpriteData
         this.homey = s.hy;
         this.attr = s.a;
     }
-    double debugZ()
-    {
-        import std.stdio;
-       // writefln("sprite=%d, z=%f", id, z);
-        return z;
-    }
-    int opCmp(ref SpriteData spr)
-    {
-        import std.stdio;
-        writeln("WHAT!????");
-        return 0;
-    }
+    //SPLINK用
+    SpriteData* parent;
+    //SPLINKの親は子より小さい管理番号でしかなれないのでsprite->child->nextのX座標を加算すればなんとかなる
+    //->挙動的に違う
+    int linkx, linky;
 }
 class Sprite
 {
@@ -520,8 +513,19 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
-                int x = cast(int)sprite.x;// - cast(int)(sprite.homex * sprite.scalex);
-                int y = cast(int)sprite.y;// - cast(int)(sprite.homey * sprite.scaley);
+                int x, y;
+                if(sprite.parent)
+                {
+                    x += cast(int)(sprite.x + sprite.parent.linkx);
+                    y += cast(int)(sprite.y + sprite.parent.linky);
+                }
+                else
+                {
+                    x = cast(int)sprite.x;// - cast(int)(sprite.homex * sprite.scalex);
+                    y = cast(int)sprite.y;// - cast(int)(sprite.homey * sprite.scaley);
+                }
+                sprite.linkx = x;
+                sprite.linky = y;
                 auto homex2 = ((sprite.w / 2 ) - sprite.homex) / disw;
                 auto homey2 = ((sprite.h / 2 ) - sprite.homey) / dish;
                 int w = sprite.w;
@@ -652,19 +656,26 @@ class Sprite
         auto spdef = SpriteDef(u, v, w, h, 0, 0, attr);
         sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
     }
-    void spofs(int id, int x, int y)
+    void spofs(int id, double x, double y)
     {
         id = spid(id);
         sprites[id].x = x;
         sprites[id].y = y;
     }
-    void spofs(int id, int x, int y, int z)
+    void spofs(int id, double x, double y, int z)
     {
         id = spid(id);
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].z = z;
         zChange = true;
+    }
+    void getspofs(int id, out  double x, out double y, out int z)
+    {
+        id = spid(id);
+        x = sprites[id].x;
+        y = sprites[id].y;
+        z = sprites[id].z;
     }
     void sphide(int id)
     {
@@ -761,5 +772,25 @@ class Sprite
     {
         id = spid(id);
         sprites[id].color = petitcom.toGLColor(color);
+    }
+    void splink(int child, int parent)
+    {
+        if(parent >= child)
+        {
+            throw new IllegalFunctionCall("SPLINK");
+        }
+        parent = spid(parent);
+        child = spid(child);
+        //SPLINK 2,0
+        //SPLINK 2,1した時の挙動謎
+        //最後にSPSETした親が優先される->子が親を保持？
+        sprites[child].parent = &sprites[parent];
+    }
+    //再帰的にUNLINKされるのか？
+    void spunlink(int id)
+    {
+        id = spid(id);
+        //parent==nullでもエラーでない
+        sprites[id].parent = null;
     }
 }

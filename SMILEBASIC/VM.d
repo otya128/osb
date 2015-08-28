@@ -113,6 +113,15 @@ class VM
         }
         value = stack[--stacki];
     }
+    void decSP()
+    {
+        if(stacki <= bp)
+        {
+            writeln("Stack underflow");
+            readln();
+        }
+        --stacki;
+    }
     Value testGetGlobalVariable(wstring name)
     {
         return global[globalTable[name].index];
@@ -1389,5 +1398,12 @@ class PopSystemVariable : Code
     override string toString(VM vm)
     {
         return "popsysvar " ~ var.to!string;
+    }
+}
+class DecSP : Code
+{
+    override void execute(VM vm)
+    {
+        vm.decSP;
     }
 }

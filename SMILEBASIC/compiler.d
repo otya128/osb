@@ -416,9 +416,11 @@ class Compiler
             case NodeType.CallFunction:
                 {
                     auto func = cast(CallFunction)exp;
-                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
-                    if(bfun)
+                    auto bfuns = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    otya.smilebasic.builtinfunctions.BuiltinFunction bfun;
+                    if(bfuns)
                     {
+                        bfun = bfuns.overloadResolution(func.args.length, 1);
                         if(bfun.argments.length >= func.args.length)
                         {
                             auto k = bfun.argments.length - func.args.length;
@@ -808,9 +810,11 @@ class Compiler
             case NodeType.CallFunctionStatement:
                 {
                     auto func = cast(CallFunctionStatement)i;
-                    auto bfun = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
-                    if(bfun)
+                    auto bfuns = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(func.name, null);
+                    otya.smilebasic.builtinfunctions.BuiltinFunction bfun;
+                    if(bfuns)
                     {
+                        bfun = bfuns.overloadResolution(func.args.length, func.outVariable.length);
                         int k = cast(int)bfun.argments.length - cast(int)func.args.length;
                         foreach(l;0..k)
                         {
@@ -823,12 +827,20 @@ class Compiler
                     }
                     if(bfun)
                     {
-                        genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, cast(int)func.outVariable.length));
+                        genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, cast(int)bfun.results.length));//func.outVariable.length));
                     }
                     else
                     {
                         writeln(func.name);
                         genCode(new CallFunctionCode(func.name, cast(int)func.args.length, cast(int)func.outVariable.length));
+                    }
+                    if(bfun)
+                    {
+                        int k = cast(int)bfun.results.length - cast(int)func.outVariable.length;
+                        foreach(l;0..k)
+                        {
+                            genCode(new DecSP);
+                        }
                     }
                     //TODO:OUT
                     foreach_reverse(wstring var; func.outVariable)

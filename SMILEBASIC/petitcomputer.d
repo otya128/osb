@@ -644,6 +644,7 @@ class PetitComputer
         DrawType dt;
         auto start = SDL_GetTicks();
         int i = s;
+        static const size = 255.5f;
         for(; i < len; i++)
         {
             DrawMessage dm = drawMessageQueue[i];
@@ -657,7 +658,7 @@ class PetitComputer
                 case DrawType.PSET:
                     glBegin(GL_POINTS);
                     glColor4ubv(cast(ubyte*)&dm.color);
-                    glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
+                    glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
                     glEnd();
                     //draw.gpset(dm.page, dm.x, dm.y ,dm.color);
                     break;
@@ -665,8 +666,8 @@ class PetitComputer
                     {
                         glBegin(GL_LINES);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
-                        glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
+                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
+                        glVertex2f((dm.x2) / size - 1, (dm.y2) / size - 1);
                         //glFlush();
                         glEnd();
                     }
@@ -676,10 +677,10 @@ class PetitComputer
                     {
                         glBegin(GL_QUADS);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
-                        glVertex2f((dm.x) / 256f - 1, (dm.y2 + 1) / 256f - 1);
-                        glVertex2f((dm.x2 + 1) / 256f - 1, (dm.y2 + 1) / 256f - 1);
-                        glVertex2f((dm.x2 + 1) / 256f - 1, (dm.y) / 256f - 1);
+                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
+                        glVertex2f((dm.x) / size - 1, (dm.y2 + 1) / size - 1);
+                        glVertex2f((dm.x2 + 1) / size - 1, (dm.y2 + 1) / size - 1);
+                        glVertex2f((dm.x2 + 1) / size - 1, (dm.y) / size - 1);
                         glEnd();
                     }
                     //draw.gfill(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
@@ -688,10 +689,10 @@ class PetitComputer
                     {
                         glBegin(GL_LINE_LOOP);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / 256f - 1, (dm.y) / 256f - 1);
-                        glVertex2f((dm.x) / 256f - 1, (dm.y2) / 256f - 1);
-                        glVertex2f((dm.x2) / 256f - 1, (dm.y2) / 256f - 1);
-                        glVertex2f((dm.x2) / 256f - 1, (dm.y) / 256f - 1);
+                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
+                        glVertex2f((dm.x) / size - 1, (dm.y2) / size - 1);
+                        glVertex2f((dm.x2) / size - 1, (dm.y2) / size - 1);
+                        glVertex2f((dm.x2) / size - 1, (dm.y) / size - 1);
                         glEnd();
                     }
                     //draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
@@ -1041,6 +1042,8 @@ class PetitComputer
         while(!buttonTable){}
         auto startTicks = SDL_GetTicks();
         Parser parser;
+        otya.smilebasic.vm.VM vm;
+        bool running;
         //デバッグ用
         version(NDirectMode)
         {
@@ -1093,6 +1096,24 @@ class PetitComputer
                                      CL=(CL+1) MOD 16 : VSYNC 1
                                      GOTO @LOOP`*/
                                      );
+            try
+            {
+                vm = parser.compile();
+                vm.init(this);
+                running = true;
+            }
+            catch(SmileBasicError sbe)
+            {
+                printConsole(sbe.getErrorMessage, "\n");
+                printConsole(sbe.getErrorMessage2, "\n");
+                //printConsole(sbe.to!string);
+                writeln(sbe.to!string);
+                writeln(sbe.getErrorMessage2);
+            }
+            catch(Throwable t)
+            {
+                writeln(t);
+            }
         }
         else
         {
@@ -1109,13 +1130,30 @@ class PetitComputer
                     printConsole("can't open program \"", file, "\".\n");
                     continue;
                 }
+                try
+                {
+                    vm = parser.compile();
+                    vm.init(this);
+                    running = true;
+                }
+                catch(SmileBasicError sbe)
+                {
+                    printConsole(sbe.getErrorMessage, "\n");
+                    printConsole(sbe.getErrorMessage2, "\n");
+                    //printConsole(sbe.to!string);
+                    writeln(sbe.to!string);
+                    writeln(sbe.getErrorMessage2);
+                    continue;
+                }
+                catch(Throwable t)
+                {
+                    writeln(t);
+                    continue;
+                }
                 break;
             } while(!quit);
         }
         if(quit) return;
-        auto vm = parser.compile();
-        bool running = true;
-        vm.init(this);
         //vm.dump;
         this.vm = vm;
         bg[0].put(0,0,1);
