@@ -357,31 +357,7 @@ class PetitComputer
             writeln("download font");
             download("http://smileboom.com/special/ptcm3/download/unicode/image/res_font_table-320.png",
                      fontFile);
-        }//createGraphicPage(fontFile, 0);
-        //s8x8 = SDL_CreateRGBSurface(0, 8, 8, 32, 0, 0, 0, 0);
-        /*auto pixels = (cast(uint*)s8x8.pixels);
-        for(int x = 0; x < 8; x++)
-        {
-            for(int y = 0; y < 8; y++)
-            {
-                *pixels = SDL_MapRGBA(s8x8.format, 255, 255, 255, 255);
-                pixels++;
-            }
-        }*/
-        //GRPFColor = new GraphicPage[consoleColor.length];
-        //GRPFColorFore = new GraphicPage[][consoleColor.length];
-        //for(int i = 0; i < GRPFColor.length; i++)
-        //{
-        //    GRPFColor[i] = createGRPF(i, GRPF.surface);
-        //}
-        /+for(int i = 0; i < GRPFColor.length; i++)
-        {
-            GRPFColorFore[i] = new GraphicPage[consoleColor.length];
-            for(int j = 0; j < GRPFColor.length; j++)
-            {
-                GRPFColorFore[i][j] = createGRPF(i, j, GRPF.surface);
-            }
-        }+/
+        }
         if(!exists(spriteFile))
         {
             writeln("download sprite");
@@ -476,155 +452,156 @@ class PetitComputer
     }
     Mutex grpmutex;
     int displaynum;
-    uint[] buffer;
-    static const MAXSIZE = 1024; /* バッファサイズ */
-
-    /* 画面サイズは 1024 X 1024 とする */
-    static const MINX = 0;
-    static const MINY = 0;
-    static const MAXX = 511;
-    static const MAXY = 511;
-
-    struct BufStr {
-        int lx; /* 領域右端のX座標 */
-        int rx; /* 領域右端のX座標 */
-        int y;  /* 領域のY座標 */
-        int oy; /* 親ラインのY座標 */
-    };
-    BufStr buff[MAXSIZE]; /* シード登録用バッファ */
-    BufStr* sIdx, eIdx;  /* buffの先頭・末尾ポインタ */
-    uint point(int x, int y)
+    struct Paint
     {
-        return buffer.ptr[x + y * 512];
-    }
-    void pset(int x, int y, uint col)
-    {
-        buffer.ptr[x + y * 512] = col;
-    }
-    /*
-    scanLine : 線分からシードを探索してバッファに登録する
+        uint[] buffer;
+        static const MAXSIZE = 1024; /* バッファサイズ */
 
-    int lx, rx : 線分のX座標の範囲
-    int y : 線分のY座標
-    int oy : 親ラインのY座標
-    unsigned int col : 領域色
-    */
-    void scanLine( int lx, int rx, int y, int oy, uint col )
-    {
-        while ( lx <= rx ) {
+        /* 画面サイズは 1024 X 1024 とする */
+        static const MINX = 0;
+        static const MINY = 0;
+        static const MAXX = 511;
+        static const MAXY = 511;
 
-            /* 非領域色を飛ばす */
-            for ( ; lx < rx ; lx++ )
-                if ( point( lx, y ) == col ) break;
-            if ( point( lx, y ) != col ) break;
+        struct BufStr {
+            int lx; /* 領域右端のX座標 */
+            int rx; /* 領域右端のX座標 */
+            int y;  /* 領域のY座標 */
+            int oy; /* 親ラインのY座標 */
+        };
+        BufStr buff[MAXSIZE]; /* シード登録用バッファ */
+        BufStr* sIdx, eIdx;  /* buffの先頭・末尾ポインタ */
+        uint point(int x, int y)
+        {
+            return buffer.ptr[x + y * 512];
+        }
+        void pset(int x, int y, uint col)
+        {
+            buffer.ptr[x + y * 512] = col;
+        }
+        /*
+        scanLine : 線分からシードを探索してバッファに登録する
 
-            eIdx.lx = lx;
+        int lx, rx : 線分のX座標の範囲
+        int y : 線分のY座標
+        int oy : 親ラインのY座標
+        unsigned int col : 領域色
+        */
+        void scanLine( int lx, int rx, int y, int oy, uint col )
+        {
+            while ( lx <= rx ) {
 
-            /* 領域色を飛ばす */
-            for ( ; lx <= rx ; lx++ )
+                /* 非領域色を飛ばす */
+                for ( ; lx < rx ; lx++ )
+                    if ( point( lx, y ) == col ) break;
                 if ( point( lx, y ) != col ) break;
 
-            eIdx.rx = lx - 1;
-            eIdx.y = y;
-            eIdx.oy = oy;
+                eIdx.lx = lx;
 
-            if ( ++eIdx == &buff.ptr[MAXSIZE] )
-                eIdx = buff.ptr;
+                /* 領域色を飛ばす */
+                for ( ; lx <= rx ; lx++ )
+                    if ( point( lx, y ) != col ) break;
+
+                eIdx.rx = lx - 1;
+                eIdx.y = y;
+                eIdx.oy = oy;
+
+                if ( ++eIdx == &buff.ptr[MAXSIZE] )
+                    eIdx = buff.ptr;
+            }
+        }
+
+        /*
+        paint : 塗り潰し処理(高速版)
+
+        int x, y : 開始座標
+        unsigned int paintCol : 塗り潰す時の色(描画色)
+        */
+        void paint( int x, int y, uint paintCol , out int dx, out int dy, out int dx2, out int dy2)
+        {
+            int lx, rx; /* 塗り潰す線分の両端のX座標 */
+            int ly;     /* 塗り潰す線分のY座標 */
+            int oy;     /* 親ラインのY座標 */
+            int i;
+            uint col = point( x, y ); /* 閉領域の色(領域色) */
+            dx = int.max, dy = int.max, dx2 = int.min, dy2 = int.min;
+            if ( col == paintCol ) return;    /* 領域色と描画色が等しければ処理不要 */
+            sIdx = buff.ptr;
+            eIdx = buff.ptr + 1;
+            sIdx.lx = sIdx.rx = x;
+            sIdx.y = sIdx.oy = y;
+
+            do {
+                lx = sIdx.lx;
+                rx = sIdx.rx;
+                ly = sIdx.y;
+                oy = sIdx.oy;
+
+                int lxsav = lx - 1;
+                int rxsav = rx + 1;
+
+                if ( ++sIdx == &buff.ptr[MAXSIZE] ) sIdx = buff.ptr;
+
+                /* 処理済のシードなら無視 */
+                if ( point( lx, ly ) != col )
+                    continue;
+
+                /* 右方向の境界を探す */
+                while ( rx < MAXX ) {
+                    if ( point( rx + 1, ly ) != col ) break;
+                    rx++;
+                }
+                /* 左方向の境界を探す */
+                while ( lx > MINX ) {
+                    if ( point( lx - 1, ly ) != col ) break;
+                    lx--;
+                }
+                import std.algorithm;
+                dy = min(dy, ly);
+                dy2 = max(dy2, ly);
+                dx = min(dx, lx);
+                dx2 = max(dx2, rx);
+                //
+                /* lx-rxの線分を描画 */
+                for ( i = lx; i <= rx; i++ ) pset( i, ly, paintCol );
+
+                /* 真上のスキャンラインを走査する */
+                if ( ly - 1 >= MINY ) {
+                    if ( ly - 1 == oy ) {
+                        scanLine( lx, lxsav, ly - 1, ly, col );
+                        scanLine( rxsav, rx, ly - 1, ly, col );
+                    } else {
+                        scanLine( lx, rx, ly - 1, ly, col );
+                    }
+                }
+
+                /* 真下のスキャンラインを走査する */
+                if ( ly + 1 <= MAXY ) {
+                    if ( ly + 1 == oy ) {
+                        scanLine( lx, lxsav, ly + 1, ly, col );
+                        scanLine( rxsav, rx, ly + 1, ly, col );
+                    } else {
+                        scanLine( lx, rx, ly + 1, ly, col );
+                    }
+                }
+
+            } while ( sIdx != eIdx );
+        }
+        void gpaintBuffer(uint* pixels, int x, int y, uint color, GLenum tf)
+        {
+            int dx, dy, dx2, dy2;
+            paint(x, y, color, dx, dy, dx2, dy2);
+            if(dx == int.max) return;
+            int h = dy2 - dy;
+            glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, 512, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * 512));
+            //        glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
         }
     }
-
-    /*
-    paint : 塗り潰し処理(高速版)
-
-    int x, y : 開始座標
-    unsigned int paintCol : 塗り潰す時の色(描画色)
-    */
-    void paint( int x, int y, uint paintCol , out int dx, out int dy, out int dx2, out int dy2)
-    {
-        int lx, rx; /* 塗り潰す線分の両端のX座標 */
-        int ly;     /* 塗り潰す線分のY座標 */
-        int oy;     /* 親ラインのY座標 */
-        int i;
-        uint col = point( x, y ); /* 閉領域の色(領域色) */
-        dx = int.max, dy = int.max, dx2 = int.min, dy2 = int.min;
-        if ( col == paintCol ) return;    /* 領域色と描画色が等しければ処理不要 */
-        sIdx = buff.ptr;
-        eIdx = buff.ptr + 1;
-        sIdx.lx = sIdx.rx = x;
-        sIdx.y = sIdx.oy = y;
-
-        do {
-            lx = sIdx.lx;
-            rx = sIdx.rx;
-            ly = sIdx.y;
-            oy = sIdx.oy;
-
-            int lxsav = lx - 1;
-            int rxsav = rx + 1;
-
-            if ( ++sIdx == &buff.ptr[MAXSIZE] ) sIdx = buff.ptr;
-
-            /* 処理済のシードなら無視 */
-            if ( point( lx, ly ) != col )
-                continue;
-
-            /* 右方向の境界を探す */
-            while ( rx < MAXX ) {
-                if ( point( rx + 1, ly ) != col ) break;
-                rx++;
-            }
-            /* 左方向の境界を探す */
-            while ( lx > MINX ) {
-                if ( point( lx - 1, ly ) != col ) break;
-                lx--;
-            }
-            import std.algorithm;
-            dy = min(dy, ly);
-            dy2 = max(dy2, ly);
-            dx = min(dx, lx);
-            dx2 = max(dx2, rx);
-            //
-            /* lx-rxの線分を描画 */
-            for ( i = lx; i <= rx; i++ ) pset( i, ly, paintCol );
-
-            /* 真上のスキャンラインを走査する */
-            if ( ly - 1 >= MINY ) {
-                if ( ly - 1 == oy ) {
-                    scanLine( lx, lxsav, ly - 1, ly, col );
-                    scanLine( rxsav, rx, ly - 1, ly, col );
-                } else {
-                    scanLine( lx, rx, ly - 1, ly, col );
-                }
-            }
-
-            /* 真下のスキャンラインを走査する */
-            if ( ly + 1 <= MAXY ) {
-                if ( ly + 1 == oy ) {
-                    scanLine( lx, lxsav, ly + 1, ly, col );
-                    scanLine( rxsav, rx, ly + 1, ly, col );
-                } else {
-                    scanLine( lx, rx, ly + 1, ly, col );
-                }
-            }
-
-        } while ( sIdx != eIdx );
-    }
-    void gpaintBuffer(uint* pixels, int x, int y, uint color, GLenum tf)
-    {
-        int dx, dy, dx2, dy2;
-        paint(x, y, color, dx, dy, dx2, dy2);
-        if(dx == int.max) return;
-        int h = dy2 - dy;
-        glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, 512, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * 512));
-//        glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
-    }
+    Paint paint;
     int renderstartpos;
     void renderGraphic()
     {
         if(!drawMessageLength) return;
-        //grpmutex.lock();
-        //scope(exit)
-        //    grpmutex.unlock();
         drawflag = true;
         //betuni kouzoutai demo sonnnani sokudo kawaranasasou
         auto len = drawMessageLength;
@@ -635,10 +612,8 @@ class PetitComputer
         int oldpage = drawMessageQueue[0].page;
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
         glDisable(GL_TEXTURE_2D);
-        //glDisable(GL_ALPHA_TEST);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
-        //
         //glAlphaFunc(GL_GEQUAL, 0.0);
         glViewport(0, 0, 512, 512);
         DrawType dt;
@@ -704,9 +679,9 @@ class PetitComputer
                         {
                             glFinish();
                             //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
-                            glReadPixels(0, 0, 512, 512, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, buffer.ptr);
+                            glReadPixels(0, 0, 512, 512, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
                         }
-                        gpaintBuffer(buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
+                        paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
                         //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
                         if(SDL_GetTicks() - start >= 16 && i != len - 1)
                         {
@@ -776,7 +751,7 @@ class PetitComputer
     bool quit;
     void render()
     {
-        buffer = new uint[512 * 512];
+        paint.buffer = new uint[512 * 512];
         DerelictSDL2.load();
         DerelictSDL2Image.load();
         GRPF = createGRPF(fontFile);
@@ -806,22 +781,40 @@ class PetitComputer
             {
                 auto imm32 = LoadLibraryA("imm32.dll".toStringz);
                 ImmDisableIME ImmDisableIME = cast(ImmDisableIME)GetProcAddress(imm32, "ImmDisableIME".toStringz);
-                ImmDisableIME(0);
+                if(ImmDisableIME) ImmDisableIME(0);
             }
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
                                       SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+            if(!window)
+            {
+                write("can't create window: ");
+                writeln(SDL_GetError.to!string);
+                return;
+            }
             scope(exit)
             {
+                quit = true;
                 SDL_DestroyWindow(window);
                 SDL_Quit();
             }
             renderer = SDL_CreateRenderer(window, -1, 0);
+            if(!renderer)
+            {
+                write("can't create renderer: ");
+                writeln(SDL_GetError.to!string);
+                return;
+            }
             SDL_Event event;
             SDL_GLContext context;
             context = SDL_GL_CreateContext(window);
-            if (!context) return;
+            if(!context)
+            {
+                write("can't create OpenGL context: ");
+                writeln(SDL_GetError.to!string);
+                return;
+            }
             GRPF.createTexture(renderer);
             glViewport(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -832,8 +825,10 @@ class PetitComputer
                 if(SDL_GetWindowWMInfo(window, &wm))
                 {
                     ImmAssociateContext ImmAssociateContext = cast(ImmAssociateContext)GetProcAddress(imm32, "ImmAssociateContext".toStringz);
-                    auto aa = wm.info.win.window;
-                    auto c = ImmAssociateContext(wm.info.win.window, null);
+                    if(ImmAssociateContext)
+                    {
+                        auto c = ImmAssociateContext(wm.info.win.window, null);
+                    }
                 }
             }
             int loopcnt;
@@ -843,13 +838,10 @@ class PetitComputer
                 g.createTexture(renderer);
                 g.createBuffer();
             }
-            //GRP[0] = GRPF;
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             //glAlphaFunc(GL_GEQUAL, 0.5);
             //glEnable(GL_ALPHA_TEST);
-           // sprite.spset(0, 0);
-            // sprite.spofs(0, 9, 8);
             glAlphaFunc(GL_GEQUAL, 0.1f);
             glEnable(GL_ALPHA_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -878,7 +870,6 @@ class PetitComputer
                 }
                 //描画の順位
                 //sprite>GRP>console>BG
-                glDisable(GL_BLEND);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 glEnable(GL_BLEND);
                 version(test) glLoadIdentity();
@@ -967,7 +958,6 @@ class PetitComputer
                     switch (event.type)
                     {
                         case SDL_QUIT:
-                            quit = true;
                             return;
                         case SDL_KEYUP:
                             {
@@ -1023,14 +1013,6 @@ class PetitComputer
     {
         keybuffer = new wchar[128];
         init();
-        /+for(int i = 0; i < GRPFColor.length; i++)
-        {
-            for(int j = 0; j < GRPFColor.length; j++)
-            {
-                GRPFColorFore[i][j].createTexture(renderer);
-            }
-        }+/
-
         consolem = new Mutex();
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
@@ -1048,12 +1030,13 @@ class PetitComputer
         version(NDirectMode)
         {
             parser = new Parser(
+                                "FOR Y=0TO 240GLINE 0,Y,399,Y,RGB(0,Y,0)NEXT"
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
                                      //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     //readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                      //readText("./SYS/EX1TEXT.TXT").to!wstring
                                      //readText("FIZZBUZZ.TXT").to!wstring
                                      //readText("TEST.TXT").to!wstring
@@ -1354,9 +1337,9 @@ class PetitComputer
         byte page;
         short x;
         short y;
+        uint color;
         short x2;
         short y2;
-        uint color;
         //
     }
     static const int dmqqueuelen = 8192;
@@ -1380,7 +1363,7 @@ class PetitComputer
         drawMessageQueue[drawMessageLength].page = page;
         drawMessageQueue[drawMessageLength].x = x;
         drawMessageQueue[drawMessageLength].y = y;
-        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color);
+        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
         drawMessageLength++;
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
@@ -1398,7 +1381,7 @@ class PetitComputer
         drawMessageQueue[drawMessageLength].y = y;
         drawMessageQueue[drawMessageLength].x2 = x2;
         drawMessageQueue[drawMessageLength].y2 = y2;
-        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color);
+        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
         drawMessageLength++;
     }
     //TODO:範囲チェック
@@ -1469,8 +1452,6 @@ class PetitComputer
             glEnd();
             glEnable(GL_TEXTURE_2D);
 
-            //glAlphaFunc(GL_GEQUAL, 0.5);
-            //glEnable(GL_ALPHA_TEST);
             glBegin(GL_QUADS);
             for(int y = 0; y < consoleHeight; y++)
                 for(int x = 0; x < consoleWidth; x++)
@@ -1490,8 +1471,6 @@ class PetitComputer
             glEnd();
             return;
         }
-        //consolem.lock();
-        //scope(exit) consolem.unlock();
         glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
@@ -1516,8 +1495,6 @@ class PetitComputer
         glEnd();
         glEnable(GL_TEXTURE_2D);
 
-        //glAlphaFunc(GL_GEQUAL, 0.5);
-        //glEnable(GL_ALPHA_TEST);
         glBegin(GL_QUADS);
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
@@ -1566,8 +1543,6 @@ class PetitComputer
         glEnd();
         glEnable(GL_TEXTURE_2D);
 
-        //glAlphaFunc(GL_GEQUAL, 0.5);
-        //glEnable(GL_ALPHA_TEST);
         glBegin(GL_QUADS);
         for(int y = 0; y < consoleHeightDisplay1; y++)
             for(int x = 0; x < consoleWidthDisplay1; x++)
@@ -1586,7 +1561,6 @@ class PetitComputer
                 glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
             }
         glEnd();
-       // glFlush();
     }
     void printConsole(T...)(T args)
     {
@@ -1630,7 +1604,6 @@ class PetitComputer
                 }
                 consoleC[consoleHeightC - 1] = tmp;
                 tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
-                //assert(console[0] != console[2]);
                 CSRY = consoleHeightC - 1;
             }
         }
