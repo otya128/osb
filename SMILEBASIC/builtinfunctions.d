@@ -345,10 +345,352 @@ class BuiltinFunction
     {
         return cast(int)str.length;
     }
+
+    static bool tryParse(Target, Source)(ref Source p, out Target result)
+        if (isInputRange!Source && isSomeChar!(ElementType!Source) && !is(Source == enum) &&
+            isFloatingPoint!Target && !is(Target == enum))
+        {
+            static immutable real negtab[14] =
+            [ 1e-4096L,1e-2048L,1e-1024L,1e-512L,1e-256L,1e-128L,1e-64L,1e-32L,
+            1e-16L,1e-8L,1e-4L,1e-2L,1e-1L,1.0L ];
+            static immutable real postab[13] =
+            [ 1e+4096L,1e+2048L,1e+1024L,1e+512L,1e+256L,1e+128L,1e+64L,1e+32L,
+            1e+16L,1e+8L,1e+4L,1e+2L,1e+1L ];
+            // static immutable string infinity = "infinity";
+            // static immutable string nans = "nans";
+
+            /*ConvException bailOut(string msg = null, string fn = __FILE__, size_t ln = __LINE__)
+            {
+                if (!msg)
+                    msg = "Floating point conversion error";
+                return new ConvException(text(msg, " for input \"", p, "\"."), fn, ln);
+            }*/
+            if(p.empty) return 0;
+            //enforce(!p.empty, bailOut());
+
+            char sign = 0;                       /* indicating +                 */
+            switch (p.front)
+            {
+                case '-':
+                    sign++;
+                    p.popFront();
+                    if(p.empty) return 0;
+                    //enforce(!p.empty, bailOut());
+                    if (std.ascii.toLower(p.front) == 'i')
+                        goto case 'i';
+                    if(p.empty) return 0;
+                    //enforce(!p.empty, bailOut());
+                    break;
+                case '+':
+                    p.popFront();
+                    if(p.empty) return 0;
+                    //enforce(!p.empty, bailOut());
+                    break;
+                case 'i': case 'I':
+                    p.popFront();
+                    if(p.empty) return 0;
+                    //enforce(!p.empty, bailOut());
+                    if (std.ascii.toLower(p.front) == 'n')
+                    {
+                        p.popFront();
+                        if(p.empty) return 0;
+                        if(std.ascii.toLower(p.front) == 'f')
+                        {
+                            // 'inf'
+                            p.popFront();
+                            result = sign ? -Target.infinity : Target.infinity;
+                            return 0;
+                        }
+                    }
+                    goto default;
+                default: {}
+            }
+
+            bool isHex = false;
+            bool startsWithZero = p.front == '0';
+            if(startsWithZero)
+            {
+                p.popFront();
+                if(p.empty)
+                {
+                    result = (sign) ? -0.0 : 0.0;
+                    return true;
+                }
+
+                isHex = p.front == 'x' || p.front == 'X';
+            }
+
+            real ldval = 0.0;
+            char dot = 0;                        /* if decimal point has been seen */
+            int exp = 0;
+            long msdec = 0, lsdec = 0;
+            ulong msscale = 1;
+
+            if (isHex)
+            {
+                int guard = 0;
+                int anydigits = 0;
+                uint ndigits = 0;
+
+                p.popFront();
+                while (!p.empty)
+                {
+                    int i = p.front;
+                    while (isHexDigit(i))
+                    {
+                        anydigits = 1;
+                        i = std.ascii.isAlpha(i) ? ((i & ~0x20) - ('A' - 10)) : i - '0';
+                        if (ndigits < 16)
+                        {
+                            msdec = msdec * 16 + i;
+                            if (msdec)
+                                ndigits++;
+                        }
+                        else if (ndigits == 16)
+                        {
+                            while (msdec >= 0)
+                            {
+                                exp--;
+                                msdec <<= 1;
+                                i <<= 1;
+                                if (i & 0x10)
+                                    msdec |= 1;
+                            }
+                            guard = i << 4;
+                            ndigits++;
+                            exp += 4;
+                        }
+                        else
+                        {
+                            guard |= i;
+                            exp += 4;
+                        }
+                        exp -= dot;
+                        p.popFront();
+                        if (p.empty)
+                            break;
+                        i = p.front;
+                        if (i == '_')
+                        {
+                            p.popFront();
+                            if (p.empty)
+                                break;
+                            i = p.front;
+                        }
+                    }
+                    if (i == '.' && !dot)
+                    {       p.popFront();
+                        dot = 4;
+                    }
+                    else
+                        break;
+                }
+
+                // Round up if (guard && (sticky || odd))
+                if (guard & 0x80 && (guard & 0x7F || msdec & 1))
+                {
+                    msdec++;
+                    if (msdec == 0)                 // overflow
+                    {   msdec = 0x8000000000000000L;
+                        exp++;
+                    }
+                }
+
+                if(!anydigits) return 0;
+                //enforce(anydigits, bailOut());
+                if(!(!p.empty && (p.front == 'p' || p.front == 'P'))) return 0;
+                //enforce(!p.empty && (p.front == 'p' || p.front == 'P'),
+                //        bailOut("Floating point parsing: exponent is required"));
+                char sexp;
+                int e;
+
+                sexp = 0;
+                p.popFront();
+                if (!p.empty)
+                {
+                    switch (p.front)
+                    {   case '-':    sexp++;
+                        goto case;
+                    case '+':    p.popFront(); 
+                        if(p.empty) return 0;
+                        //enforce(!p.empty,
+                        //            new ConvException("Error converting input"
+                        //            " to floating point"));
+                        break;
+                    default: {}
+                    }
+                }
+                ndigits = 0;
+                e = 0;
+                while (!p.empty && isDigit(p.front))
+                {
+                    if (e < 0x7FFFFFFF / 10 - 10) // prevent integer overflow
+                    {
+                        e = e * 10 + p.front - '0';
+                    }
+                    p.popFront();
+                    ndigits = 1;
+                }
+                exp += (sexp) ? -e : e;
+                if(p.empty) return 0;
+                //enforce(ndigits, new ConvException("Error converting input"
+                //" to floating point"));
+
+                if (msdec)
+                {
+                    int e2 = 0x3FFF + 63;
+
+                    // left justify mantissa
+                    while (msdec >= 0)
+                    {   msdec <<= 1;
+                        e2--;
+                    }
+
+                    // Stuff mantissa directly into real
+                    *cast(long *)&ldval = msdec;
+                    (cast(ushort *)&ldval)[4] = cast(ushort) e2;
+
+                    // Exponent is power of 2, not power of 10
+                    ldval = ldexp(ldval,exp);
+                }
+                goto L6;
+            }
+            else // not hex
+            {
+                if (std.ascii.toUpper(p.front) == 'N' && !startsWithZero)
+                {
+                    // nan
+                    if(!((p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'A') &&
+                         (p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'N'))) return 0;
+                    //enforce((p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'A')
+                    //        && (p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'N'),
+                    //       new ConvException("error converting input to floating point"));
+                    // skip past the last 'n'
+                    p.popFront();
+                    result = typeof(result).nan;
+                    return true;
+                }
+
+                bool sawDigits = startsWithZero;
+
+                while (!p.empty)
+                {
+                    int i = p.front;
+                    while (isDigit(i))
+                    {
+                        sawDigits = true;        /* must have at least 1 digit   */
+                        if (msdec < (0x7FFFFFFFFFFFL-10)/10)
+                            msdec = msdec * 10 + (i - '0');
+                        else if (msscale < (0xFFFFFFFF-10)/10)
+                        {   lsdec = lsdec * 10 + (i - '0');
+                            msscale *= 10;
+                        }
+                        else
+                        {
+                            exp++;
+                        }
+                        exp -= dot;
+                        p.popFront();
+                        if (p.empty)
+                            break;
+                        i = p.front;
+                        if (i == '_')
+                        {
+                            p.popFront();
+                            if (p.empty)
+                                break;
+                            i = p.front;
+                        }
+                    }
+                    if (i == '.' && !dot)
+                    {
+                        p.popFront();
+                        dot++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                if(!sawDigits) return 0;
+                //enforce(sawDigits, new ConvException("no digits seen"));
+            }
+            if (!p.empty && (p.front == 'e' || p.front == 'E'))
+            {
+                char sexp;
+                int e;
+
+                sexp = 0;
+                p.popFront();
+                if(p.empty) return false;
+                //enforce(!p.empty, new ConvException("Unexpected end of input"));
+                switch (p.front)
+                {   case '-':    sexp++;
+                    goto case;
+                case '+':    p.popFront();
+                    break;
+                default: {}
+                }
+                bool sawDigits = 0;
+                e = 0;
+                while (!p.empty && isDigit(p.front))
+                {
+                    if (e < 0x7FFFFFFF / 10 - 10)   // prevent integer overflow
+                    {
+                        e = e * 10 + p.front - '0';
+                    }
+                    p.popFront();
+                    sawDigits = 1;
+                }
+                exp += (sexp) ? -e : e;
+                if(!sawDigits) return 0;
+                //enforce(sawDigits, new ConvException("No digits seen."));
+            }
+
+            ldval = msdec;
+            if (msscale != 1)               /* if stuff was accumulated in lsdec */
+                ldval = ldval * msscale + lsdec;
+            if (ldval)
+            {
+                uint u = 0;
+                int pow = 4096;
+
+                while (exp > 0)
+                {
+                    while (exp >= pow)
+                    {
+                        ldval *= postab[u];
+                        exp -= pow;
+                    }
+                    pow >>= 1;
+                    u++;
+                }
+                while (exp < 0)
+                {
+                    while (exp <= -pow)
+                    {
+                        ldval *= negtab[u];
+                        if(ldval == 0) return 0;
+                        //enforce(ldval != 0, new ConvException("Range error"));
+                        exp += pow;
+                    }
+                    pow >>= 1;
+                    u++;
+                }
+            }
+        L6: // if overflow occurred
+            if(ldval == core.stdc.math.HUGE_VAL) return 0;
+            //enforce(ldval != core.stdc.math.HUGE_VAL, new ConvException("Range error"));
+
+        L1:
+            result = (sign) ? -ldval : ldval;
+            return true;
+        }
     static double VAL(wstring str)
     {
         try
         {
+            if(str.empty) return 0;
             if(str.length > 2 && str[0..2] == "&H")
             {
                 return str[2..$].to!int(16);
@@ -357,8 +699,22 @@ class BuiltinFunction
             {
                 return str[2..$].to!int(2);
             }
-            double val = str.to!double;
-            return val;
+            import std.string : munch;
+            munch(str, " ");
+            if(str.empty) return 0;
+            /*
+            wchar c = str[0];
+            if((c > '9' || c < '0') && (c != '-' && c != '+' && c != '.'))
+                return 0;*/
+            double val;
+            if(tryParse(str, val))
+                return val;
+            else
+                return 0;
+            //例外は遅い
+            //TryParse欲しい...
+            //double val = str.to!double;
+            //return val;
         }
         catch(Exception e)
         {

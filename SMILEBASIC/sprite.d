@@ -258,13 +258,14 @@ struct SpriteData
     int[SpriteAnimTarget.V + 1] animloopcnt;
     void setAnimation(SpriteAnimData[] anim, SpriteAnimTarget sat, int loop)
     {
-        this.anim[sat] = anim;
+        this.anim[sat] = null;
         if(loop < 0)
         {
             throw new IllegalFunctionCall("SPANIM");
         }
         animloop[sat] = loop;
         animloopcnt[sat] = 0;
+        this.anim[sat] = anim;
         isAnim = true;
     }
     void clear()
@@ -362,6 +363,79 @@ class Sprite
         listptr = list.ptr;
         bucketsptr = buckets.ptr;
     }
+    void animation(SpriteData* sprite, SpriteAnimData* data, SpriteAnimTarget target)
+    {
+        if(!data.interpolation)
+        {
+            switch(target)
+            {
+                case SpriteAnimTarget.XY:
+                    sprite.x = data.data.x;
+                    sprite.y = data.data.y;
+                    break;
+                case SpriteAnimTarget.Z:
+                    sprite.z = cast(int)data.data.z;
+                    break;
+                case SpriteAnimTarget.UV:
+                    sprite.u = data.data.u;
+                    sprite.v = data.data.v;
+                    break;
+                case SpriteAnimTarget.I:
+                    sprite.defno = data.data.i;
+                    spchr(sprite.id, sprite.defno);
+                    break;
+                case SpriteAnimTarget.R:
+                    sprite.r = data.data.r;
+                    break;
+                case SpriteAnimTarget.S:
+                    sprite.scalex = data.data.scalex;
+                    sprite.scaley = data.data.scaley;
+                    break;
+                case SpriteAnimTarget.C:
+                    break;
+                case SpriteAnimTarget.V:
+                    break;
+                default:
+                    break;
+            }
+        }
+        else
+        {
+            auto frame = data.elapse;
+            //線形補完する奴
+            switch(target)
+            {
+                case SpriteAnimTarget.XY:
+                    sprite.x = data.old.x + ((data.data.x - data.old.x) / data.frame) * frame;
+                    sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.Z:
+                    sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
+                    break;
+                case SpriteAnimTarget.UV:
+                    sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
+                    sprite.v = data.old.v + ((data.data.v - data.old.v) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.I:
+                    sprite.defno = data.old.i + ((data.data.i - data.old.i) / data.frame) * frame;
+                    spchr(sprite.id, sprite.defno);
+                    break;
+                case SpriteAnimTarget.R:
+                    sprite.r = data.old.r + ((data.data.r - data.old.r) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.S:
+                    sprite.scalex = data.old.scalex + ((data.data.scalex - data.old.scalex) / data.frame) * frame;
+                    sprite.scaley = data.old.scaley + ((data.data.scaley - data.old.scaley) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.C:
+                    break;
+                case SpriteAnimTarget.V:
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
     void animation(SpriteData* sprite)
     {
         foreach(i, ref d; sprite.anim)
@@ -452,11 +526,14 @@ class Sprite
                 {
                     continue;
                 }
-                sprite.animloop[i]++;
-                if(sprite.animloop[i] >= sprite.animloopcnt[i])
+                if(!sprite.animindex[i])
                 {
-                    sprite.anim[i] = null;
-                    continue;
+                    sprite.animloop[i]++;
+                    if(sprite.animloop[i] >= sprite.animloopcnt[i])
+                    {
+                        sprite.anim[i] = null;
+                        continue;
+                    }
                 }
                 continue;
             }
@@ -729,28 +806,22 @@ class Sprite
     {
         //animeとめる
         id = spid(id);
+        sprites[id].anim[SpriteAnimTarget.XY] = null;
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
         sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
-        sprites[id].anim[SpriteAnimTarget.XY] = null;
-        sprites[id].animindex[SpriteAnimTarget.XY] = 0;
-        sprites[id].animloop[SpriteAnimTarget.XY] = 0;
-        sprites[id].animloopcnt[SpriteAnimTarget.XY] = 0;
     }
     void spofs(int id, double x, double y, int z)
     {
         id = spid(id);
+        sprites[id].anim[SpriteAnimTarget.XY] = null;
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].z = z;
         sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
         sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
         zChange = true;
-        sprites[id].anim[SpriteAnimTarget.XY] = null;
-        sprites[id].animindex[SpriteAnimTarget.XY] = 0;
-        sprites[id].animloop[SpriteAnimTarget.XY] = 0;
-        sprites[id].animloopcnt[SpriteAnimTarget.XY] = 0;
     }
     void getspofs(int id, out  double x, out double y, out int z)
     {
@@ -830,6 +901,23 @@ class Sprite
             }
         }
         sprites[id].setAnimation(animdata, target, loop);
+        if(animdata[0].frame == 1)
+        {
+            sprites[id].animindex[target]++;
+            animation(&sprites[id], &animdata[0], target);
+            if(animcount == 1)
+            {
+                if(loop > 1 || loop == 0)
+                {
+                    sprites[id].animindex[target] = 0;
+                    sprites[id].animloopcnt[target]++;
+                }
+                else
+                {
+                    sprites[id].anim[target] = null;
+                }
+            }
+        }
     }
     void spclr(int id)
     {
