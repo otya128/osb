@@ -40,9 +40,11 @@ class VM
     Value[] global;
     VMVariable[wstring] globalTable;
     Function[wstring] functions;
+    int[wstring] globalLabel;
     int bp;
     PetitComputer petitcomputer;
-    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/)
+    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+         int[wstring] globalLabel)
     {
         this.code = code;
         this.stack = new Value[16384];
@@ -55,6 +57,7 @@ class VM
         }
         this.functions = functions;
         this.globalDataTable = gdt;
+        this.globalLabel = globalLabel;
     }
     Code getCurrent()
     {
@@ -638,6 +641,27 @@ class GotoFalse : Code
         return "gotofalse " ~ address.to!string(16);
     }
 }
+class GotoExpr : Code
+{
+    Scope sc;
+    this(Scope sc)
+    {
+        this.sc = sc;
+    }
+    override void execute(VM vm)
+    {
+        Value label;
+        vm.pop(label);
+        if(!label.isString)
+        {
+            vm.pc = vm.globalLabel[label.castString] - 1;
+        }
+        else
+        {
+            throw new TypeMismatch();
+        }
+    }
+}
 class GosubAddr : Code
 {
     int address;
@@ -669,6 +693,28 @@ class GosubS : Code
     override void execute(VM vm)
     {
         stderr.writeln("can't execute (compiler bug?)");
+    }
+}
+class GosubExpr : Code
+{
+    Scope sc;
+    this(Scope sc)
+    {
+        this.sc = sc;
+    }
+    override void execute(VM vm)
+    {
+        Value label;
+        vm.pop(label);
+        if(!label.isString)
+        {
+            vm.push(Value(vm.pc));
+            vm.pc = vm.globalLabel[label.castString] - 1;
+        }
+        else
+        {
+            throw new TypeMismatch();
+        }
     }
 }
 class ReturnSubroutine : Code

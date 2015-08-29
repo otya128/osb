@@ -737,7 +737,16 @@ class Compiler
                 break;
             case NodeType.Goto:
                 {
-                    genCodeGoto((cast(Goto)i).label, s);
+                    auto gotou = cast(Goto)i;
+                    if(!gotou.label)
+                    {
+                        compileExpression(gotou.labelexpr, s);
+                        genCode(new GotoExpr(s));
+                    }
+                    else
+                    {
+                        genCodeGoto(gotou.label, s);
+                    }
                 }
                 break;
             case NodeType.If:
@@ -749,7 +758,15 @@ class Compiler
             case NodeType.Gosub:
                 {
                     auto gosub = cast(Gosub)i;
-                    genCodeGosub(gosub.label, s);
+                    if(gosub.label)
+                    {
+                        genCodeGosub(gosub.label, s);
+                    }
+                    else
+                    {
+                        compileExpression(gosub.labelexpr, s);
+                        genCode(new GosubExpr(s));
+                    }
                 }
                 break;
             case NodeType.Return:
@@ -969,7 +986,7 @@ class Compiler
                 code[i] = new RestoreCode(s.data.label[restore.label], s.data);
             }
         }
-        return new VM(code, globalIndex + 1, global, functions, s.data);
+        return new VM(code, globalIndex + 1, global, functions, s.data, globalLabel);
     }
 }
 

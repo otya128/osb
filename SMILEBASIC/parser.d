@@ -825,8 +825,10 @@ class Parser
                     node = new Goto(token.value.stringValue);
                 else
                 {
-                    writeln("NotImpl");
-                    syntaxError();
+                    auto e = expression();
+                    if(!e)
+                        syntaxError();
+                    node = new Goto(e);
                 }
                 break;
             case TokenType.Gosub:
@@ -836,8 +838,10 @@ class Parser
                     node = new Gosub(token.value.stringValue);
                 else
                 {
-                    writeln("NotImpl");
-                    syntaxError();
+                    auto e = expression();
+                    if(!e)
+                        syntaxError();
+                    node = new Gosub(e);
                 }
                 break;
             case TokenType.If:

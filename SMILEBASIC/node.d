@@ -222,6 +222,12 @@ class Goto : Statement
         this.type = NodeType.Goto;
         this.label = name;
     }
+    Expression labelexpr;
+    this(Expression expr)
+    {
+        this.type = NodeType.Goto;
+        this.labelexpr = expr;
+    }
 }
 class If : Statement
 {
@@ -270,6 +276,12 @@ class Gosub : Statement
     {
         this.type = NodeType.Gosub;
         this.label = name;
+    }
+    Expression labelexpr;
+    this(Expression expr)
+    {
+        this.type = NodeType.Gosub;
+        this.labelexpr = expr;
     }
 }
 class Return : Statement

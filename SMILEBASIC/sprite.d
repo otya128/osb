@@ -172,8 +172,6 @@ struct SpriteCollision
             return true;
         if(x <= x2 && y <= y2 + h2 && x + w >= x2 && y + h >= y2 + h2)
             return true;
-        //if(x2 <= x && y2 <= y && x2 + (data.w * data.scalex) >= x && y + (data.h * data.scaley) >= y)
-        //    return true;
         return false;
     }
 }
