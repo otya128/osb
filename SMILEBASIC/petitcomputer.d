@@ -774,7 +774,7 @@ class PetitComputer
         buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
         buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
         buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-        bool renderprofile = true;
+        bool renderprofile;//e = true;
         try
         {
             version(Windows)
@@ -1030,9 +1030,8 @@ class PetitComputer
         version(NDirectMode)
         {
             parser = new Parser(
-                                "FOR Y=0TO 240GLINE 0,Y,399,Y,RGB(0,Y,0)NEXT"
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring

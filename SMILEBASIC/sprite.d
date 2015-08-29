@@ -136,6 +136,37 @@ struct SpriteDef
     int u, v, w, h, hx, hy;
     SpriteAttr a;
 }
+struct SpriteCollision
+{
+    SpriteData* data;
+    bool scale = true;//scale対応
+    int mask = -1;
+    short sx;
+    short sy;
+    ushort w;
+    ushort h;
+    bool detection(ref SpriteData sp)
+    {
+        if(sp.define && sp.col.mask & mask)
+        {
+            auto x = (sp.linkx + sp.homex + sp.col.sx);
+            auto y = (sp.linky + sp.homey + sp.col.sy);
+            return detection(x, y, cast(int)(sp.w * sp.scalex), cast(int)(sp.h * sp.scaley));
+        }
+        return false;
+    }
+
+    //(x,y,z,w)
+    //(x,y,w,h)と判定
+    bool detection(int x, int y, int w, int h)
+    {
+        auto x2 = (data.linkx + data.homex + sx);
+        auto y2 = (data.linky + data.homey + sy);
+        if(x <= x2 && y <= y2 && x + w > x2 + data.w * data.scalex && y + h > y2 + data.h * data.scaley)
+            return true;
+        return false;
+    }
+}
 struct SpriteData
 {
     bool isAnim;
@@ -157,6 +188,7 @@ struct SpriteData
         this.id = id;
         z = 0;
         define = false;
+        col = SpriteCollision(&this);
     }
     this(int id, int defno)
     {
@@ -171,6 +203,7 @@ struct SpriteData
         this.define = true;
         scalex = 1;
         scaley = 1;
+        col = SpriteCollision(&this);
     }
     this(int id, int u, int v, int w, int h)
     {
@@ -188,6 +221,7 @@ struct SpriteData
         this.define = true;
         scalex = 1;
         scaley = 1;
+        col = SpriteCollision(&this);
     }
     this(int id, ref SpriteDef spdef, int defno)
     {
@@ -208,6 +242,7 @@ struct SpriteData
         scalex = 1;
         scaley = 1;
         this.defno = defno;
+        col = SpriteCollision(&this);
     }
     SpriteAnimData[][SpriteAnimTarget.V] anim;
     int[SpriteAnimTarget.V] animindex;
@@ -244,6 +279,9 @@ struct SpriteData
     //SPLINKの親は子より小さい管理番号でしかなれないのでsprite->child->nextのX座標を加算すればなんとかなる
     //->挙動的に違う
     int linkx, linky;
+
+    //SPCOL
+    SpriteCollision col;
 }
 class Sprite
 {
@@ -792,5 +830,50 @@ class Sprite
         id = spid(id);
         //parent==nullでもエラーでない
         sprites[id].parent = null;
+    }
+    void spcol(int id)
+    {
+        id = spid(id);
+        spcol(id, 0, 0, cast(ushort)sprites[id].w, cast(ushort)sprites[id].h, true, -1);
+    }
+    void spcol(int id, bool scale)
+    {
+        id = spid(id);
+        spcol(id, 0, 0, cast(ushort)sprites[id].w, cast(ushort)sprites[id].h, scale, -1);
+    }
+    void spcol(int id, bool scale, int mask)
+    {
+        id = spid(id);
+        spcol(id, 0, 0, cast(ushort)sprites[id].w, cast(ushort)sprites[id].h, scale, mask);
+    }
+    void spcol(int id, short sx, short sy, ushort w, ushort h, bool scale, int mask)
+    {
+        id = spid(id);
+        sprites[id].col.sx = sx;
+        sprites[id].col.sy = sy;
+        sprites[id].col.w = w;
+        sprites[id].col.h = h;
+        sprites[id].col.scale = scale;
+        sprites[id].col.mask = mask;
+    }
+    void getspcol(int id, out bool scale)
+    {
+        id = spid(id);
+    }
+    void getspcol(int id, out bool scale, out int mask)
+    {
+        id = spid(id);
+    }
+    void getspcol(int id, out int sx, out int sy, out int w, out int h)
+    {
+        id = spid(id);
+    }
+    void getspcol(int id, out int sx, out int sy, out int w, out int h, out bool scale)
+    {
+        id = spid(id);
+    }
+    void getspcol(int id, out int sx, out int sy, out int w, out int h, out bool scale, out int mask)
+    {
+        id = spid(id);
     }
 }
