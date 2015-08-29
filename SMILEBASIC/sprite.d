@@ -149,8 +149,8 @@ struct SpriteCollision
     {
         if(sp.define && sp.col.mask & mask)
         {
-            auto x = (sp.linkx + sp.homex + sp.col.sx);
-            auto y = (sp.linky + sp.homey + sp.col.sy);
+            int x = (sp.linkx + sp.homex + sp.col.sx);
+            int y = (sp.linky + sp.homey + sp.col.sy);
             return detection(x, y, cast(int)(sp.w * sp.scalex), cast(int)(sp.h * sp.scaley));
         }
         return false;
@@ -160,10 +160,20 @@ struct SpriteCollision
     //(x,y,w,h)と判定
     bool detection(int x, int y, int w, int h)
     {
-        auto x2 = (data.linkx + data.homex + sx);
-        auto y2 = (data.linky + data.homey + sy);
-        if(x <= x2 && y <= y2 && x + w > x2 + data.w * data.scalex && y + h > y2 + data.h * data.scaley)
+        int x2 = (data.linkx + data.homex + sx);
+        int y2 = (data.linky + data.homey + sy);
+        if(x <= x2 && y <= y2 && x + w >= x2 && y + h >= y2)
             return true;
+        int w2 = cast(int)(data.w * data.scalex);
+        int h2 = cast(int)(data.h * data.scaley);
+        if(x <= x2 + w2 && y <= y2 + h2 && x + w >= x2 + w2 && y + h >= y2 + h2)
+            return true;
+        if(x <= x2 + w2 && y <= y2 && x + w >= x2  + w2 && y + h >= y2)
+            return true;
+        if(x <= x2 && y <= y2 + h2 && x + w >= x2 && y + h >= y2 + h2)
+            return true;
+        //if(x2 <= x && y2 <= y && x2 + (data.w * data.scalex) >= x && y + (data.h * data.scaley) >= y)
+        //    return true;
         return false;
     }
 }
@@ -699,6 +709,8 @@ class Sprite
         id = spid(id);
         sprites[id].x = x;
         sprites[id].y = y;
+        sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
+        sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
     }
     void spofs(int id, double x, double y, int z)
     {
@@ -706,6 +718,8 @@ class Sprite
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].z = z;
+        sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
+        sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
         zChange = true;
     }
     void getspofs(int id, out  double x, out double y, out int z)
@@ -849,6 +863,7 @@ class Sprite
     void spcol(int id, short sx, short sy, ushort w, ushort h, bool scale, int mask)
     {
         id = spid(id);
+        sprites[id].col.data = &sprites[id];
         sprites[id].col.sx = sx;
         sprites[id].col.sy = sy;
         sprites[id].col.w = w;
@@ -896,6 +911,8 @@ class Sprite
     {
         for(; start <= end; start++)
         {
+            //自分を除外すべきか?
+            if(id == start) continue;//????
             if(sprites[id].col.detection(sprites[start]))
                 return start;
         }
