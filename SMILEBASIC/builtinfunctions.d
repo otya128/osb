@@ -274,6 +274,11 @@ class BuiltinFunction
         color.setDefaultValue(p.gcolor);
         p.gfill(p.useGRP, x, y, x2, y2, cast(int)color);
     }
+    static void GCIRCLE(PetitComputer p, Value[])
+    {
+        //color.setDefaultValue(p.gcolor);
+        //p.gfill(p.useGRP, x, y, x2, y2, cast(int)color);
+    }
     static void GCOLOR(PetitComputer p, int color)
     {
         p.gcolor = color;
@@ -546,16 +551,48 @@ class BuiltinFunction
         //TODO:配列
         auto args = retro(va_args);
         int no = args[0].castInteger;
-        double[] animdata = new double[args.length - 2];
-        int i;
-        foreach(a; args[2..$])
+        double[] animdata;
+        if(args[2].isString)
         {
-            animdata[i++] = a.castDouble;
+            VM vm = p.vm;
+            vm.pushDataIndex();
+            vm.restoreData(args[2].castString);
+            int keyframe = vm.readData.castInteger;
+            auto target = p.sprite.getSpriteAnimTarget(args[1].castString);
+            int item = 2;
+            if((target & 7) == SpriteAnimTarget.XY || (target & 7) == SpriteAnimTarget.UV) item++;
+            animdata = new double[item * keyframe + 1];
+            int j;
+            for(int i = 0; i < keyframe; i++)
+            {
+                animdata[j] = vm.readData.castDouble;
+                animdata[j + 1] = vm.readData.castDouble;
+                if(item == 3)
+                    animdata[j + 2] = vm.readData.castDouble;
+                j += item;
+            }
+            if(args.length > 2)
+                animdata[j] = args[3].castInteger;
+            vm.popDataIndex();
+        }
+        else
+        {
+            int i;
+            animdata = new double[args.length - 2];
+            foreach(a; args[2..$])
+            {
+                animdata[i++] = a.castDouble;
+            }
         }
         if(args[1].isString)
             p.sprite.spanim(no, args[1].castString, animdata);
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
+    }
+    @StartOptional("W")
+    static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int HX, out int HY, out int A)
+    {
+        p.sprite.getspdef(id, U, V, W, H, HX, HY, A);
     }
     static void SPDEF(PetitComputer p, Value[] va_args)
     {
@@ -686,6 +723,18 @@ class BuiltinFunction
     static int SPHITSP(PetitComputer p, int id, int min, int max)
     {
         return p.sprite.sphitsp(id, min, max);
+    }
+    static void SPVAR(PetitComputer p, int id, int var, double val)
+    {
+        p.sprite.spvar(id, var, val);
+    }
+    static double SPVAR(PetitComputer p, int id, int var)
+    {
+        return p.sprite.spvar(id, var);
+    }
+    static int SPCHK(PetitComputer p, int id)
+    {
+        return p.sprite.spchk(id);
     }
     static void BGMSTOP(PetitComputer p)
     {
@@ -826,6 +875,10 @@ class BuiltinFunction
     static void BGROT(PetitComputer p, int layer, double rot)
     {
         p.getBG(layer).rot(rot);
+    }
+    static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, int screendata)
+    {
+        p.getBG(layer).fill(x, y, x2, y2, screendata);
     }
     static void EFCON()
     {

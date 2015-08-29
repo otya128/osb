@@ -706,7 +706,7 @@ class GosubExpr : Code
     {
         Value label;
         vm.pop(label);
-        if(!label.isString)
+        if(label.isString)
         {
             vm.push(Value(vm.pc));
             vm.pc = vm.globalLabel[label.castString] - 1;

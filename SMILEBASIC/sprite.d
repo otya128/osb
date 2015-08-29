@@ -252,10 +252,10 @@ struct SpriteData
         this.defno = defno;
         col = SpriteCollision(&this);
     }
-    SpriteAnimData[][SpriteAnimTarget.V] anim;
-    int[SpriteAnimTarget.V] animindex;
-    int[SpriteAnimTarget.V] animloop;
-    int[SpriteAnimTarget.V] animloopcnt;
+    SpriteAnimData[][SpriteAnimTarget.V + 1] anim;
+    int[SpriteAnimTarget.V + 1] animindex;
+    int[SpriteAnimTarget.V + 1] animloop;
+    int[SpriteAnimTarget.V + 1] animloopcnt;
     void setAnimation(SpriteAnimData[] anim, SpriteAnimTarget sat, int loop)
     {
         this.anim[sat] = anim;
@@ -320,6 +320,16 @@ class Sprite
     void spdef()
     {
         this.SPDEFTable[] = (this.defSPDEFTable)[];
+    }
+    void getspdef(int id, out int U, out int V, out int W, out int H, out int HX, out int HY, out int A)
+    {
+        U = SPDEFTable[id].u;
+        V = SPDEFTable[id].v;
+        W = SPDEFTable[id].w;
+        H = SPDEFTable[id].h;
+        HX= SPDEFTable[id].hx;
+        HY= SPDEFTable[id].hy;
+        A = SPDEFTable[id].a;
     }
     void spchr(int i, int d)
     {
@@ -702,13 +712,31 @@ class Sprite
         auto spdef = SpriteDef(u, v, w, h, 0, 0, attr);
         sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
     }
+    int spchk(int id)
+    {
+        id = spid(id);
+        int state;
+        for(int i = 0; i <= SpriteAnimTarget.V; i++)
+        {
+            if(sprites[id].anim[i])
+            {
+                state |= 1 << i;
+            }
+        }
+        return state;
+    }
     void spofs(int id, double x, double y)
     {
+        //animeとめる
         id = spid(id);
         sprites[id].x = x;
         sprites[id].y = y;
         sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
         sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+        sprites[id].anim[SpriteAnimTarget.XY] = null;
+        sprites[id].animindex[SpriteAnimTarget.XY] = 0;
+        sprites[id].animloop[SpriteAnimTarget.XY] = 0;
+        sprites[id].animloopcnt[SpriteAnimTarget.XY] = 0;
     }
     void spofs(int id, double x, double y, int z)
     {
@@ -719,6 +747,10 @@ class Sprite
         sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
         sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
         zChange = true;
+        sprites[id].anim[SpriteAnimTarget.XY] = null;
+        sprites[id].animindex[SpriteAnimTarget.XY] = 0;
+        sprites[id].animloop[SpriteAnimTarget.XY] = 0;
+        sprites[id].animloopcnt[SpriteAnimTarget.XY] = 0;
     }
     void getspofs(int id, out  double x, out double y, out int z)
     {
@@ -761,6 +793,16 @@ class Sprite
             "C": SpriteAnimTarget.C,
             "V": SpriteAnimTarget.V,
         ];
+    }
+    SpriteAnimTarget getSpriteAnimTarget(wstring target)
+    {
+        bool relative = false;
+        if(target[$ - 1..$] == "+")
+        {
+            target = target[0..$-1];
+            relative = true;
+        }
+        return spriteAnimTarget[target] | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0);
     }
     void spanim(int id, SpriteAnimTarget target, double[] data)
     {
@@ -915,5 +957,15 @@ class Sprite
                 return start;
         }
         return -1;
+    }
+    void spvar(int id, int var, double val)
+    {
+        id = spid(id);
+        sprites[id].var[var] = val;
+    }
+    double spvar(int id, int var)
+    {
+        id = spid(id);
+        return sprites[id].var[var];
     }
 }

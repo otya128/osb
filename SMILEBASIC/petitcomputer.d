@@ -156,6 +156,8 @@ class PetitComputer
     int consoleHeight;
     int consoleWidthDisplay1;
     int consoleHeightDisplay1;
+    int consoleWidth4;
+    int consoleHeight4;
     int consoleHeightC, consoleWidthC;
     ConsoleCharacter[][] consoleC;
     int[] consoleColor = 
@@ -198,6 +200,7 @@ class PetitComputer
     Button button;
     ConsoleCharacter[][] console;
     ConsoleCharacter[][] consoleDisplay1;
+    ConsoleCharacter[][] console4;
     bool visibleGRP = true;
     private int[2] showPage = [0, 1];
     private int[2] usePage = [0, 1];
@@ -391,8 +394,11 @@ class PetitComputer
         consoleHeight = screenHeight / fontHeight;
         consoleWidthDisplay1 = screenWidthDisplay1 / fontWidth;
         consoleHeightDisplay1 = screenHeightDisplay1 / fontHeight;
+        consoleWidth4 = 320 / fontWidth;
+        consoleHeight4 = 480 / fontHeight;
         console = new ConsoleCharacter[][consoleHeight];
         consoleDisplay1 = new ConsoleCharacter[][consoleHeightDisplay1];
+        console4 = new ConsoleCharacter[][consoleHeight4];
         consoleForeColor = 15;//#T_WHITE
         for(int i = 0; i < console.length; i++)
         {
@@ -404,11 +410,23 @@ class PetitComputer
             consoleDisplay1[i] = new ConsoleCharacter[consoleWidthDisplay1];
             consoleDisplay1[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
+        for(int i = 0; i < console4.length; i++)
+        {
+            console4[i] = new ConsoleCharacter[consoleWidth4];
+            console4[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+        }
         display(0);
     }
     void display(int number)
     {
         displaynum = number;
+        if(xscreenmode == 2)
+        {
+            consoleHeightC = consoleHeight4;
+            consoleWidthC = consoleWidth4;
+            consoleC = console4;
+            return;
+        }
         if(number)
         {
             consoleHeightC = consoleHeightDisplay1;
@@ -422,9 +440,9 @@ class PetitComputer
     }
     void cls()
     {
-        for(int i = 0; i < console.length; i++)
+        for(int i = 0; i < consoleC.length; i++)
         {
-            console[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+            consoleC[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
         CSRX = 0;
         CSRY = 0;
@@ -721,6 +739,7 @@ class PetitComputer
         this.bgmax = bg;
         //BG
         int mode2 = mode / 2;
+        xscreenmode = mode2;
         if(mode2 == 0)
         {
             SDL_SetWindowSize(window, 400, 240);
@@ -732,8 +751,8 @@ class PetitComputer
         if(mode == 4)
         {
             SDL_SetWindowSize(window, 320, 240 * 2);
+            display(0);
         }
-        xscreenmode = mode2;
     }
     BG getBG(int layer)
     {
@@ -768,12 +787,6 @@ class PetitComputer
 
         DerelictGL.load();
         DerelictGL3.load();
-        buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
-        buttonTable[SDL_SCANCODE_UP] = Button.UP;
-        buttonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
-        buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
-        buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
-        buttonTable[SDL_SCANCODE_SPACE] = Button.A;
         bool renderprofile;//e = true;
         try
         {
@@ -787,6 +800,12 @@ class PetitComputer
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
                                       SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+            buttonTable = new Button[SDL_SCANCODE_SLEEP + 1];
+            buttonTable[SDL_SCANCODE_UP] = Button.UP;
+            buttonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
+            buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
+            buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
+            buttonTable[SDL_SCANCODE_SPACE] = Button.A;
             if(!window)
             {
                 write("can't create window: ");
@@ -1004,6 +1023,7 @@ class PetitComputer
         catch(Throwable t)
         {
             writeln(t);
+            readln();
         }
     }
     SDL_Window* window;
@@ -1031,11 +1051,11 @@ class PetitComputer
         {
             parser = new Parser(
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     //readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                      //readText("./SYS/EX1TEXT.TXT").to!wstring
                                      //readText("FIZZBUZZ.TXT").to!wstring
                                      //readText("TEST.TXT").to!wstring
@@ -1430,10 +1450,10 @@ class PetitComputer
             glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
             glDisable(GL_TEXTURE_2D);
             glBegin(GL_QUADS);
-            for(int y = 0; y < consoleHeight; y++)
-                for(int x = 0; x < consoleWidth; x++)
+            for(int y = 0; y < consoleHeight4; y++)
+                for(int x = 0; x < consoleWidth4; x++)
                 {
-                    auto back = consoleColorGL[console[y][x].backColor];
+                    auto back = consoleColorGL[console4[y][x].backColor];
                     glColor4ubv(cast(ubyte*)&back);
                     glVertex3f((x * 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, 0.9f);
                     glVertex3f((x * 8) / 160f - 1, 1 - (y * 8) / 240f, 0.9f);
@@ -1452,20 +1472,21 @@ class PetitComputer
             glEnable(GL_TEXTURE_2D);
 
             glBegin(GL_QUADS);
-            for(int y = 0; y < consoleHeight; y++)
-                for(int x = 0; x < consoleWidth; x++)
+            for(int y = 0; y < consoleHeight4; y++)
+                for(int x = 0; x < consoleWidth4; x++)
                 {
-                    auto fore = consoleColorGL[console[y][x].foreColor];
-                    auto rect = &fontTable[console[y][x].character];
+                    auto fore = consoleColorGL[console4[y][x].foreColor];
+                    auto rect = &fontTable[console4[y][x].character];
                     glColor4ubv(cast(ubyte*)&fore);
+                    float z = console4[y][x].z / 1025f;
                     glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, 0);
+                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, z);
                     glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8) / 240f, 0);
+                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8) / 240f, z);
                     glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8) / 240f, 0);
+                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8) / 240f, z);
                     glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, 0);
+                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, z);
                 }
             glEnd();
             return;

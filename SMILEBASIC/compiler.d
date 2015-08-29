@@ -213,6 +213,15 @@ class Compiler
     }
     void genCodePushVar(wstring name, Scope sc)
     {
+        if(sc.func)
+        {
+            auto local = sc.func.hasLocalVarIndex(name);
+            if(local)
+            {
+                code ~= new PushL(local);
+                return;
+            }
+        }
         auto global = hasGlobalVarIndex(name);
         if(global)
         {
@@ -233,6 +242,15 @@ class Compiler
     }
     void genCodePopVar(wstring name, Scope sc)
     {
+        if(sc.func)
+        {
+            auto local = sc.func.hasLocalVarIndex(name);
+            if(local)
+            {
+                code ~= new PopL(local);
+                return;
+            }
+        }
         auto global = hasGlobalVarIndex(name);
         if(global)
         {
@@ -821,7 +839,10 @@ class Compiler
                     auto assign = cast(ArrayAssign)i;
                     compileExpression(assign.assignExpression, s);
                     compileExpression(assign.indexExpression, s);
-                    genCode(new PopArray(getGlobalVarIndex(assign.name), cast(int)assign.indexExpression.expressions.length, !(s.func is null)));
+                    int index;
+                    bool local;
+                    getVarIndex(assign.name, s, index, local);
+                    genCode(new PopArray(index, cast(int)assign.indexExpression.expressions.length, local));
                 }
                 break;
             case NodeType.CallFunctionStatement:

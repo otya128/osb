@@ -132,4 +132,17 @@ class BG
     {
         this.r = rot;
     }
+    void fill(int x, int y, int x2, int y2, int screendata)
+    {
+        import std.algorithm;
+        int id = screendata & 4095;
+        if(x > x2) swap(x, x2);
+        if(y > y2) swap(y, y2);
+        for(; y <= y2; y++)
+            chip[x + y * width .. x2 + y * width] = BGChip(id);
+            /*for(int i = x; i <= x2; i++)
+            {
+                chip[i + y * width].i = id;
+            }*/
+    }
 }

@@ -739,6 +739,14 @@ class Parser
     void syntaxError()
     {
         stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
+        try
+        {
+            throw new Exception("Stacktrace");
+        }
+        catch(Exception e)
+        {
+            writeln(e);
+        }
     }
     //statement
     Statement statement()
@@ -768,6 +776,7 @@ class Parser
                     //命令呼び出し
                     auto func = new CallFunctionStatement(name);
                     node = func;
+                    bool oldcomma;
                     while(true)
                     {
                         token = lex.front();
@@ -781,11 +790,12 @@ class Parser
                         else
                         {
                             auto expr = expression();
-                            if(expr)
+                            if(expr || oldcomma || lex.front.type == TokenType.Comma)//if(expr)
                                 func.addArg(expr);
                         }
                         if(lex.front().type == TokenType.Out) break;
                         if(lex.front().type != TokenType.Comma) break;
+                        oldcomma = true;
                         lex.popFront();
                     }
                     if(lex.front().type == TokenType.Out)
@@ -810,8 +820,9 @@ class Parser
                             break;
                         }
                     }
+                    return node;
                 }
-                break;
+                //break;
             case TokenType.Colon:
             case TokenType.NewLine:
                 break;
