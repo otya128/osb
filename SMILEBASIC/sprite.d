@@ -876,4 +876,29 @@ class Sprite
     {
         id = spid(id);
     }
+    int sphitsp(int id)
+    {
+        id = spid(id);
+        if(spmax > id)
+        {
+            return sphitsp2(id, 0, spmax - 1);
+        }
+        return sphitsp2(id, spmax, 511);
+    }
+    int sphitsp(int id, int start, int end)
+    {
+        id = spid(id);
+        start = spid(start);
+        end = spid(end);
+        return sphitsp2(id, start, end);
+    }
+    int sphitsp2(int id, int start, int end)
+    {
+        for(; start <= end; start++)
+        {
+            if(sprites[id].col.detection(sprites[start]))
+                return start;
+        }
+        return -1;
+    }
 }
