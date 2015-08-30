@@ -45,6 +45,8 @@ enum NodeType
 abstract class Node
 {
     NodeType type;
+    //式は複数行に渡って描けないのでStatementに置くべき
+    SourceLocation location;
 }
 abstract class Expression : Node
 {
@@ -52,8 +54,9 @@ abstract class Expression : Node
 class Constant : Expression
 {
     Value value;
-    this(Value v)
+    this(Value v, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Constant;
         this.value = v;
     }
@@ -63,20 +66,23 @@ class BinaryOperator : Expression
     Expression item1;
     TokenType operator;
     Expression item2;
-    this(BinaryOperator bop)
+    this(BinaryOperator bop, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.BinaryOperator;
         this.item1 = bop.item1;
         this.operator = bop.operator;
         this.item2 = bop.item2;
     }
-    this(Expression i1)
+    this(Expression i1, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.BinaryOperator;
         this.item1 = i1;
     }
-    this(Expression i1, TokenType o, Expression i2)
+    this(Expression i1, TokenType o, Expression i2, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.BinaryOperator;
         this.item1 = i1;
         this.operator = o;
@@ -87,8 +93,9 @@ class UnaryOperator : Expression
 {
     TokenType operator;
     Expression item;
-    this(TokenType o, Expression i)
+    this(TokenType o, Expression i, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.UnaryOperator;
         this.operator = o;
         this.item = i;
@@ -97,8 +104,9 @@ class UnaryOperator : Expression
 class Variable : Expression
 {
     wstring name;
-    this(wstring n)
+    this(wstring n, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Variable;
         this.name = n;
     }
@@ -107,8 +115,9 @@ class CallFunction : Expression
 {
     wstring name;
     Expression[] args;
-    this(wstring n)
+    this(wstring n, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.CallFunction;
         this.name = n;
         args = new Expression[0];
@@ -120,8 +129,9 @@ class CallFunction : Expression
 }
 class VoidExpression : Expression
 {
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.VoidExpression;
     }
 }
@@ -132,8 +142,9 @@ abstract class Statement : Node
 class Statements : Statement
 {
     Statement[] statements;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Statements;
         statements = new Statement[0];
     }
@@ -176,8 +187,9 @@ struct PrintArgument
 class Print : Statement
 {
     PrintArgument[] args;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Print;
         args = new PrintArgument[0];
     }
@@ -198,8 +210,9 @@ class Assign : Statement
 {
     wstring name;
     Expression expression;
-    this(wstring name, Expression expr)
+    this(wstring name, Expression expr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Assign;
         this.name = name;
         this.expression = expr;
@@ -208,8 +221,9 @@ class Assign : Statement
 class Label : Statement
 {
     wstring label;
-    this(wstring name)
+    this(wstring name, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Label;
         this.label = name;
     }
@@ -217,14 +231,16 @@ class Label : Statement
 class Goto : Statement
 {
     wstring label;
-    this(wstring name)
+    this(wstring name, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Goto;
         this.label = name;
     }
     Expression labelexpr;
-    this(Expression expr)
+    this(Expression expr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Goto;
         this.labelexpr = expr;
     }
@@ -234,8 +250,9 @@ class If : Statement
     Expression condition;
     Statements then;
     Statements else_;
-    this(Expression condition, Statements t, Statements e)
+    this(Expression condition, Statements t, Statements e, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.If;
         this.condition = condition;
         this.then = t;
@@ -252,16 +269,18 @@ class For : Statement
     Expression toExpression;
     Expression stepExpression;
     Statements statements;
-    this(Assign assign, Expression toExpression, Expression stepExpression, Statements statements)
+    this(Assign assign, Expression toExpression, Expression stepExpression, Statements statements, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.For;
         this.initExpression = assign;
         this.toExpression = toExpression;
         this.stepExpression = stepExpression;
         this.statements = statements;
     }
-    this(Assign assign, Expression toExpression, Statements statements)
+    this(Assign assign, Expression toExpression, Statements statements, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.For;
         this.initExpression = assign;
         this.toExpression = toExpression;
@@ -272,14 +291,16 @@ class For : Statement
 class Gosub : Statement
 {
     wstring label;
-    this(wstring name)
+    this(wstring name, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Gosub;
         this.label = name;
     }
     Expression labelexpr;
-    this(Expression expr)
+    this(Expression expr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Gosub;
         this.labelexpr = expr;
     }
@@ -287,38 +308,43 @@ class Gosub : Statement
 class Return : Statement
 {
     Expression expression;
-    this(Expression expression)
+    this(Expression expression, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Return;
         this.expression = expression;
     }
 }
 class End : Statement
 {
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.End;
     }
 }
 class Break : Statement
 {
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Break;
     }
 }
 class Continue : Statement
 {
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Continue;
     }
 }
 class Var : Statement
 {
     Statement[] define;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Var;
         this.define = new Statement[0];
     }
@@ -335,8 +361,9 @@ class DefineVariable : Statement
 {
     wstring name;
     Expression expression;
-    this(wstring name, Expression expr)
+    this(wstring name, Expression expr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.DefineVariable;
         this.name = name;
         this.expression = expr;
@@ -346,8 +373,9 @@ class DefineArray : Statement
 {
     wstring name;
     IndexExpressions dim;
-    this(wstring name, IndexExpressions dim)
+    this(wstring name, IndexExpressions dim, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.DefineArray;
         this.name = name;
         this.dim = dim;
@@ -356,8 +384,9 @@ class DefineArray : Statement
 class IndexExpressions : Expression
 {
     Expression[] expressions;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.IndexExpressions;
         this.expressions = new Expression[0];
     }
@@ -371,8 +400,9 @@ class ArrayAssign : Statement
     wstring name;
     IndexExpressions indexExpression;
     Expression assignExpression;
-    this(wstring name, IndexExpressions expr, Expression assign)
+    this(wstring name, IndexExpressions expr, Expression assign, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.ArrayAssign;
         this.name = name;
         this.indexExpression = expr;
@@ -386,14 +416,16 @@ class DefineFunction : Statement
     wstring name;
     Statements functionBody;
     bool returnExpr;
-    this(wstring name, bool returnExpr)
+    this(wstring name, bool returnExpr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.DefineFunction;
         this.name = name;
         this.returnExpr = returnExpr;
     }
-    this(wstring name)
+    this(wstring name, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.DefineFunction;
         this.name = name;
         this.returnExpr = false;
@@ -412,8 +444,9 @@ class CallFunctionStatement : Statement
     wstring name;
     Expression[] args;
     wstring[] outVariable;
-    this(wstring n)
+    this(wstring n, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.CallFunctionStatement;
         this.name = n;
         args = new Expression[0];
@@ -431,8 +464,9 @@ class While : Statement
 {
     Expression condExpression;
     Statements statements;
-    this(Expression condExpression, Statements statements)
+    this(Expression condExpression, Statements statements, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.While;
         this.condExpression = condExpression;
         this.statements = statements;
@@ -442,8 +476,9 @@ class Inc : Statement
 {
     wstring name;
     Expression expression;
-    this(wstring name, Expression expr)
+    this(wstring name, Expression expr, SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Inc;
         this.name = name;
         this.expression = expr;
@@ -452,8 +487,9 @@ class Inc : Statement
 class Data : Statement
 {
     Value[] data;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Data;
         this.data = new Value[0];
     }
@@ -465,8 +501,9 @@ class Data : Statement
 class Read : Statement
 {
     Expression[] variables;
-    this()
+    this(SourceLocation loc)
     {
+        super.location = loc;
         this.type = NodeType.Read;
     }
     void addVariable(Expression lvalue)
@@ -477,8 +514,9 @@ class Read : Statement
 class Restore : Statement
 {
     Expression label;
-    this(Expression label)
+    this(Expression label, SourceLocation loc)
     {
+        super.location = loc;
         this.label = label;
         this.type = NodeType.Restore;
     }
@@ -488,8 +526,9 @@ class On : Statement
     Expression condition;
     bool isGosub;
     wstring[] labels;
-    this(Expression expr, bool isgosub)
+    this(Expression expr, bool isgosub, SourceLocation loc)
     {
+        super.location = loc;
         this.condition = expr;
         this.isGosub = isgosub;
         this.labels = new wstring[0];
@@ -505,8 +544,9 @@ class Input : Statement
     Expression message;
     bool question;
     Expression[] variables;
-    this(Expression message, bool question)
+    this(Expression message, bool question, SourceLocation loc)
     {
+        super.location = loc;
         this.message = message;
         this.question = question;
         this.variables = new Expression[0];

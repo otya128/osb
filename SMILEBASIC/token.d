@@ -81,3 +81,9 @@ struct Token
         type = t;
     }
 }
+struct SourceLocation
+{
+    int line;//何行目
+    int pos;//何文字目
+    int pos2;//全体から何文字目
+}

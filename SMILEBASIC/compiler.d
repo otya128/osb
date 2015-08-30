@@ -6,6 +6,26 @@ import otya.smilebasic.type;
 import otya.smilebasic.error;
 import otya.smilebasic.systemvariable;
 import std.stdio;
+class DebugInfo
+{
+    int old;
+    std.container.Array!SourceLocation location;
+    this()
+    {
+    }
+    void addLocation(SourceLocation loc, Code[] code)
+    {
+        for(int i = 0; i < code.length - old; i++)
+        {
+            location ~= loc;
+        }
+        old = location.length;
+    }
+    SourceLocation getLocationByAddress(int addr)
+    {
+        return location[addr];
+    }
+}
 class Scope
 {
     GotoAddr breakAddr;
@@ -152,8 +172,10 @@ class Compiler
         }
     }
     Statements statements;
+    DebugInfo debugInfo;
     this(Statements statements)
     {
+        this.debugInfo = new DebugInfo;
         this.statements = statements;
         code = new Code[0];
         global["DATE$"] = VMVariable(-1);
@@ -930,6 +952,7 @@ class Compiler
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }
+        this.debugInfo.addLocation(i.location, code);
     }
     VM compile()
     {
@@ -1007,7 +1030,7 @@ class Compiler
                 code[i] = new RestoreCode(s.data.label[restore.label], s.data);
             }
         }
-        return new VM(code, globalIndex + 1, global, functions, s.data, globalLabel);
+        return new VM(code, globalIndex + 1, global, functions, s.data, globalLabel, debugInfo);
     }
 }
 

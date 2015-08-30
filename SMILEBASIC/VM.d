@@ -23,12 +23,6 @@ struct VMVariable
         this.index = index;
     }
 }
-struct SourceLocation
-{
-    int line;//何行目
-    int pos;//何文字目
-    byte slot;//スロット
-}
 class VM
 {
     DataTable globalDataTable;
@@ -43,8 +37,9 @@ class VM
     int[wstring] globalLabel;
     int bp;
     PetitComputer petitcomputer;
+    DebugInfo debugInfo;
     this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
-         int[wstring] globalLabel)
+         int[wstring] globalLabel, DebugInfo dinfo)
     {
         this.code = code;
         this.stack = new Value[16384];
@@ -58,6 +53,7 @@ class VM
         this.functions = functions;
         this.globalDataTable = gdt;
         this.globalLabel = globalLabel;
+        this.debugInfo = dinfo;
     }
     Code getCurrent()
     {
@@ -74,6 +70,10 @@ class VM
         {
             stderr.writeln("CompilerBug?:stack");
         }
+    }
+    SourceLocation currentLocation()
+    {
+        return debugInfo.getLocationByAddress(pc);
     }
     void init(PetitComputer petitcomputer)
     {

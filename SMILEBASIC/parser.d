@@ -85,7 +85,9 @@ class Lexical
     {
         return c == '$' || c == '%' || c == '#';
     }
+    SourceLocation location;
     Token token;
+    private int pos;
     void popFront()
     {
         if(empty())
@@ -316,9 +318,13 @@ class Lexical
                         i++;
                     }
                 }
+                pos = i;
             }
             break;
         }
+        this.location.pos = i - this.pos;
+        this.location.line = line;
+        this.location.pos2 = index - 1;
         index = i;
     }
     Token front()
@@ -367,6 +373,15 @@ unittest
 }
 class Parser
 {
+    wstring getLine(SourceLocation loc)
+    {
+        import std.string;
+        int mae = code[0 .. loc.pos2].lastIndexOf('\n');
+        mae++;
+        int ushiro = code[mae..$].indexOf('\n');
+        if(ushiro == -1) ushiro = code.length;
+        return code[mae .. mae + ushiro];
+    }
     wstring code;
     Lexical lex;
     this(wstring input)
@@ -488,7 +503,7 @@ class Parser
     Statements parseProgram()
     {
         lex.popFront();
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         while(!lex.empty())
         {
             auto token = lex.front();
@@ -539,7 +554,7 @@ class Parser
             syntaxError();
             return null;
         }
-        DefineFunction node = new DefineFunction(token.value.stringValue);
+        DefineFunction node = new DefineFunction(token.value.stringValue, lex.location);
         lex.popFront();
         token = lex.front();
         if(token.type == TokenType.LParen)
@@ -630,7 +645,7 @@ class Parser
     }
     Statements functionStatements()
     {
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         while(true)
         {
             auto type = lex.front().type;
@@ -651,7 +666,7 @@ class Parser
     }
     Statements ifStatements()
     {
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         bool flag = true;
         while(!lex.empty())
         {
@@ -662,7 +677,7 @@ class Parser
             if(type == TokenType.Endif) break;
             if(type == TokenType.Label)
             {
-                statements.addStatement(new Goto(lex.front.value.stringValue));
+                statements.addStatement(new Goto(lex.front.value.stringValue, lex.location));
                 lex.popFront;
                 continue;
             }
@@ -676,7 +691,7 @@ class Parser
     }
     Statements multilineIfStatements()
     {
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         while(!lex.empty())
         {
             auto type = lex.front().type;
@@ -692,7 +707,7 @@ class Parser
     }
     Statements forStatements()
     {
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         while(!lex.empty())
         {
             auto type = lex.front().type;
@@ -722,7 +737,7 @@ class Parser
     }
     Statements whileStatements()
     {
-        auto statements = new Statements();
+        auto statements = new Statements(lex.location);
         while(!lex.empty())
         {
             auto type = lex.front().type;
@@ -774,7 +789,7 @@ class Parser
                         return node;
                     }
                     //命令呼び出し
-                    auto func = new CallFunctionStatement(name);
+                    auto func = new CallFunctionStatement(name, lex.location);
                     node = func;
                     bool oldcomma;
                     while(true)
@@ -783,7 +798,7 @@ class Parser
 
                         if(token.type == TokenType.Comma)
                         {
-                            func.addArg(new VoidExpression());
+                            func.addArg(new VoidExpression(lex.location));
                             lex.popFront();
                             token = lex.front();
                         }
@@ -827,32 +842,32 @@ class Parser
             case TokenType.NewLine:
                 break;
             case TokenType.Label:
-                node = new Label(token.value.stringValue);
+                node = new Label(token.value.stringValue, lex.location);
                 break;
             case TokenType.Goto:
                 lex.popFront();
                 token = lex.front();
                 if(token.type == TokenType.Label)
-                    node = new Goto(token.value.stringValue);
+                    node = new Goto(token.value.stringValue, lex.location);
                 else
                 {
                     auto e = expression();
                     if(!e)
                         syntaxError();
-                    node = new Goto(e);
+                    node = new Goto(e, lex.location);
                 }
                 break;
             case TokenType.Gosub:
                 lex.popFront();
                 token = lex.front();
                 if(token.type == TokenType.Label)
-                    node = new Gosub(token.value.stringValue);
+                    node = new Gosub(token.value.stringValue, lex.location);
                 else
                 {
                     auto e = expression();
                     if(!e)
                         syntaxError();
-                    node = new Gosub(e);
+                    node = new Gosub(e, lex.location);
                 }
                 break;
             case TokenType.If:
@@ -864,21 +879,21 @@ class Parser
                 lex.popFront();
                 if(isFuncReturnExpr)
                 {
-                    node = new Return(expression());
+                    node = new Return(expression(), lex.location);
                 }
                 else
                 {
-                    node = new Return(null);
+                    node = new Return(null, lex.location);
                 }
                 return node;
             case TokenType.End:
-                node = new End();
+                node = new End(lex.location);
                 break;
             case TokenType.Break:
-                node = new Break();
+                node = new Break(lex.location);
                 break;
             case TokenType.Continue:
-                node = new Continue();
+                node = new Continue(lex.location);
                 break;
             case TokenType.Var:
                 lex.popFront();
@@ -935,7 +950,7 @@ class Parser
         auto token = lex.front();
         if(token.type == TokenType.Semicolon || (token.type == TokenType.Comma && !isLValue(message)))
         {
-            Input input = new Input(message, token.type == TokenType.Semicolon);
+            Input input = new Input(message, token.type == TokenType.Semicolon, lex.location);
             do
             {
                 lex.popFront();
@@ -956,7 +971,7 @@ class Parser
                    syntaxError();
                    return null;
             }
-            Input input = new Input(null, true);
+            Input input = new Input(null, true, lex.location);
             input.addVariable(message);
             do
             {
@@ -982,11 +997,11 @@ class Parser
         On on;
         if(token.type == TokenType.Gosub)
         {
-            on = new On(cond, true);//gosub
+            on = new On(cond, true, lex.location);//gosub
         }
         else if(token.type == TokenType.Goto)
         {
-            on = new On(cond, false);//gosub
+            on = new On(cond, false, lex.location);//gosub
         }
         else
         {
@@ -1011,7 +1026,7 @@ class Parser
     }
     Data dataStatement()
     {
-        Data data = new Data();
+        Data data = new Data(lex.location);
         lex.popFront();
         auto token = lex.front();
         while(true)
@@ -1051,7 +1066,7 @@ class Parser
     }
     Read readStatement()
     {
-        Read read = new Read();
+        Read read = new Read(lex.location);
         Token token;
         do
         {
@@ -1075,7 +1090,7 @@ class Parser
             syntaxError();
             return null;
         }
-        return new Restore(label);
+        return new Restore(label, lex.location);
     }
     Inc incStatement()
     {
@@ -1105,17 +1120,17 @@ class Parser
         }
         else
         {
-            expr = new Constant(Value(1));
+            expr = new Constant(Value(1), lex.location);
         }
         if(dec)
         {
-            expr = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, expr);
+            expr = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, expr, lex.location);
         }
-        return new Inc(var, expr);
+        return new Inc(var, expr, lex.location);
     }
     IndexExpressions indexExpressions()
     {
-        IndexExpressions ie = new IndexExpressions();
+        IndexExpressions ie = new IndexExpressions(lex.location);
         int count = 0;
         while(true)
         {
@@ -1160,12 +1175,12 @@ class Parser
         lex.popFront();
         auto expr = expression();
         token = lex.front();
-        auto node = new ArrayAssign(name, ie, expr);
+        auto node = new ArrayAssign(name, ie, expr, lex.location);
         return node;
     }
     Statement var()
     {
-        Var var = new Var();
+        Var var = new Var(lex.location);
         Token token;
         while(true)
         {
@@ -1215,7 +1230,7 @@ class Parser
             if(token.type != TokenType.RBracket)
                 return null;
             lex.popFront();
-            DefineArray ary = new DefineArray(name, dim);
+            DefineArray ary = new DefineArray(name, dim, lex.location);
             return ary;
         }
         else
@@ -1228,7 +1243,7 @@ class Parser
                 token = lex.front();
             }
         }
-        DefineVariable node = new DefineVariable(name, expr);
+        DefineVariable node = new DefineVariable(name, expr, lex.location);
         return node;
     }
     For forStatement()
@@ -1263,11 +1278,11 @@ class Parser
         else
         {
             //とりあえず
-            step = new Constant(Value(1));
+            step = new Constant(Value(1), lex.location);
         }
         token = lex.front();
         Statements statements = forStatements();
-        node = new For(init, to, step, statements);
+        node = new For(init, to, step, statements, lex.location);
         return node;
     }
     While whileStatement()
@@ -1280,7 +1295,7 @@ class Parser
             return null;
         }
         Statements statements = whileStatements();
-        auto node = new While(expr, statements);
+        auto node = new While(expr, statements, lex.location);
         return node;
     }
     If if_()
@@ -1340,7 +1355,7 @@ class Parser
                 else_ = ifStatements();
             }
         }
-        auto if_ = new If(expr, then, else_);
+        auto if_ = new If(expr, then, else_, lex.location);
         return if_;
     }
     Assign assign(wstring name)
@@ -1349,12 +1364,12 @@ class Parser
         auto token = lex.front();//=の次
         Expression expr = expression();
         if(expr is null) return null;
-        auto a = new Assign(name, expr);
+        auto a = new Assign(name, expr, lex.location);
         return a;
     }
     Print print()
     {
-        auto print = new Print();
+        auto print = new Print(lex.location);
         bool addline = true;
         lex.popFront();
         auto token = lex.front();
@@ -1429,7 +1444,7 @@ class Parser
         auto token = lex.front();
         if(order == getOPRank(token.type))
         {
-            BinaryOperator op = new BinaryOperator(exp);
+            BinaryOperator op = new BinaryOperator(exp, lex.location);
             while(order == getOPRank(token.type))
             {
                 auto tt = token.type;
@@ -1451,7 +1466,7 @@ class Parser
                     write(tt, " ");
                 if(order == getOPRank(token.type))
                 {
-                    BinaryOperator op2 = new BinaryOperator(op);
+                    BinaryOperator op2 = new BinaryOperator(op, lex.location);
                     op.item1 = op2;
                 }
                 version(none)stdout.flush();
@@ -1470,14 +1485,14 @@ class Parser
             case TokenType.Integer:
                 version(none)write(token.value.integerValue, ' ');
                 version(none)stdout.flush();
-                node = new Constant(token.value);
+                node = new Constant(token.value, lex.location);
                 break;
             case TokenType.Iden:
                 if(!lex.empty())
                     lex.popFront();
                 if(lex.front().type == TokenType.LParen)
                 {
-                    auto func = new CallFunction(token.value.stringValue);
+                    auto func = new CallFunction(token.value.stringValue, lex.location);
                     node = func;
                     //関数呼び出しだった
                     while(true)
@@ -1488,7 +1503,7 @@ class Parser
                         if(token.type == TokenType.RParen) break;
                         if(token.type == TokenType.Comma)
                         {
-                            func.addArg(new VoidExpression());
+                            func.addArg(new VoidExpression(lex.location));
                             lex.popFront();
                             token = lex.front();
                         }
@@ -1499,7 +1514,7 @@ class Parser
                 }
                 else
                 {
-                    return new Variable(token.value.stringValue);
+                    return new Variable(token.value.stringValue, lex.location);
                 }
                 break;
             case TokenType.LParen:
@@ -1512,18 +1527,18 @@ class Parser
                 break;
             case TokenType.Label://3.1
                 //文字列リテラル
-                node = new Constant(token.value);
+                node = new Constant(token.value, lex.location);
                 break;
             case TokenType.Minus:
                 //TODO:UnaryOperatorの実装
                 //とりあえず0-exprを作成
                 lex.popFront();
-                node = new BinaryOperator(new Constant(Value(0)), TokenType.Minus, factor());
+                node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, factor(), lex.location);
                 return node;
             case TokenType.LogicalNot:
             case TokenType.Not:
                 lex.popFront();
-                node = new UnaryOperator(token.type, factor());
+                node = new UnaryOperator(token.type, factor(), lex.location);
                 return node;
             default:
                 return node;

@@ -1052,11 +1052,11 @@ class PetitComputer
             parser = new Parser(
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
                                      //readText("./SYS/GAME7EXPAD.TXT").to!wstring
-                                     readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     //readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                      //readText("./SYS/EX1TEXT.TXT").to!wstring
                                      //readText("FIZZBUZZ.TXT").to!wstring
                                      //readText("TEST.TXT").to!wstring
@@ -1166,6 +1166,8 @@ class PetitComputer
         //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
         int startcnt = SDL_GetTicks();
         float frame = 1000f / 60f;
+        typeof(vm.currentLocation()) loc;
+        debug bool trace = false;
         while (true)
         {
             uint elapse;
@@ -1178,6 +1180,11 @@ class PetitComputer
                     {
                         //writefln("%04X:%s", vm.pc, vm.getCurrent);
                         running = vm.runStep();
+                        debug if(trace && loc.line != vm.currentLocation.line)
+                        {
+                            loc = vm.currentLocation;
+                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                        }
                     }
                 }
                 catch(SmileBasicError sbe)
@@ -1190,9 +1197,12 @@ class PetitComputer
                         //printConsole(sbe.to!string);
                         writeln(sbe.to!string);
                         writeln(sbe.getErrorMessage2);
+                         loc = vm.currentLocation;
+                        printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                     }
-                    catch
+                    catch(Throwable t)
                     {
+                        writeln(t);
                     }
                 }
                 catch(Throwable t)
@@ -1202,9 +1212,11 @@ class PetitComputer
                     {
                         printConsole(t.to!string);
                         writeln(t);
+                        printConsole(parser.getLine(vm.currentLocation));
                     }
-                    catch
+                    catch(Throwable t)
                     {
+                        writeln(t);
                     }
                 }
                 //elapse = SDL_GetTicks() - startTicks;
