@@ -1336,7 +1336,7 @@ class PetitComputer
         throw new Exception("unsuport enviroment");
     }
     //プチコンと違って[A,]R,G,Bじゃない
-    static void RGBRead(uint color, out ubyte r, out ubyte g, out ubyte b, out ubyte a)
+    static pure nothrow void RGBRead(uint color, out ubyte r, out ubyte g, out ubyte b, out ubyte a)
     {
         //エンディアン関係ない
         a = color >> 24;
@@ -1344,11 +1344,11 @@ class PetitComputer
         g = color >> 8 & 0xFF;
         b = color& 0xFF;
     }
-    static uint RGB(ubyte r, ubyte g, ubyte b)
+    static pure nothrow uint RGB(ubyte r, ubyte g, ubyte b)
     {
         return 0xFF000000 | r << 16 | g << 8 | b; 
     }
-    static uint RGB(ubyte a, ubyte r, ubyte g, ubyte b)
+    static pure nothrow uint RGB(ubyte a, ubyte r, ubyte g, ubyte b)
     {
         return a << 24 | r << 16 | g << 8 | b; 
     }

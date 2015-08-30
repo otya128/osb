@@ -123,43 +123,43 @@ class BuiltinFunction
     }*/
     //static double function(double) ABS = &abs!double;
     //static double function(double) SGN = &sgn!double;
-    static double ABS(double arg1)
+    static pure nothrow double ABS(double arg1)
     {
         return abs(arg1);
     }
-    static double SGN(double arg1)
+    static pure nothrow double SGN(double arg1)
     {
         return sgn(arg1);
     }
-    static double SIN(double arg1)
+    static pure nothrow double SIN(double arg1)
     {
         return sin(arg1);
     }
-    static double ASIN(double arg1)
+    static pure nothrow double ASIN(double arg1)
     {
         return asin(arg1);
     }
-    static double SINH(double arg1)
+    static pure nothrow double SINH(double arg1)
     {
         return sinh(arg1);
     }
-    static double COS(double arg1)
+    static pure nothrow double COS(double arg1)
     {
         return cos(arg1);
     }
-    static double ACOS(double arg1)
+    static pure nothrow double ACOS(double arg1)
     {
         return acos(arg1);
     }
-    static double COSH(double arg1)
+    static pure nothrow double COSH(double arg1)
     {
         return cosh(arg1);
     }
-    static double TAN(double arg1)
+    static pure nothrow double TAN(double arg1)
     {
         return tan(arg1);
     }
-    static double ATAN(double arg1, DefaultValue!(double, false) arg2)
+    static pure nothrow double ATAN(double arg1, DefaultValue!(double, false) arg2)
     {
         if(arg2.isDefault)
         {
@@ -167,19 +167,19 @@ class BuiltinFunction
         }
         return atan2(arg1, cast(double)arg2);
     }
-    static double TANH(double arg1)
+    static pure nothrow double TANH(double arg1)
     {
         return tanh(arg1);
     }
-    static double RAD(double arg1)
+    static pure nothrow double RAD(double arg1)
     {
         return arg1 * std.math.PI / 180;
     }
-    static double DEG(double arg1)
+    static pure nothrow double DEG(double arg1)
     {
         return arg1 * 180 / std.math.PI;
     }
-    static double PI()
+    static pure nothrow double PI()
     {
         return std.math.PI;
     }
@@ -331,7 +331,7 @@ class BuiltinFunction
         x = 0;
         y = 0;
     }
-    static int RGB(int R, int G, int B, DefaultValue!(int, false) _)
+    static pure nothrow int RGB(int R, int G, int B, DefaultValue!(int, false) _)
     {
         if(!_.isDefault)
         {
@@ -362,10 +362,9 @@ class BuiltinFunction
             formattedRead(v, "%d/%d/%d", &Y, &M, &D);
         }
     }
-    //hairetuha?
-    static int LEN(wstring str)
+    static int LEN(Value ary)
     {
-        return cast(int)str.length;
+        return ary.length;
     }
 
     static bool tryParse(Target, Source)(ref Source p, out Target result)
@@ -743,15 +742,15 @@ class BuiltinFunction
             return 0;//toriaezu
         }
     }
-    static double FLOOR(double val)
+    static nothrow double FLOOR(double val)
     {
         return val.floor;
     }
-    static double ROUND(double val)
+    static nothrow double ROUND(double val)
     {
         return val.round;
     }
-    static double CEIL(double val)
+    static nothrow double CEIL(double val)
     {
         return val.ceil;
     }
@@ -819,6 +818,8 @@ class BuiltinFunction
     }
     static int ASC(wstring str)
     {
+        if(str.empty)
+            throw new IllegalFunctionCall("ASC");
         return cast(int)str[0];
     }
     static wstring STR(int val)
@@ -1193,11 +1194,11 @@ class BuiltinFunction
     {
         return (cast(wchar)code).to!wstring;
     }
-    static double POW(double a1, double a2)
+    static pure nothrow double POW(double a1, double a2)
     {
         return a1 ^^ a2;
     }
-    static double SQR(double a1)
+    static pure nothrow double SQR(double a1)
     {
         return sqrt(a1);
     }
