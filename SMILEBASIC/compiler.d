@@ -192,11 +192,19 @@ class Compiler
         sysVariable["CSRZ"] = new CSRZ();
         addSystemVariable("VERSION", new Version());
         addSystemVariable("FREEMEM", new FreeMem());
+        addSystemVariable("TABSTEP", new TabStep());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {
         global[name] = VMVariable(-1);
         sysVariable[name] = var;
+    }
+    void registerSystemVariable(VM vm)
+    {
+        foreach(k, ref v; sysVariable)
+        {
+            v.vm = vm;
+        }
     }
     SystemVariable[wstring] sysVariable;
     Code[] code;
@@ -1030,7 +1038,9 @@ class Compiler
                 code[i] = new RestoreCode(s.data.label[restore.label], s.data);
             }
         }
-        return new VM(code, globalIndex + 1, global, functions, s.data, globalLabel, debugInfo);
+        VM vm = new VM(code, globalIndex + 1, global, functions, s.data, globalLabel, debugInfo);
+        registerSystemVariable(vm);
+        return vm;
     }
 }
 

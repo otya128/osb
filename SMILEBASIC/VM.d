@@ -224,7 +224,7 @@ class PrintCode : Code
                 case ValueType.String:
                     //write(arg.stringValue);
                     if(vm.petitcomputer)
-                        vm.petitcomputer.printConsole(arg.stringValue);
+                        vm.petitcomputer.printConsoleString(arg.stringValue);
                     break;
                 default:
                     //type mismatch
@@ -1421,7 +1421,7 @@ class PushSystemVariable : Code
     }
     override void execute(VM vm)
     {
-        vm.push(var.value(vm));
+        vm.push(var.value);
     }
     override string toString(VM vm)
     {

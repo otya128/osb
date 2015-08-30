@@ -1602,7 +1602,10 @@ class PetitComputer
             printConsoleString(i.to!wstring);
         }
     }
+    //0<=TABSTEP<=16
+    int TABSTEP = 4;
     byte consoleAttr;
+    int tab;
     void printConsoleString(wstring text)
     {
         //consolem.lock();
@@ -1614,16 +1617,32 @@ class PetitComputer
             {
                 CSRY = consoleHeightC - 1;
             }
-            if(c != '\r' && c != '\n')
+            if(c == '\t')
             {
-                consoleC[CSRY][CSRX].character = c;
-                consoleC[CSRY][CSRX].foreColor = consoleForeColor;
-                consoleC[CSRY][CSRX].backColor = consoleBackColor;
-                consoleC[CSRY][CSRX].z = CSRZ;
-                consoleC[CSRY][CSRX].attr = consoleAttr;
+                import std.algorithm : min;
+                if(tab == 2 && CSRX == 0)
+                {
+                    CSRX--;
+                }
+                else
+                {
+                    auto t = min(CSRX + TABSTEP - CSRX % TABSTEP, consoleWidthC - 1);
+                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
+                    CSRX += TABSTEP - (CSRX % TABSTEP) - 1;
+                    if(CSRX + 1 >= consoleWidthC)
+                    {
+                        CSRX = consoleWidthC - 2;
+                    }
+                    tab = true;
+                }
+            }
+            else if(c != '\n')
+            {
+                consoleC[CSRY][CSRX] = ConsoleCharacter(c, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
+                tab = tab ? 2 : 0;
             }
             CSRX++;
-            if(CSRX >= consoleWidthC || c == '\n' || c == '\r')
+            if(CSRX >= consoleWidthC || c == '\n')
             {
                 CSRX = 0;
                 CSRY++;
