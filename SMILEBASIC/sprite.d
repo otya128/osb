@@ -273,7 +273,7 @@ struct SpriteData
         this.define = false;
         this.attr = SpriteAttr.none;
     }
-    void change(SpriteDef s)
+    void change(ref SpriteDef s)
     {
         this.u = s.u;
         this.v = s.v;
@@ -316,6 +316,8 @@ class Sprite
         {
             defSPDEFTable[record.I] = SpriteDef(record.X, record.Y, record.W, record.H, record.HX, record.HY, cast(SpriteAttr)record.ATTR);
         }
+        //defSPDEFTable[1208].u = 176;
+        //defSPDEFTable[1208 + 2048].u = 176;
         spdef;
     }
     void spdef()
@@ -496,11 +498,11 @@ class Sprite
                         sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
                         break;
                     case SpriteAnimTarget.UV:
-                        sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
-                        sprite.v = data.old.v + ((data.data.v - data.old.v) / data.frame) * frame;
+                        sprite.u = data.old.u + cast(int)(((data.data.u - data.old.u) / cast(double)data.frame) * frame);
+                        sprite.v = data.old.v + cast(int)(((data.data.v - data.old.v) / cast(double)data.frame) * frame);
                         break;
                     case SpriteAnimTarget.I:
-                        sprite.defno = data.old.i + ((data.data.i - data.old.i) / data.frame) * frame;
+                        sprite.defno = data.old.i + cast(int)(((data.data.i - data.old.i) / cast(double)data.frame) * frame);
                         spchr(sprite.id, sprite.defno);
                         break;
                     case SpriteAnimTarget.R:
@@ -614,17 +616,19 @@ class Sprite
             }
         }
         float disw = 200f, dish = 120f, disw2 = 400f, dish2 = 240f;
+        int dis;
         if(petitcom.xscreenmode == 2)
         {
             disw = 160f;
             disw2 = 320f;
             dish = 240f;
             dish2 = 480f;
+            dis = -1;
         }
         auto texture = petitcom.GRP[petitcom.sppage].glTexture;
         float aspect = disw2 / dish2;
         float z = -0.01f;
-        int spmax = petitcom.xscreenmode == 1 ? this.spmax : -1;//XSCREENが2,3じゃないと下画面は描画しない
+        int spmax = petitcom.xscreenmode == 1 ? this.spmax : 512;//XSCREENが2,3じゃないと下画面は描画しない
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
         // glDisable(GL_TEXTURE_2D);
@@ -632,13 +636,6 @@ class Sprite
         glLoadIdentity();
         foreach(i, sprite; zsortedSprites)
         {
-            if(i == spmax)
-            {
-                disw = 160f;
-                disw2 = 320f;
-                glViewport(40, 0, 320, 240);
-                aspect = disw2 / dish2;
-            }
             //定義されてたら動かす
             if(sprite.define)
             {
@@ -646,6 +643,28 @@ class Sprite
             }
             if(sprite.attr & SpriteAttr.show)
             {
+                if(dis != -1)
+                {
+                    if(!dis && sprite.id >= spmax)
+                    {
+                        disw = 160f;
+                        disw2 = 320f;
+                        glViewport(40, 0, 320, 240);
+                        aspect = disw2 / dish2;
+                        dis = true;
+                    }
+                    else
+                    {
+                        if(sprite.id < spmax && dis)
+                        {
+                            disw = 200f;
+                            disw2 = 400f;
+                            glViewport(0, 240, 400, 240);
+                            aspect = disw2 / dish2;
+                            dis = false;
+                        }
+                    }
+                }
                 int x, y;
                 if(sprite.parent)
                 {

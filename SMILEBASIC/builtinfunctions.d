@@ -234,6 +234,22 @@ class BuiltinFunction
     static void VISIBLE(PetitComputer p, DefaultValue!(int) console, DefaultValue!(int) graphic, DefaultValue!(int) BG, DefaultValue!(int) sprite)
     {
     }
+    static void XON(PetitComputer p, Value mode/*!?!???!?*/)
+    {
+    }
+    static void XOFF(PetitComputer p, Value mode/*!?!???!?*/)
+    {
+    }
+    static void TOUCH(PetitComputer p, DefaultValue!(int, false) id, out int tm, out int tchx, out int tchy)
+    {
+        if(!id.isDefault)
+        {
+            writeln("NOTIMPL:TOUCH MPID");
+        }
+        tm = 0;
+        tchx = 0;
+        tchy = 0;
+    }
     static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
     {
         a.setDefaultValue(512);
@@ -304,6 +320,12 @@ class BuiltinFunction
     {
     }
     static void STICK(PetitComputer p, DefaultValue!(int, false) mp, out int x, out int y)
+    {
+        //JOYSTICK?
+        x = 0;
+        y = 0;
+    }
+    static void STICKEX(PetitComputer p, DefaultValue!(int, false) mp, out int x, out int y)
     {
         //JOYSTICK?
         x = 0;
@@ -950,8 +972,9 @@ class BuiltinFunction
     {
         p.sprite.getspdef(id, U, V, W, H, HX, HY, A);
     }
-    static void SPDEF(PetitComputer p, Value[] va_args)
+    static void SPDEF(PetitComputer p, Value[] va_args2)
     {
+        auto va_args = retro(va_args2);
         switch(va_args.length)
         {
             case 0:

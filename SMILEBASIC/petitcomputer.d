@@ -1051,6 +1051,7 @@ class PetitComputer
         {
             parser = new Parser(
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                     //readText("./SYS/GAME7EXPAD.TXT").to!wstring
                                      readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
