@@ -1,5 +1,8 @@
-﻿# otyaSMILEBASIC
+# otyaSMILEBASIC
 SMILEBASIC 3.x互換BASIC
+
+<img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
+
 ## 速度
 実行環境によるものの3DSよりは速い。
 SYS/EX8TECDEMOのSPEED TEST括弧は旧3DS
