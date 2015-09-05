@@ -1052,11 +1052,11 @@ class PetitComputer
             parser = new Parser(
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
                                      //readText("./SYS/GAME7EXPAD.TXT").to!wstring
-                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     //readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                      //readText("./SYS/EX1TEXT.TXT").to!wstring
                                      //readText("FIZZBUZZ.TXT").to!wstring
                                      //readText("TEST.TXT").to!wstring
@@ -1119,7 +1119,17 @@ class PetitComputer
             }
         }
         else
-        {
+        {/*
+            if(!vm)
+            {
+                import otya.smilebasic.vm;
+                vm = new VM();
+                vm.init(this);
+            }
+            auto prg = input("", true);
+            parser = new Parser(prg);
+            vm.code.append(parser.compiler.compileProgram());*/
+            version(none)
             do
             {
                 auto file = input("LOAD PROGRAM:", true).to!string;

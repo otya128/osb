@@ -495,6 +495,11 @@ class Parser
                 return - - -1;
         }
     }
+    auto compiler()
+    {
+        auto compiler = new Compiler(parseProgram());
+        return compiler;
+    }
     auto compile()
     {
         auto compiler = new Compiler(parseProgram());

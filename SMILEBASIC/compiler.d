@@ -73,6 +73,7 @@ class DataTable
 }
 class Function
 {
+    static const frameSize = 3;
     int address;
     wstring name;
     int argCount;
@@ -82,13 +83,20 @@ class Function
     int[wstring] label;
     bool returnExpr;
     int outArgCount;
+    /**
+    0:bp
+    1:pc
+    2:data table(global)
+    3:data index
+    4:function pointer
+    */
     this(int address, wstring name, bool returnExpr, int argCount)
     {
         this.address = address;
         this.name = name;
         this.returnExpr = returnExpr;
         this.argCount = argCount;
-        this.variableIndex = 1;//0,bp,1,pc
+        this.variableIndex = frameSize - 1;//1;//0,bp,1,pc
         if(returnExpr)
         {
             outArgCount = 1;
@@ -962,9 +970,10 @@ class Compiler
         }
         this.debugInfo.addLocation(i.location, code);
     }
-    VM compile()
+    Scope globalScope;
+    Code[] compileProgram()
     {
-        Scope s = new Scope();
+        Scope s = globalScope = new Scope();
         foreach(Statement i ; statements.statements)
         {
             if(i.type == NodeType.DefineFunction)
@@ -1038,7 +1047,15 @@ class Compiler
                 code[i] = new RestoreCode(s.data.label[restore.label], s.data);
             }
         }
-        VM vm = new VM(code, globalIndex + 1, global, functions, s.data, globalLabel, debugInfo);
+        genCode(new EndVM());
+        return code;
+    }
+    VM compile()
+    {
+        compileProgram();
+        VM vm = new VM();
+        vm.loadSlot(0, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
+        vm.setCurrentSlot(0);
         registerSystemVariable(vm);
         return vm;
     }

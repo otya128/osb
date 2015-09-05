@@ -10,6 +10,13 @@ enum ValueType : byte
     IntegerArray,
     DoubleArray,
     StringArray,
+    InternalAddress,
+    InternalSlotAddress,
+}
+struct VMAddress
+{
+    byte slot;
+    uint address;
 }
 struct Value
 {
@@ -23,6 +30,7 @@ struct Value
         Array!int integerArray;
         Array!double doubleArray;
         Array!wstring stringArray;
+        VMAddress internalAddress;
     }
     this(int value)
     {

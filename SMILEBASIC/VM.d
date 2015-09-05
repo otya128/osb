@@ -23,48 +23,69 @@ struct VMVariable
         this.index = index;
     }
 }
-class VM
+class VMSlot
 {
+    bool isUsed;
     DataTable globalDataTable;
     Code[] code;
     SourceLocation[] location;
-    int stacki;
-    int pc;
-    Value[] stack;
     Value[] global;
     VMVariable[wstring] globalTable;
     Function[wstring] functions;
     int[wstring] globalLabel;
+    DebugInfo debugInfo;
+}
+class VM
+{
+    static const directModeSlot = 5;
+    VMSlot[6] slots;
+    int slot;
+    VMSlot currentSlot;
+    int stacki;
+    int pc;
+    Value[] stack;
     int bp;
     PetitComputer petitcomputer;
-    DebugInfo debugInfo;
-    this(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+    this()
+    {
+        this.stack = new Value[16384];
+        for(int i = 0; i < slots.length; i++)
+        {
+            slots[i] = new VMSlot();
+        }
+    }
+    void setCurrentSlot(int slot)
+    {
+        currentSlot = slots[slot];
+    }
+    void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
          int[wstring] globalLabel, DebugInfo dinfo)
     {
-        this.code = code;
-        this.stack = new Value[16384];
-        this.global = new Value[len];
-        this.globalTable = globalTable;
+        auto s = this.slots[slot];
+        s.isUsed = true;
+        s.code = code;
+        s.global = new Value[len];
+        s.globalTable = globalTable;
         foreach(wstring k, VMVariable v ; globalTable)
         {
             if(v.index >= 0)
-                this.global[v.index] = Value(v.type);
+                s.global[v.index] = Value(v.type);
         }
-        this.functions = functions;
-        this.globalDataTable = gdt;
-        this.globalLabel = globalLabel;
-        this.debugInfo = dinfo;
+        s.functions = functions;
+        s.globalDataTable = gdt;
+        s.globalLabel = globalLabel;
+        s.debugInfo = dinfo;
     }
     Code getCurrent()
     {
-        return code[pc];
+        return currentSlot.code[pc];
     }
     void run()
     {
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
-        for(pc = 0; pc < this.code.length; pc++)
+        for(pc = 0; pc < this.currentSlot.code.length; pc++)
         {
-            code[pc].execute(this);
+            currentSlot.code[pc].execute(this);
         }
         if(stacki != 0)
         {
@@ -73,7 +94,7 @@ class VM
     }
     SourceLocation currentLocation()
     {
-        return debugInfo.getLocationByAddress(pc);
+        return currentSlot.debugInfo.getLocationByAddress(pc);
     }
     void init(PetitComputer petitcomputer)
     {
@@ -82,13 +103,37 @@ class VM
     }
     bool runStep()
     {
-        if(pc < this.code.length)
+        if(pc < this.currentSlot.code.length)
         {
-            code[pc].execute(this);
+            currentSlot.code[pc].execute(this);
             pc++;
             return true;
         }
         return false;
+    }
+    void poppc()
+    {
+        Value value;
+        pop(value);
+        if(value.type == ValueType.InternalAddress)
+        {
+            pc = value.integerValue;
+            return;
+        }
+        if(value.type == ValueType.InternalSlotAddress)
+        {
+            pc = value.internalAddress.address;
+            setCurrentSlot(value.internalAddress.slot);
+            return;
+        }
+        assert(false, "internal error, compiler bug?");
+    }
+    void pushpc()
+    {
+        Value value;
+        value.type = ValueType.InternalAddress;
+        value.integerValue = pc;
+        push(value);
     }
     void push(ref Value value)
     {
@@ -127,20 +172,20 @@ class VM
     }
     Value testGetGlobalVariable(wstring name)
     {
-        return global[globalTable[name].index];
+        return currentSlot.global[currentSlot.globalTable[name].index];
     }
     void end()
     {
-        pc = cast(int)code.length;
+        pc = cast(int)currentSlot.code.length;
     }
     void dump()
     {
-        foreach(i, c; code)
+        foreach(i, c; currentSlot.code)
             writefln("%04X:%s", i, c.toString(this));
     }
     wstring getGlobalVarName(int index)
     {
-        foreach(k, v; globalTable)
+        foreach(k, v; currentSlot.globalTable)
         {
             if(v.index == index) return k;
         }
@@ -149,21 +194,21 @@ class VM
     Value readData()
     {
         Value value;
-        this.globalDataTable.read(value, this);
+        this.currentSlot.globalDataTable.read(value, this);
         return value;
     }
     void restoreData(wstring label)
     {
-        this.globalDataTable.dataIndex = this.globalDataTable.label[label];
+        this.currentSlot.globalDataTable.dataIndex = this.currentSlot.globalDataTable.label[label];
     }
     int olddti;
     void pushDataIndex()
     {
-        olddti = this.globalDataTable.dataIndex;
+        olddti = this.currentSlot.globalDataTable.dataIndex;
     }
     void popDataIndex()
     {
-       this.globalDataTable.dataIndex = olddti;
+       this.currentSlot.globalDataTable.dataIndex = olddti;
     }
 }
 enum CodeType
@@ -269,7 +314,7 @@ class PushG : Code
     }
     override void execute(VM vm)
     {
-        vm.push(vm.global[var]);
+        vm.push(vm.currentSlot.global[var]);
     }
     override string toString(VM vm)
     {
@@ -287,28 +332,28 @@ class PopG : Code
     override void execute(VM vm)
     {
         Value v;
-        Value g = vm.global[var];
+        Value g = vm.currentSlot.global[var];
         vm.pop(v);
         if(v.type == ValueType.Integer && g.type == ValueType.Double)
         {
-            vm.global[var] = Value(cast(double)v.integerValue);
+            vm.currentSlot.global[var] = Value(cast(double)v.integerValue);
             return;
         }
         if(g.type == ValueType.Integer && v.type == ValueType.Double)
         {
-            vm.global[var] = Value(cast(int)v.doubleValue);
+            vm.currentSlot.global[var] = Value(cast(int)v.doubleValue);
             return;
         }
         if(g.type == ValueType.Void)
         {
-            vm.global[var] = v;
+            vm.currentSlot.global[var] = v;
             return;
         }
         if(v.type != g.type)
         {
             throw new TypeMismatch();
         }
-        vm.global[var] = v;
+        vm.currentSlot.global[var] = v;
     }
     override string toString(VM vm)
     {
@@ -654,7 +699,7 @@ class GotoExpr : Code
         vm.pop(label);
         if(!label.isString)
         {
-            vm.pc = vm.globalLabel[label.castString] - 1;
+            vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
         }
         else
         {
@@ -672,7 +717,7 @@ class GosubAddr : Code
     }
     override void execute(VM vm)
     {
-        vm.push(Value(vm.pc));
+        vm.pushpc;//vm.push(Value(vm.pc));
         vm.pc = address - 1;
     }
     override string toString(VM vm)
@@ -708,8 +753,8 @@ class GosubExpr : Code
         vm.pop(label);
         if(label.isString)
         {
-            vm.push(Value(vm.pc));
-            vm.pc = vm.globalLabel[label.castString] - 1;
+            vm.pushpc;//vm.push(Value(vm.pc));
+            vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
         }
         else
         {
@@ -730,14 +775,16 @@ class ReturnSubroutine : Code
         {
             throw new ReturnWithoutGosub();
         }
-        vm.pop(pc);
-        if(pc.type != ValueType.Integer || pc.integerValue < 0 || pc.integerValue >= vm.code.length)
+        /*vm.pop(pc);
+        if(pc.type != ValueType.Integer || pc.integerValue < 0 || pc.integerValue >= vm.currentSlot.code.length)
         {
             stderr.writeln("Internal error:Compiler bug?");
             readln();
             return;
         }
         vm.pc = pc.integerValue;
+        */
+        vm.poppc;
     }
     override string toString(VM vm)
     {
@@ -896,7 +943,7 @@ class PopArray : Code
         }
         else
         {
-            array = vm.global[var];
+            array = vm.currentSlot.global[var];
         }
         if(!array.isArray)
         {
@@ -969,10 +1016,12 @@ class ReturnFunction : Code
         {
             vm.pop(retexpr);
         }
-        vm.stacki = vm.bp + 2;
+        vm.stacki = vm.bp + Function.frameSize;//2;
         Value bp, pc;
-        vm.pop(pc);
+        vm.poppc;//(pc);
         vm.pop(bp);
+        Value hae;
+        vm.pop(hae);
         vm.stacki -= func.argCount;
         if(func.returnExpr)
         {
@@ -983,10 +1032,10 @@ class ReturnFunction : Code
             //OUTの実装
             for(int i = 0; i < func.outArgCount; i++)
             {
-                vm.push(vm.stack[vm.bp + i + 2]);
+                vm.push(vm.stack[vm.bp + i + /*2*/Function.frameSize]);
             }
         }
-        vm.pc = pc.integerValue;
+        //vm.pc = pc.integerValue;
         vm.bp = bp.integerValue;
     }
     override string toString(VM vm)
@@ -1013,7 +1062,7 @@ class CallFunctionCode : Code
     }
     override void execute(VM vm)
     {
-        Function func = vm.functions.get(name, null);
+        Function func = vm.currentSlot.functions.get(name, null);
         if(!func)
         {
             throw new SyntaxError(name);
@@ -1028,8 +1077,9 @@ class CallFunctionCode : Code
         }
         //TODO:args
         auto bp = vm.stacki;
+        vm.push(Value());
         vm.push(Value(vm.bp));
-        vm.push(Value(vm.pc));
+        vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
         vm.pc = func.address - 1;
         vm.stacki += func.variableIndex - 1;
@@ -1104,7 +1154,7 @@ class IncCodeG : Code
     override void execute(VM vm)
     {
         Value v;
-        Value g = vm.global[var];
+        Value g = vm.currentSlot.global[var];
         vm.pop(v);
         if(!g.isNumber() && g.type != ValueType.String)
         {
@@ -1119,15 +1169,15 @@ class IncCodeG : Code
             double l = g.castDouble;
             double r = v.castDouble;
             if(v.type == ValueType.Double)
-                vm.global[var] = Value(l + r);
+                vm.currentSlot.global[var] = Value(l + r);
             else
-                vm.global[var] = Value(cast(int)(l + r));
+                vm.currentSlot.global[var] = Value(cast(int)(l + r));
         }
         else
         {
             wstring l = g.stringValue;
             wstring r = v.stringValue;
-            vm.global[var] = Value(l ~ r);
+            vm.currentSlot.global[var] = Value(l ~ r);
         }
     }
     override string toString(VM vm)
@@ -1244,7 +1294,7 @@ class OnGosub : OnBase
     {
         int index = on(vm);
         if(index < 0) return;
-        vm.push(Value(vm.pc));
+        vm.pushpc;//vm.push(Value(vm.pc));
         vm.pc = index - 1;
     }
     override string toString(VM vm)
@@ -1352,7 +1402,7 @@ class ReadCode : Code
         for(int i = 0; i < count; i++)
         {
             Value data;
-            vm.globalDataTable.read(data, vm);
+            vm.currentSlot.globalDataTable.read(data, vm);
             vm.push(data);
         }
     }
