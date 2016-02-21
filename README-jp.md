@@ -1,27 +1,27 @@
 # otyaSMILEBASIC
-SmileBASIC 3.x Compatible BASIC
+SMILEBASIC 3.x互換BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
-# How to build
+# ビルド方法
 ```sh
 git clone git@github.com:otya128/otyaSMILEBASIC.git
 cd otyaSMILEBASIC
 dub run
 ```
 
-## Dependency:build
-+ D compiler
+## コンパイルするのに必要なもの
++ Dコンパイラ
 + dub
 + DerelictSDL2
 + DerelictGL3
 + curl
 
-## Dependency:run
+## 実行時に必要なもの
 + SDL2
 
-## implemented function
-Example code
+## 実装機能
+動くコード例
 ```
 FOR I=0 TO 100
  IF I MOD 3==0 AND I MOD 5==0 THEN
