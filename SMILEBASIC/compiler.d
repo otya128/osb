@@ -163,6 +163,7 @@ class Function
 }
 class Compiler
 {
+    bool isDirectMode;
     ValueType getType(wstring name)
     {
         wchar s = name[name.length - 1];
@@ -1050,8 +1051,15 @@ class Compiler
         genCode(new EndVM());
         return code;
     }
+    void compileDirectMode(VM vm)
+    {
+        isDirectMode = true;
+        compileProgram();
+        vm.directSlot(code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
+    }
     VM compile()
     {
+        isDirectMode = false;
         compileProgram();
         VM vm = new VM();
         vm.loadSlot(0, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);

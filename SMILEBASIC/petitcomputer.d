@@ -233,8 +233,8 @@ class PetitComputer
         rect.y = 0;
         rect.w = src.w;
         rect.h = src.h;
-//        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
-//        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
+        //        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
+        //        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
 
         ubyte sr, sg, sb, sa;
         SDL_GetRGBA((cast(uint*)src.pixels)[0], src.format, &sr, &sg, &sb, &sa);
@@ -347,7 +347,7 @@ class PetitComputer
     }
     void init()
     {
-     //   DerelictGL.load();
+        //   DerelictGL.load();
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = toGLColor(consoleColor[i]);
         if(!exists(resourcePath))
@@ -727,7 +727,7 @@ class PetitComputer
             }
             dt = dm.type;
         }
-        brk:
+    brk:
         if(i == len)
         {
             renderstartpos = 0;
@@ -740,7 +740,6 @@ class PetitComputer
         glBindFramebufferEXT(GL_FRAMEBUFFER, old);
         glEnable(GL_DEPTH_TEST);
         drawflag = false;
-        this.chScreen(0, 0, 400, 240);
         glEnable(GL_ALPHA_TEST);
     }
     Button[] buttonTable;
@@ -802,7 +801,7 @@ class PetitComputer
 
         DerelictGL.load();
         DerelictGL3.load();
-        bool renderprofile = true;
+        bool renderprofile;// = true;
         try
         {
             version(Windows)
@@ -894,6 +893,7 @@ class PetitComputer
                 }
                 glLoadIdentity();
                 renderGraphic();
+                chScreen(0, 0, 400, 240);
                 if(xscreenmode == 1)
                 {
                     chScreen(0, 240, 400, 240);
@@ -1029,7 +1029,7 @@ class PetitComputer
                 }
                 long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                 if(delay > 0)
-                        SDL_Delay(cast(uint)delay);
+                    SDL_Delay(cast(uint)delay);
             }
         }
         catch(Throwable t)
@@ -1058,59 +1058,60 @@ class PetitComputer
         Parser parser;
         otya.smilebasic.vm.VM vm;
         bool running;
+        bool directMode = false;
         //デバッグ用
         version(NDirectMode)
         {
             parser = new Parser(
-                                     //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                     //readText("./SYS/GAME7EXPAD.TXT").to!wstring
-                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
-                                     //readText("./SYS/GAME2RPG.TXT").to!wstring
-                                     //readText("./SYS/GAME1DOTRC.TXT").to!wstring
-                                     //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
-                                     //readText("./SYS/EX1TEXT.TXT").to!wstring
-                                     //readText("FIZZBUZZ.TXT").to!wstring
-                                     //readText("TEST.TXT").to!wstring
-                                     /*"?ABS(-1)
-                                     LOCATE 0,10
-                                     COLOR 5
-                                     FOR I=0 TO 10
-                                     ?I;\"!\",\"=\",FACT(I)
-                                     NEXT
-                                     DEF FACT(N)
-                                     IF N<=1 THEN RETURN 1
-                                     RETURN N*FACT(N-1)
-                                     END"*/
-                                     /*
-                                     `CLS : CL=0 : Z=0
-                                     WHILE 1
-                                     INC Z : IF Z>200 THEN Z=0
-                                     FOR I=0 TO 15
-                                     LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
-                                     PRINT "★ 梅雨で雨が多い季節ですね ★"
-                                     NEXT
-                                     CL=(CL+1) MOD 16 
-                                     WEND`*/
-                                     /*
-                                     `CLS : CL=0
-                                     WHILE 1
-                                     FOR I=0 TO 15
-                                     LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                     PRINT "Ё プチコン3ゴウ Ж"
-                                     NEXT
-                                     CL=(CL+1) MOD 16 : VSYNC 1
-                                     WEND`
-                                     /*
-                                     `CLS : CL=0
-                                     @LOOP
-                                     FOR I=0 TO 15
-                                     LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                     PRINT "Ё プチコン3ゴウ Ж"
-                                     NEXT
-                                     CL=(CL+1) MOD 16 : VSYNC 1
-                                     GOTO @LOOP`*/
-                                     );
+                                //readText("./SYS/GAME6TALK.TXT").to!wstring
+                                //readText("./SYS/GAME7EXPAD.TXT").to!wstring
+                                //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                //readText("./SYS/GAME2RPG.TXT").to!wstring
+                                //readText("./SYS/GAME1DOTRC.TXT").to!wstring
+                                //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
+                                readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                //readText("./SYS/EX1TEXT.TXT").to!wstring
+                                //readText("FIZZBUZZ.TXT").to!wstring
+                                //readText("TEST.TXT").to!wstring
+                                /*"?ABS(-1)
+                                LOCATE 0,10
+                                COLOR 5
+                                FOR I=0 TO 10
+                                ?I;\"!\",\"=\",FACT(I)
+                                NEXT
+                                DEF FACT(N)
+                                IF N<=1 THEN RETURN 1
+                                RETURN N*FACT(N-1)
+                                END"*/
+                                /*
+                                `CLS : CL=0 : Z=0
+                                WHILE 1
+                                INC Z : IF Z>200 THEN Z=0
+                                FOR I=0 TO 15
+                                LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
+                                PRINT "★ 梅雨で雨が多い季節ですね ★"
+                                NEXT
+                                CL=(CL+1) MOD 16 
+                                WEND`*/
+                                /*
+                                `CLS : CL=0
+                                WHILE 1
+                                FOR I=0 TO 15
+                                LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                PRINT "Ё プチコン3ゴウ Ж"
+                                NEXT
+                                CL=(CL+1) MOD 16 : VSYNC 1
+                                WEND`
+                                /*
+                                `CLS : CL=0
+                                @LOOP
+                                FOR I=0 TO 15
+                                LOCATE 9,4+I : COLOR (CL+I) MOD 16
+                                PRINT "Ё プチコン3ゴウ Ж"
+                                NEXT
+                                CL=(CL+1) MOD 16 : VSYNC 1
+                                GOTO @LOOP`*/
+                                );
             try
             {
                 vm = parser.compile();
@@ -1131,130 +1132,145 @@ class PetitComputer
             }
         }
         else
-        {/*
-            if(!vm)
-            {
-                import otya.smilebasic.vm;
-                vm = new VM();
-                vm.init(this);
-            }
-            auto prg = input("", true);
-            parser = new Parser(prg);
-            vm.code.append(parser.compiler.compileProgram());*/
-            version(none)
-            do
-            {
-                auto file = input("LOAD PROGRAM:", true).to!string;
-                try
-                {
-                    parser = new Parser(readText(file).to!wstring);
-                }
-                catch(Throwable t)
-                {
-                    writeln(t);
-                    printConsole("can't open program \"", file, "\".\n");
-                    continue;
-                }
-                try
-                {
-                    vm = parser.compile();
-                    vm.init(this);
-                    running = true;
-                }
-                catch(SmileBasicError sbe)
-                {
-                    printConsole(sbe.getErrorMessage, "\n");
-                    printConsole(sbe.getErrorMessage2, "\n");
-                    //printConsole(sbe.to!string);
-                    writeln(sbe.to!string);
-                    writeln(sbe.getErrorMessage2);
-                    continue;
-                }
-                catch(Throwable t)
-                {
-                    writeln(t);
-                    continue;
-                }
-                break;
-            } while(!quit);
-        }
-        if(quit) return;
-        //vm.dump;
-        this.vm = vm;
-        bg[0].put(0,0,1);
-        //gpset(0, 10, 10, 0xFF00FF00);
-        //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
-        //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
-        //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
-        int startcnt = SDL_GetTicks();
-        float frame = 1000f / 60f;
-        typeof(vm.currentLocation()) loc;
-        debug bool trace = false;
-        while (true)
         {
-            uint elapse;
-            startTicks = SDL_GetTicks();
-            //do
-            {
-                try
+            directMode = true;
+            /*vm.code.append(parser.compiler.compileProgram());*/
+            version(none)
+                do
                 {
-                    for(int i = 0; i < 128 && !vsyncFrame && running; i++)
-                    {
-                        //writefln("%04X:%s", vm.pc, vm.getCurrent);
-                        running = vm.runStep();
-                        debug if(trace && loc.line != vm.currentLocation.line)
-                        {
-                            loc = vm.currentLocation;
-                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
-                        }
-                    }
-                }
-                catch(SmileBasicError sbe)
-                {
-                    running = false;
+                    auto file = input("LOAD PROGRAM:", true).to!string;
                     try
+                    {
+                        parser = new Parser(readText(file).to!wstring);
+                    }
+                    catch(Throwable t)
+                    {
+                        writeln(t);
+                        printConsole("can't open program \"", file, "\".\n");
+                        continue;
+                    }
+                    try
+                    {
+                        vm = parser.compile();
+                        vm.init(this);
+                        running = true;
+                    }
+                    catch(SmileBasicError sbe)
                     {
                         printConsole(sbe.getErrorMessage, "\n");
                         printConsole(sbe.getErrorMessage2, "\n");
                         //printConsole(sbe.to!string);
                         writeln(sbe.to!string);
                         writeln(sbe.getErrorMessage2);
-                         loc = vm.currentLocation;
-                        printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                        continue;
                     }
                     catch(Throwable t)
                     {
                         writeln(t);
+                        continue;
                     }
-                }
-                catch(Throwable t)
+                    break;
+                } while(!quit);
+        }
+        if(quit) return;
+        do
+        {
+            if(directMode)
+            {
+                if(!vm)
                 {
-                    running = false;
+                    import otya.smilebasic.vm;
+                    vm = (new Parser("")).compile;
+                    vm.init(this);
+                }
+                auto prg = input("", true);
+                parser = new Parser(prg);
+                auto cc = parser.compiler;
+                cc.compileDirectMode(vm);
+                vm.dump();
+                running = true;
+            }
+            //vm.dump;
+            this.vm = vm;
+            bg[0].put(0,0,1);
+            //gpset(0, 10, 10, 0xFF00FF00);
+            //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
+            //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
+            //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
+            int startcnt = SDL_GetTicks();
+            float frame = 1000f / 60f;
+            typeof(vm.currentLocation()) loc;
+            debug bool trace = false;
+            while (true)
+            {
+                uint elapse;
+                startTicks = SDL_GetTicks();
+                //do
+                {
                     try
                     {
-                        printConsole(t.to!string);
-                        writeln(t);
-                        printConsole(parser.getLine(vm.currentLocation));
+                        for(int i = 0; i < 128 && !vsyncFrame && running; i++)
+                        {
+                            //writefln("%04X:%s", vm.pc, vm.getCurrent);
+                            running = vm.runStep();
+                            debug if(trace && loc.line != vm.currentLocation.line)
+                            {
+                                loc = vm.currentLocation;
+                                printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                            }
+                        }
+                        if(!running)
+                        {
+                            if(directMode) break;
+                        }
+                    }
+                    catch(SmileBasicError sbe)
+                    {
+                        running = false;
+                        try
+                        {
+                            printConsole(sbe.getErrorMessage, "\n");
+                            printConsole(sbe.getErrorMessage2, "\n");
+                            //printConsole(sbe.to!string);
+                            writeln(sbe.to!string);
+                            writeln(sbe.getErrorMessage2);
+                            loc = vm.currentLocation;
+                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                        }
+                        catch(Throwable t)
+                        {
+                            writeln(t);
+                        }
                     }
                     catch(Throwable t)
                     {
-                        writeln(t);
+                        running = false;
+                        try
+                        {
+                            printConsole(t.to!string);
+                            writeln(t);
+                            printConsole(parser.getLine(vm.currentLocation));
+                        }
+                        catch(Throwable t)
+                        {
+                            writeln(t);
+                        }
                     }
+                    //elapse = SDL_GetTicks() - startTicks;
+                } //while(elapse <= 1000 / 60);
+                if(vsyncFrame)
+                {
+                    SDL_Delay(cast(uint)(vsyncFrame * frame));
+                    vsyncFrame = 0;
                 }
-                //elapse = SDL_GetTicks() - startTicks;
-            } //while(elapse <= 1000 / 60);
-            if(vsyncFrame)
-            {
-                SDL_Delay(cast(uint)(vsyncFrame * frame));
-                vsyncFrame = 0;
+                maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
+                if(quit)
+                {
+                    quit = false;
+                    break;
+                }
             }
-            maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
-            if(quit)
-            {
-                quit = false;
-                break;
-            }
-        }
+        } while(directMode);
         scope(exit)
         {
             writeln("quit");
@@ -1306,12 +1322,13 @@ class PetitComputer
                     CSRX--;
                     continue;
                 }
-                printConsole(key);
                 if(key == '\r')
                 {
                     k = key;
+                    printConsole("\n");
                     break;
                 }
+                printConsole(key);
                 buffer ~= key;
             }
             clearKeyBuffer();

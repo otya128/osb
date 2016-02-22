@@ -60,6 +60,7 @@ class VM
     void directSlot(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
                     int[wstring] globalLabel, DebugInfo dinfo)
     {
+        this.pc = currentSlot.code.length;
         this.currentSlot.code ~= code;
     }
     void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
