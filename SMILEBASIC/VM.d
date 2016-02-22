@@ -37,8 +37,7 @@ class VMSlot
 }
 class VM
 {
-    static const directModeSlot = 5;
-    VMSlot[6] slots;
+    VMSlot[5] slots;
     int slot;
     VMSlot currentSlot;
     int stacki;
@@ -57,6 +56,11 @@ class VM
     void setCurrentSlot(int slot)
     {
         currentSlot = slots[slot];
+    }
+    void directSlot(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+                    int[wstring] globalLabel, DebugInfo dinfo)
+    {
+        this.currentSlot.code ~= code;
     }
     void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
          int[wstring] globalLabel, DebugInfo dinfo)

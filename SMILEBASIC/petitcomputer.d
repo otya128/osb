@@ -617,6 +617,13 @@ class PetitComputer
     }
     Paint paint;
     int renderstartpos;
+    void chScreen(int x, int y, int w, int h)
+    {
+        glViewport(x, y, w, h);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, w, h, 0, 10,-10/*-256, 1024*/);
+    }
     void renderGraphic()
     {
         if(!drawMessageLength) return;
@@ -632,8 +639,16 @@ class PetitComputer
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
+
         //glAlphaFunc(GL_GEQUAL, 0.0);
-        glViewport(0, 0, 512, 512);
+        void chScreen(int x, int y, int w, int h)
+        {
+            glViewport(x, y, w, h);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, w, 0, h, -256, 1024);//wakaranai
+        }
+        chScreen(0, 0, 511, 511);
         DrawType dt;
         auto start = SDL_GetTicks();
         int i = s;
@@ -651,7 +666,7 @@ class PetitComputer
                 case DrawType.PSET:
                     glBegin(GL_POINTS);
                     glColor4ubv(cast(ubyte*)&dm.color);
-                    glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
+                    glVertex2f(dm.x, dm.y);
                     glEnd();
                     //draw.gpset(dm.page, dm.x, dm.y ,dm.color);
                     break;
@@ -659,8 +674,8 @@ class PetitComputer
                     {
                         glBegin(GL_LINES);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
-                        glVertex2f((dm.x2) / size - 1, (dm.y2) / size - 1);
+                        glVertex2f(dm.x, dm.y);
+                        glVertex2f(dm.x2, dm.y2);
                         //glFlush();
                         glEnd();
                     }
@@ -670,10 +685,10 @@ class PetitComputer
                     {
                         glBegin(GL_QUADS);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
-                        glVertex2f((dm.x) / size - 1, (dm.y2 + 1) / size - 1);
-                        glVertex2f((dm.x2 + 1) / size - 1, (dm.y2 + 1) / size - 1);
-                        glVertex2f((dm.x2 + 1) / size - 1, (dm.y) / size - 1);
+                        glVertex2f(dm.x, dm.y);
+                        glVertex2f(dm.x, dm.y2);
+                        glVertex2f(dm.x2, dm.y2);
+                        glVertex2f(dm.x2, dm.y);
                         glEnd();
                     }
                     //draw.gfill(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
@@ -682,10 +697,10 @@ class PetitComputer
                     {
                         glBegin(GL_LINE_LOOP);
                         glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f((dm.x) / size - 1, (dm.y) / size - 1);
-                        glVertex2f((dm.x) / size - 1, (dm.y2) / size - 1);
-                        glVertex2f((dm.x2) / size - 1, (dm.y2) / size - 1);
-                        glVertex2f((dm.x2) / size - 1, (dm.y) / size - 1);
+                        glVertex2f(dm.x, dm.y);
+                        glVertex2f(dm.x, dm.y2);
+                        glVertex2f(dm.x2, dm.y2);
+                        glVertex2f(dm.x2, dm.y);
                         glEnd();
                     }
                     //draw.gbox(dm.page, dm.x, dm.y ,dm.x2, dm.y2, dm.color);
@@ -725,7 +740,7 @@ class PetitComputer
         glBindFramebufferEXT(GL_FRAMEBUFFER, old);
         glEnable(GL_DEPTH_TEST);
         drawflag = false;
-        glViewport(0, 0, 400, 240);
+        this.chScreen(0, 0, 400, 240);
         glEnable(GL_ALPHA_TEST);
     }
     Button[] buttonTable;
@@ -787,7 +802,7 @@ class PetitComputer
 
         DerelictGL.load();
         DerelictGL3.load();
-        bool renderprofile;//e = true;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -835,7 +850,7 @@ class PetitComputer
                 return;
             }
             GRPF.createTexture(renderer);
-            glViewport(0, 0, 400, 240);
+            chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
             version(Windows)
@@ -881,28 +896,25 @@ class PetitComputer
                 renderGraphic();
                 if(xscreenmode == 1)
                 {
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
                 if(xscreenmode == 2)
                 {
-                    glViewport(0, 0, 320, 480);
+                    chScreen(0, 0, 320, 480);
                 }
                 //描画の順位
                 //sprite>GRP>console>BG
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                glEnable(GL_BLEND);
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 if(xscreenmode == 1)
                 {
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
-                glEnable(GL_BLEND);
                 if(xscreenmode == 1)
                 {
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
-                glEnable(GL_BLEND);
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 if(xscreenmode == 2)
@@ -915,18 +927,18 @@ class PetitComputer
                 }
                 if(xscreenmode == 1)
                 {
-                    glViewport(40, 0, 320, 240);
+                    chScreen(40, 0, 320, 240);
                     renderGraphicPage(1, 320, 240);
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
                 if(xscreenmode == 2)
                 {
-                    glViewport(0, 0, 320, 480);
+                    chScreen(0, 0, 320, 480);
                 }
                 renderConsoleGL();
                 if(xscreenmode == 1)
                 {
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
@@ -946,12 +958,12 @@ class PetitComputer
                     }
                     if(xscreenmode == 1)
                     {
-                        glViewport(40, 0, 320, 240);
+                        chScreen(40, 0, 320, 240);
                         for(int i = bgmax; i < bg.length; i++)
                         {
                             bg[i].render(320f, 240f);
                         }
-                        glViewport(0, 240, 400, 240);
+                        chScreen(0, 240, 400, 240);
                     }
                 }
                 version(test) glLoadIdentity();
@@ -959,7 +971,7 @@ class PetitComputer
 
                 if(xscreenmode == 1)
                 {
-                    glViewport(0, 240, 400, 240);
+                    chScreen(0, 240, 400, 240);
                 }
                 //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
                 //とりあえず一番楽な方法
@@ -1456,13 +1468,13 @@ class PetitComputer
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
         glTexCoord2f(0 / 512f - 1 , h / 512f - 1);
-        glVertex3f(-1, -1, z);
+        glVertex3f(0, h, z);
         glTexCoord2f(0 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(-1, 1, z);
+        glVertex3f(0, 0, z);
         glTexCoord2f(w / 512f - 1, 0 / 512f - 1);
-        glVertex3f(1, 1, z);
+        glVertex3f(w, 0, z);
         glTexCoord2f(w / 512f - 1, h / 512f - 1);
-        glVertex3f(1, -1, z);
+        glVertex3f(w, h, z);
         glEnd();
         //glFlush();
     }
@@ -1478,18 +1490,18 @@ class PetitComputer
                 {
                     auto back = consoleColorGL[console4[y][x].backColor];
                     glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, 0.9f);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8) / 240f, 0.9f);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8) / 240f, 0.9f);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, 0.9f);
+                    glVertex3f(x * 8, y * 8 + 8, 0.9f);
+                    glVertex3f(x * 8, y * 8, 0.9f);
+                    glVertex3f(x * 8 + 8, y * 8, 0.9f);
+                    glVertex3f(x * 8 + 8, y * 8 + 8, 0.9f);
                 }
             if(showCursor && animationCursor)
             {
                 glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-                glVertex3f((CSRX * 8) / 160f - 1, 1 - (CSRY * 8 + 8) / 240f, -0.9f);
-                glVertex3f((CSRX * 8) / 160f - 1, 1 - (CSRY * 8) / 240f, -0.9f);
-                glVertex3f((CSRX * 8 + 2) / 160f - 1, 1 - (CSRY * 8) / 240f, -0.9f);
-                glVertex3f((CSRX * 8 + 2) / 160f - 1, 1 - (CSRY * 8 + 8) / 240f, -0.9f);
+                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -0.9f);
+                glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
             }
             glEnd();
             glEnable(GL_TEXTURE_2D);
@@ -1503,13 +1515,13 @@ class PetitComputer
                     glColor4ubv(cast(ubyte*)&fore);
                     float z = console4[y][x].z / 1025f;
                     glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, z);
+                    glVertex3f((x * 8), (y * 8 + 8), z);
                     glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8) / 160f - 1, 1 - (y * 8) / 240f, z);
+                    glVertex3f((x * 8), (y * 8), z);
                     glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8) / 240f, z);
+                    glVertex3f((x * 8 + 8), (y * 8), z);
                     glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                    glVertex3f((x * 8 + 8) / 160f - 1, 1 - (y * 8 + 8) / 240f, z);
+                    glVertex3f((x * 8 + 8), (y * 8 + 8), z);
                 }
             glEnd();
             return;
@@ -1522,18 +1534,18 @@ class PetitComputer
             {
                 auto back = consoleColorGL[console[y][x].backColor];
                 glColor4ubv(cast(ubyte*)&back);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 1f);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 1f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 1f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 1f);
+                glVertex3f((x * 8), (y * 8 + 8), 1f);
+                glVertex3f((x * 8), (y * 8), 1f);
+                glVertex3f((x * 8 + 8), (y * 8), 1f);
+                glVertex3f((x * 8 + 8), (y * 8 + 8), 1f);
             }
         if(showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8 + 8) , -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
         }
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -1547,13 +1559,13 @@ class PetitComputer
                 float z = console[y][x].z / 1025f;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
+                glVertex3f((x * 8), (y * 8 + 8), z);
                 glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, z);
+                glVertex3f((x * 8), (y * 8), z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, z);
+                glVertex3f((x * 8 + 8), (y * 8), z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
+                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
             }
         glEnd();
         if(xscreenmode != 1)
@@ -1561,7 +1573,7 @@ class PetitComputer
             return;
         }
         //下画面
-        glViewport(40, 0, 400, 240);
+        chScreen(40, 0, 400, 240);
         glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
@@ -1570,18 +1582,18 @@ class PetitComputer
             {
                 auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
                 glColor4ubv(cast(ubyte*)&back);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, 0.9f);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, 0.9f);
+                glVertex3f((x * 8), (y * 8 + 8), 0.9f);
+                glVertex3f((x * 8), (y * 8), 0.9f);
+                glVertex3f((x * 8 + 8), (y * 8), 0.9f);
+                glVertex3f((x * 8 + 8), (y * 8 + 8), 0.9f);
             }
         if(showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8) / 120f, -0.9f);
-            glVertex3f((CSRX * 8 + 2) / 200f - 1, 1 - (CSRY * 8 + 8) / 120f, -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
         }
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -1595,13 +1607,13 @@ class PetitComputer
                 float z = consoleDisplay1[y][x].z / 1025f;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
+                glVertex3f((x * 8), (y * 8 + 8), z);
                 glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8) / 200f - 1, 1 - (y * 8) / 120f, z);
+                glVertex3f((x * 8), (y * 8), z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8) / 120f, z);
+                glVertex3f((x * 8 + 8), (y * 8), z);
                 glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8) / 200f - 1, 1 - (y * 8 + 8) / 120f, z);
+                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
             }
         glEnd();
     }

@@ -39,11 +39,11 @@ class BG
         dish /= 2;
         float z = offsetz / 1025f;
         glColor3f(1.0, 1.0, 1.0);
+        glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glTranslatef((-offsetx + homex) / disw, -((-offsety + homey) / dish), z);
-        glScalef(1.0f / aspect, 1.0f, 1.0f);
+        glTranslatef((-offsetx + homex), ((-offsety + homey)), z);
+        glScalef(scalex, scaley, 1f);
         glRotatef(360 - r, 0.0f, 0.0f, 1.0f );
-        glScalef(scalex * aspect, scaley, 1f);
         version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
         //viewport
         //clipx,clipy
@@ -66,13 +66,13 @@ class BG
                 int w = 16;
                 int h = 16;
                 glTexCoord2f((u) / 512f - 1 , (v2) / 512f - 1);
-                glVertex3f((x * w) / disw - 1, 1 - (y * h + h) / dish, 0);
+                glVertex3f((x * w), (y * h + h), 0);
                 glTexCoord2f((u) / 512f - 1, (v) / 512f - 1);
-                glVertex3f((x * w) / disw - 1, 1 - (y * h) / dish, 0);
+                glVertex3f((x * w), (y * h), 0);
                 glTexCoord2f((u2) / 512f - 1, (v) / 512f - 1);
-                glVertex3f((x * w + w) / disw - 1, 1 - (y * h) / dish, 0);
+                glVertex3f((x * w + w), (y * h), 0);
                 glTexCoord2f((u2) / 512f - 1, (v2) / 512f - 1);
-                glVertex3f((x * w + w) / disw - 1, 1 - (y * h + h) / dish, 0);
+                glVertex3f((x * w + w), (y * h + h), 0);
                 rendercount++;
                 if(rendercount >= 899)
                 {
