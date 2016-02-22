@@ -693,7 +693,7 @@ class Sprite
                 int v = cast(int)sprite.v;
                 int u2 = cast(int)sprite.u + sprite.w;//-1
                 int v2 = cast(int)sprite.v + sprite.h;
-                z = (sprite.z - 1) / 1025f;//スプライトの描画順が一番上だけどスプライトは最後に描画しないといけないのでZ - 1で一番上にする
+                z = (sprite.z - 1);//スプライトの描画順が一番上だけどスプライトは最後に描画しないといけないのでZ - 1で一番上にする
                 float flipx = cast(float)sprite.scalex, flipy = cast(float)sprite.scaley, flipx2 = x, flipy2 = y;
                 if(sprite.attr & SpriteAttr.hflip)
                 {

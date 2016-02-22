@@ -622,7 +622,7 @@ class PetitComputer
         glViewport(x, y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0, w, h, 0, 10,-10/*-256, 1024*/);
+        glOrtho(0, w, h, 0, 1024, -2048);
     }
     void renderGraphic()
     {
@@ -1064,11 +1064,11 @@ class PetitComputer
             parser = new Parser(
                                      //readText("./SYS/GAME6TALK.TXT").to!wstring
                                      //readText("./SYS/GAME7EXPAD.TXT").to!wstring
-                                     readText("./SYS/GAME4SHOOTER.TXT").to!wstring
+                                     //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                      //readText("./SYS/GAME2RPG.TXT").to!wstring
                                      //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                      //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                     //readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                     readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                      //readText("./SYS/EX1TEXT.TXT").to!wstring
                                      //readText("FIZZBUZZ.TXT").to!wstring
                                      //readText("TEST.TXT").to!wstring
@@ -1462,7 +1462,7 @@ class PetitComputer
     int gprio;
     void renderGraphicPage(int display, float w, float h)
     {
-        float z = gprio / 1025f;
+        float z = gprio;
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);
         glEnable(GL_TEXTURE_2D);
@@ -1489,19 +1489,22 @@ class PetitComputer
                 for(int x = 0; x < consoleWidth4; x++)
                 {
                     auto back = consoleColorGL[console4[y][x].backColor];
-                    glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f(x * 8, y * 8 + 8, 0.9f);
-                    glVertex3f(x * 8, y * 8, 0.9f);
-                    glVertex3f(x * 8 + 8, y * 8, 0.9f);
-                    glVertex3f(x * 8 + 8, y * 8 + 8, 0.9f);
+                    if(back)
+                    {
+                        glColor4ubv(cast(ubyte*)&back);
+                        glVertex3f(x * 8, y * 8 + 8, 1024);
+                        glVertex3f(x * 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                    }
                 }
             if(showCursor && animationCursor)
             {
                 glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -0.9f);
-                glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
-                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
-                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
+                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
+                glVertex3f((CSRX * 8), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
             }
             glEnd();
             glEnable(GL_TEXTURE_2D);
@@ -1513,7 +1516,7 @@ class PetitComputer
                     auto fore = consoleColorGL[console4[y][x].foreColor];
                     auto rect = &fontTable[console4[y][x].character];
                     glColor4ubv(cast(ubyte*)&fore);
-                    float z = console4[y][x].z / 1025f;
+                    int z = console4[y][x].z;
                     glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
                     glVertex3f((x * 8), (y * 8 + 8), z);
                     glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
@@ -1533,19 +1536,22 @@ class PetitComputer
             for(int x = 0; x < consoleWidth; x++)
             {
                 auto back = consoleColorGL[console[y][x].backColor];
-                glColor4ubv(cast(ubyte*)&back);
-                glVertex3f((x * 8), (y * 8 + 8), 1f);
-                glVertex3f((x * 8), (y * 8), 1f);
-                glVertex3f((x * 8 + 8), (y * 8), 1f);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), 1f);
+                if(back)
+                {
+                    glColor4ubv(cast(ubyte*)&back);
+                    glVertex3f(x * 8, y * 8 + 8, 1024);
+                    glVertex3f(x * 8, y * 8, 1024);
+                    glVertex3f(x * 8 + 8, y * 8, 1024);
+                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                }
             }
         if(showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8) , -0.9f);
-            glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
+            glVertex3f((CSRX * 8), (CSRY * 8), -256);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
         }
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -1556,7 +1562,7 @@ class PetitComputer
             {
                 auto fore = consoleColorGL[console[y][x].foreColor];
                 auto rect = &fontTable[console[y][x].character];
-                float z = console[y][x].z / 1025f;
+                float z = console[y][x].z;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
                 glVertex3f((x * 8), (y * 8 + 8), z);
@@ -1581,19 +1587,22 @@ class PetitComputer
             for(int x = 0; x < consoleWidthDisplay1; x++)
             {
                 auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
-                glColor4ubv(cast(ubyte*)&back);
-                glVertex3f((x * 8), (y * 8 + 8), 0.9f);
-                glVertex3f((x * 8), (y * 8), 0.9f);
-                glVertex3f((x * 8 + 8), (y * 8), 0.9f);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), 0.9f);
+                if(back)
+                {
+                    glColor4ubv(cast(ubyte*)&back);
+                    glVertex3f(x * 8, y * 8 + 8, 1024);
+                    glVertex3f(x * 8, y * 8, 1024);
+                    glVertex3f(x * 8 + 8, y * 8, 1024);
+                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                }
             }
         if(showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -0.9f);
-            glVertex3f((CSRX * 8), (CSRY * 8), -0.9f);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -0.9f);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -0.9f);
+            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
+            glVertex3f((CSRX * 8), (CSRY * 8), -256);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
+            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
         }
         glEnd();
         glEnable(GL_TEXTURE_2D);
@@ -1604,7 +1613,7 @@ class PetitComputer
             {
                 auto fore = consoleColorGL[consoleDisplay1[y][x].foreColor];
                 auto rect = &fontTable[consoleDisplay1[y][x].character];
-                float z = consoleDisplay1[y][x].z / 1025f;
+                float z = consoleDisplay1[y][x].z;
                 glColor4ubv(cast(ubyte*)&fore);
                 glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
                 glVertex3f((x * 8), (y * 8 + 8), z);

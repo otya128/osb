@@ -37,7 +37,7 @@ class BG
         float aspect = disw / dish;
         disw /= 2;
         dish /= 2;
-        float z = offsetz / 1025f;
+        float z = offsetz;
         glColor3f(1.0, 1.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
