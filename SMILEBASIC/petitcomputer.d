@@ -820,6 +820,7 @@ class PetitComputer
             buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
             buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
             buttonTable[SDL_SCANCODE_SPACE] = Button.A;
+            buttonTable[SDL_SCANCODE_ESCAPE] = Button.START;
             if(!window)
             {
                 write("can't create window: ");
@@ -1000,6 +1001,10 @@ class PetitComputer
                             {
                                 auto key = event.key.keysym.sym;
                                 button |= buttonTable[event.key.keysym.scancode];
+                                if(Button.START & buttonTable[event.key.keysym.scancode])
+                                {
+                                    stop();
+                                }
                                 if(key == SDLK_BACKSPACE)
                                 {
                                     keybuffermutex.lock();
@@ -1041,6 +1046,13 @@ class PetitComputer
     SDL_Window* window;
     otya.smilebasic.vm.VM vm;
     int maincnt;
+    bool running;
+    bool stopflg;
+    void stop()
+    {
+        running = false;
+        stopflg = true;
+    }
     void run()
     {
         keybuffer = new wchar[128];
@@ -1057,7 +1069,6 @@ class PetitComputer
         auto startTicks = SDL_GetTicks();
         Parser parser;
         otya.smilebasic.vm.VM vm;
-        bool running;
         bool directMode = false;
         //デバッグ用
         version(NDirectMode)
@@ -1195,7 +1206,7 @@ class PetitComputer
                     try
                     {
                         printConsole(sbe.getErrorMessage, "\n");
-                        printConsole(sbe.getErrorMessage2, "\n");
+                        if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
                         //printConsole(sbe.to!string);
                         writeln(sbe.to!string);
                         writeln(sbe.getErrorMessage2);
@@ -1254,10 +1265,6 @@ class PetitComputer
                                 printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                             }
                         }
-                        if(!running)
-                        {
-                            if(directMode) break;
-                        }
                     }
                     catch(SmileBasicError sbe)
                     {
@@ -1265,7 +1272,7 @@ class PetitComputer
                         try
                         {
                             printConsole(sbe.getErrorMessage, "\n");
-                            printConsole(sbe.getErrorMessage2, "\n");
+                            if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
                             //printConsole(sbe.to!string);
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
@@ -1290,6 +1297,16 @@ class PetitComputer
                         {
                             writeln(t);
                         }
+                    }
+                    if(!running || stopflg)
+                    {
+                        if(stopflg)
+                        {
+                            loc = vm.currentLocation;
+                            printConsole("Break on ", vm.currentSlotNumber, ":", loc.line, "\n");
+                            stopflg = false;
+                        }
+                        if(directMode) break;
                     }
                     //elapse = SDL_GetTicks() - startTicks;
                 } //while(elapse <= 1000 / 60);

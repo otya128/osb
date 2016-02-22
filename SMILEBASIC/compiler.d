@@ -23,6 +23,7 @@ class DebugInfo
     }
     SourceLocation getLocationByAddress(int addr)
     {
+        if(location.length <= addr) return SourceLocation(0, 0, 0);
         return location[addr];
     }
 }
@@ -1062,6 +1063,7 @@ class Compiler
         auto start = vm.currentSlot.code.length;
         this.code = vm.currentSlot.code;
         globalIndex = vm.currentSlot.global.length;
+        functions = vm.currentSlot.functions;
         compileProgram();
         vm.directSlot(start, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
     }

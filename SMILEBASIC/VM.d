@@ -56,9 +56,14 @@ class VM
             slots[i] = new VMSlot();
         }
     }
+    int currentSlotNumber()
+    {
+        return slot;
+    }
     void setCurrentSlot(int slot)
     {
         currentSlot = slots[slot];
+        this.slot = slot;
     }
     void directSlot(int start, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
                     int[wstring] globalLabel, DebugInfo dinfo)
