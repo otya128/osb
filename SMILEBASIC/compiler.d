@@ -690,6 +690,10 @@ class Compiler
     }
     void compileDefineFunction(DefineFunction node)
     {
+        if(isDirectMode)
+        {
+            throw new CantUseFromDirectMode();
+        }
         auto skip = genCodeGoto();
         Function func = new Function(cast(int)this.code.length, node.name, node.returnExpr, cast(int)node.arguments.length);
         Scope sc = new Scope(func);
@@ -1054,8 +1058,12 @@ class Compiler
     void compileDirectMode(VM vm)
     {
         isDirectMode = true;
+        global = vm.currentSlot.globalTable;
+        auto start = vm.currentSlot.code.length;
+        this.code = vm.currentSlot.code;
+        globalIndex = vm.currentSlot.global.length;
         compileProgram();
-        vm.directSlot(code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
+        vm.directSlot(start, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
     }
     VM compile()
     {

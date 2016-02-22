@@ -104,4 +104,14 @@ class SubscriptOutOfRange : SmileBasicError
         super("Subscript out of range");
     }
 }
+class CantUseFromDirectMode : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 43;
+        this.errprg = 0;//always 0
+        this.errline = 0;
+        super("Can't use from direct mode");
+    }
+}
 

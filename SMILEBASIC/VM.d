@@ -27,6 +27,8 @@ class VMSlot
 {
     bool isUsed;
     DataTable globalDataTable;
+    //2MBらしい
+    //Code code[2 * 1024 * 1024 / Code.sizeof];
     Code[] code;
     SourceLocation[] location;
     Value[] global;
@@ -34,6 +36,7 @@ class VMSlot
     Function[wstring] functions;
     int[wstring] globalLabel;
     DebugInfo debugInfo;
+    Value[wstring] directModeVariable;
 }
 class VM
 {
@@ -57,11 +60,22 @@ class VM
     {
         currentSlot = slots[slot];
     }
-    void directSlot(Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+    void directSlot(int start, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
                     int[wstring] globalLabel, DebugInfo dinfo)
     {
-        this.pc = currentSlot.code.length;
-        this.currentSlot.code ~= code;
+        this.pc = start;
+        auto c = this.currentSlot;
+        c.globalTable = globalTable;
+        c.code = code;
+        sizediff_t oldlen = c.global.length;
+        sizediff_t addedvarcount = len - oldlen;
+        for(sizediff_t i = 0; i < addedvarcount; i++)
+            c.global ~= Value(ValueType.Void);
+        foreach(wstring k, VMVariable v ; globalTable)
+        {
+            if(v.index >= 0 && v.index >= oldlen)
+                c.global[v.index] = Value(v.type);
+        }
     }
     void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
          int[wstring] globalLabel, DebugInfo dinfo)

@@ -1185,8 +1185,43 @@ class PetitComputer
                 }
                 auto prg = input("", true);
                 parser = new Parser(prg);
-                auto cc = parser.compiler;
-                cc.compileDirectMode(vm);
+                try
+                {
+                    auto cc = parser.compiler;
+                    cc.compileDirectMode(vm);
+                }
+                catch(SmileBasicError sbe)
+                {
+                    try
+                    {
+                        printConsole(sbe.getErrorMessage, "\n");
+                        printConsole(sbe.getErrorMessage2, "\n");
+                        //printConsole(sbe.to!string);
+                        writeln(sbe.to!string);
+                        writeln(sbe.getErrorMessage2);
+                        auto loc = vm.currentLocation;
+                        printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                    }
+                    catch(Throwable t)
+                    {
+                        writeln(t);
+                    }
+                    continue;
+                }
+                catch(Throwable t)
+                {
+                    try
+                    {
+                        printConsole(t.to!string);
+                        writeln(t);
+                        printConsole(parser.getLine(vm.currentLocation));
+                    }
+                    catch(Throwable t)
+                    {
+                        writeln(t);
+                    }
+                    continue;
+                }
                 vm.dump();
                 running = true;
             }
