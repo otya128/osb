@@ -221,7 +221,7 @@ class Compiler
     VMVariable[wstring] global;
     int[wstring] globalLabel;
     Function[wstring] functions;
-    sizediff_t globalIndex = 0;
+    int globalIndex = 0;
     void genCode(Code c)
     {
         code ~= c;
@@ -1062,7 +1062,7 @@ class Compiler
         global = vm.currentSlot.globalTable;
         auto start = vm.currentSlot.code.length;
         this.code = vm.currentSlot.code;
-        globalIndex = vm.currentSlot.global.length;
+        globalIndex = cast(int)vm.currentSlot.global.length;
         functions = vm.currentSlot.functions;
         compileProgram();
         vm.directSlot(start, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
