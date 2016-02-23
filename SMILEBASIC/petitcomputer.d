@@ -14,6 +14,7 @@ import otya.smilebasic.sprite;
 import otya.smilebasic.error;
 import otya.smilebasic.bg;
 import otya.smilebasic.parser;
+import otya.smilebasic.project;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -141,6 +142,7 @@ struct Slot
     void load(wstring data)
     {
         import std.algorithm;
+        program.clear();
         foreach(l; splitter(data, "\n"))
         {
             program.insertBack(l);
@@ -358,8 +360,12 @@ class PetitComputer
             fontTable[record[0]].h = 8;
         }
     }
+    Projects project;
+    wstring currentProject;
     void init()
     {
+        currentProject = "";
+        project = new Projects(".");
         //   DerelictGL.load();
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = toGLColor(consoleColor[i]);

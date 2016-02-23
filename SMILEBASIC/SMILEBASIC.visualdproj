@@ -214,6 +214,7 @@
   <File path="node.d" />
   <File path="parser.d" />
   <File path="petitcomputer.d" perConfig="true" />
+  <File path="project.d" />
   <File path="sprite.d" />
   <File path="systemvariable.d" />
   <File path="TEST.txt" />

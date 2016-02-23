@@ -43,6 +43,10 @@ struct StartOptional
 {
     const char[] name;
 }
+struct BasicName
+{
+    wstring naame;
+}
 alias ValueType = otya.smilebasic.type.ValueType;
 struct BuiltinFunctionArgument
 {
@@ -69,7 +73,8 @@ class BuiltinFunctions
         //とりあえず引数の数で解決させる,というよりコンパイル時に型を取得する方法がない
         foreach(f; func)
         {
-            if(f.startskip <= argc && f.argments.length >= argc && f.outoptional <= outargc && f.results.length >= outargc)
+            if(f.startskip <= argc && f.argments.length >= argc)
+                if((f.outoptional != 0 && f.outoptional <= outargc && f.results.length >= outargc) || f.results.length == outargc)
                 return f;
             if(f.variadic)
                 va = f;
@@ -1302,8 +1307,94 @@ class BuiltinFunction
         }
         throw new IllegalFunctionCall("COPY (Not implemented error)");
     }
+    @BasicName("LOAD")
+    static Value LOAD1(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
+    {
+        import otya.smilebasic.project;
+        import std.string;
+        flag.setDefaultValue(0);
+        auto type = Projects.splitResourceName(name);
+        wstring txt;
+        wstring resname = type[0];
+        wstring projectname = type[1];
+        wstring filename = type[2];
+        if(projectname != "" && projectname != "SYS")
+        {
+            throw new IllegalFunctionCall("LOAD");
+        }
+        if(projectname == "")
+        {
+            projectname = p.currentProject;
+        }
+        if(resname == "TXT")
+        {
+            if(p.project.loadFile(projectname, resname, filename, txt))
+            {
+                return Value(txt);
+            }
+            throw new IllegalFunctionCall("LOAD");
+        }
+        throw new IllegalFunctionCall("LOAD");
+    }
+    @BasicName("LOAD")
+    static void LOAD2(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
+    {
+        import otya.smilebasic.project;
+        import std.string;
+        flag.setDefaultValue(0);
+        auto type = Projects.splitResourceName(name);
+        wstring txt;
+        wstring resname = type[0];
+        wstring projectname = type[1];
+        wstring filename = type[2];
+        if(projectname != "" && projectname != "SYS")
+        {
+            throw new IllegalFunctionCall("LOAD");
+        }
+        if(projectname == "")
+        {
+            projectname = p.currentProject;
+        }
+        if(resname == "" || resname.indexOf("PRG") == 0)
+        {
+            int lot;
+            if(resname != "" && resname != "PRG")
+            {
+                auto num = resname[3..$];
+                lot = num.to!int;
+            }
+            if(!p.project.loadFile(projectname, "TXT", filename, txt))
+            {
+                throw new IllegalFunctionCall("LOAD");
+            }
+            p.slot[lot].load(txt);
+            return;
+        }
+        if(resname.indexOf("GRP") == 0)
+        {
+            throw new IllegalFunctionCall("NOTIMPL:LOAD GRP");
+        }
+        throw new IllegalFunctionCall("LOAD");
+    }
+    static Value LOAD(wstring name, Value arr, DefaultValue!(int, false) flag)
+    {
+        flag.setDefaultValue(0);
+        throw new IllegalFunctionCall("NOTIMPL:LOAD");
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
+    static wstring getBasicName(BFD)(const wstring def)
+    {
+        enum attr = __traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_]);
+        foreach(i; attr)
+        {
+            static if(__traits(compiles, i.naame))
+            {
+                return i.naame;
+            }
+        }
+        return def;
+    }
     static this()
     {
         foreach(name; __traits(derivedMembers, BuiltinFunction))
@@ -1319,9 +1410,9 @@ class BuiltinFunction
                     {
                         suffix = "$";
                     }
-                    wstring name2 = name ~ suffix;
-                    auto func = builtinFunctions.get(name2, null);
                     alias BFD = BuiltinFunctionData!(BuiltinFunction, name, i);
+                    wstring name2 = getBasicName!BFD(name ~ suffix);
+                    auto func = builtinFunctions.get(name2, null);
                     pragma(msg, AddFunc!BFD);
                     auto f = new BuiltinFunction(
                                                  GetFunctionParamType!(BFD),
@@ -1432,10 +1523,6 @@ template GetBuiltinFunctionArgment(P...)
         const string arg = "ValueType.Integer, true";
     }
     else static if(is(P[0] == DefaultValue!(int, false)))
-    {
-        const string arg = "ValueType.Integer, true";
-    }
-    else static if(is(P[0] == OptionalOutValue!int))
     {
         const string arg = "ValueType.Integer, true";
     }
@@ -1575,6 +1662,12 @@ template AddFunc(BFD)
         const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ BFD.N ~ "\");}ret[0] = Value(" ~ BFD.N ~ "(" ~
             AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(BFD) - 1, 0, 0, 0, BFD,
                         BFD.ParameterType) ~ "));}";
+    }
+    else static if(is(BFD.ReturnType == Value))
+    {
+        const string AddFunc = "function void(PetitComputer p, Value[] arg, Value[] ret){if(ret.length != 1){throw new IllegalFunctionCall(\"" ~ BFD.N ~ "\");}ret[0] = " ~ BFD.N ~ "(" ~
+            AddFuncArg!(/*ParameterTypeTuple!(__traits(getMember, T, N)).length*/GetArgumentCount!(BFD) - 1, 0, 0, 0, BFD,
+                        BFD.ParameterType) ~ ");}";
     }
     else
     {
