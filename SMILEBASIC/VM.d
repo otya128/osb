@@ -11,7 +11,7 @@ import std.conv;
 import std.stdio;
 struct VMVariable
 {
-    int index;
+    sizediff_t index;
     ValueType type;
     this(int index, ValueType type)
     {
