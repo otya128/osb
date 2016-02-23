@@ -1381,6 +1381,24 @@ class BuiltinFunction
         flag.setDefaultValue(0);
         throw new IllegalFunctionCall("NOTIMPL:LOAD");
     }
+    static void PROJECT(PetitComputer p, wstring name)
+    {
+        //DirectMode only
+        if(p.isRunningDirectMode)
+        {
+            if(!p.project.isValidProjectName(name))
+            {
+                throw new IllegalFunctionCall("PROJECT");
+            }
+            p.currentProject = name;
+            return;
+        }
+        throw new CantUseInProgram("PROJECT");
+    }
+    static void PROJECT(PetitComputer p, out wstring name)
+    {
+        name = p.currentProject;
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
@@ -1872,9 +1890,18 @@ template AddFuncArg(int L, int N, int M, int O, BFD, P...)
         }
         else static if(is(P[0] == wstring))
         {
-            enum add = 1;
-            enum outadd = 0;
-            const string arg = "arg[" ~ I.to!string ~ "].castString";
+            static if(storage & ParameterStorageClass.out_)
+            {
+                enum add = 0;
+                enum outadd = 1;
+                const string arg = "ret[" ~ O.to!string ~ "].stringValue";
+            }
+            else
+            {
+                enum add = 1;
+                enum outadd = 0;
+                const string arg = "arg[" ~ I.to!string ~ "].castString";
+            }
         }
         else static if(is(P[0] == DefaultValue!int))
         {
@@ -1994,6 +2021,10 @@ template OutArgsInit(BFD, int I = 0, int J = 0)
             else static if(is(param[I] == Value[]))
             {
                 enum ret2 = "ValueType.Void;";
+            }
+            else static if(is(param[I] == wstring))
+            {
+                enum ret2 = "ValueType.String;";
             }
             else
             {

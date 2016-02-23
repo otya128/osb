@@ -114,4 +114,12 @@ class CantUseFromDirectMode : SmileBasicError
         super("Can't use from direct mode");
     }
 }
+class CantUseInProgram : SmileBasicError
+{
+    this(wstring func)
+    {
+        this.errnum = 44;
+        super("Can't use in program");
+    }
+}
 

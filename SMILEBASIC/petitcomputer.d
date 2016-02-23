@@ -1115,6 +1115,7 @@ class PetitComputer
         printConsole("OK\n");
     }
     Slot[] slot;
+    bool isRunningDirectMode = false;
     void run()
     {
         slot = new Slot[5];
@@ -1133,7 +1134,6 @@ class PetitComputer
         Parser parser;
         otya.smilebasic.vm.VM vm;
         bool directMode = false;
-        bool isRunningDirectMode = false;
         int oldpc;
         void runSlot(int lot)
         {
