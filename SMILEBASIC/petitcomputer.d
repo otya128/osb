@@ -134,6 +134,19 @@ version(Windows)
     alias extern (Windows) void* function(void*, void*) ImmAssociateContext;
     alias extern (Windows) int function(int) ImmDisableIME;
 }
+import std.container;
+struct Slot
+{
+    DList!wstring program;
+    void load(wstring data)
+    {
+        import std.algorithm;
+        foreach(l; splitter(data, "\n"))
+        {
+            program.insertBack(l);
+        }
+    }
+}
 class PetitComputer
 {
     this()
@@ -458,11 +471,37 @@ class PetitComputer
     Mutex keybuffermutex;
     int keybufferpos;
     int keybufferlen;
+    enum KeyOp
+    {
+        KEY,
+        COPY,
+        PASTE,
+        UNDO,
+        REDO,
+    }
+    struct Key
+    {
+        wchar key;
+        KeyOp op;
+        this(wchar k)
+        {
+            key = k;
+            op = KeyOp.KEY;
+        }
+        this(KeyOp o)
+        {
+            op = o;
+        }
+    }
     //解析した結果キー入力のバッファは127くらい
-    wchar[] keybuffer;// = new wchar[128];//Linuxだとこうやって確保した場合書き込むとSEGV
+    Key[] keybuffer;// = new wchar[128];//Linuxだとこうやって確保した場合書き込むとSEGV
     void sendKey(wchar key)
     {
-        keybuffer[keybufferpos] = cast(wchar)key;
+        sendKey(Key(key));
+    }
+    void sendKey(Key key)
+    {
+        keybuffer[keybufferpos] = key;
         keybufferlen++;
         if(keybufferlen > keybuffer.length)
             keybufferlen = cast(int)keybuffer.length;
@@ -908,16 +947,12 @@ class PetitComputer
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
+                renderConsoleGL();
+
                 if(xscreenmode == 1)
                 {
                     chScreen(0, 240, 400, 240);
                 }
-                if(xscreenmode == 1)
-                {
-                    chScreen(0, 240, 400, 240);
-                }
-                version(test) glLoadIdentity();
-                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 if(xscreenmode == 2)
                 {
                     renderGraphicPage(0, 320, 480);
@@ -936,7 +971,6 @@ class PetitComputer
                 {
                     chScreen(0, 0, 320, 480);
                 }
-                renderConsoleGL();
                 if(xscreenmode == 1)
                 {
                     chScreen(0, 240, 400, 240);
@@ -1001,6 +1035,14 @@ class PetitComputer
                             {
                                 auto key = event.key.keysym.sym;
                                 button |= buttonTable[event.key.keysym.scancode];
+                                if(key == SDLK_v)
+                                {
+                                    auto mod = event.key.keysym.mod;
+                                    if((mod & 0xC0))
+                                    {
+                                        sendKey(Key(KeyOp.PASTE));
+                                    }
+                                }
                                 if(Button.START & buttonTable[event.key.keysym.scancode])
                                 {
                                     stop();
@@ -1053,9 +1095,24 @@ class PetitComputer
         running = false;
         stopflg = true;
     }
+    void printInformation()
+    {
+        printConsole("otyaSMILEBASIC ver ", otya.smilebasic.systemvariable.Version.VERSIONSTRING, "\n");
+        printConsole("(C)2015-2016 otya\n");
+        printConsole("8327164 bytes free\n");
+        printConsole("\n");
+        printPrompt();
+    }
+    void printPrompt()
+    {
+        //printConsole("[","]");
+        printConsole("OK\n");
+    }
+    Slot[] slot;
     void run()
     {
-        keybuffer = new wchar[128];
+        slot = new Slot[5];
+        keybuffer = new Key[128];
         init();
         consolem = new Mutex();
         keybuffermutex = new Mutex();
@@ -1070,17 +1127,42 @@ class PetitComputer
         Parser parser;
         otya.smilebasic.vm.VM vm;
         bool directMode = false;
+        bool isRunningDirectMode = false;
+        int oldpc;
+        void runSlot(int lot)
+        {
+            parser = new Parser(std.algorithm.reduce!("a ~ b")(slot[lot].program.opSlice));
+            try
+            {
+                vm = parser.compile();
+                vm.init(this);
+                running = true;
+            }
+            catch(SmileBasicError sbe)
+            {
+                printConsole(sbe.getErrorMessage, "\n");
+                if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
+                writeln(sbe.to!string);
+                writeln(sbe.getErrorMessage2);
+            }
+            catch(Throwable t)
+            {
+                writeln(t);
+            }
+        }
         //デバッグ用
         version(NDirectMode)
         {
-            parser = new Parser(
+            slot[0].load(readText("./SYS/EX8TECDEMO.TXT").to!wstring);
+            version(none)
+                parser = new Parser(
                                 //readText("./SYS/GAME6TALK.TXT").to!wstring
                                 //readText("./SYS/GAME7EXPAD.TXT").to!wstring
                                 //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
                                 //readText("./SYS/GAME2RPG.TXT").to!wstring
                                 //readText("./SYS/GAME1DOTRC.TXT").to!wstring
                                 //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                readText("./SYS/EX8TECDEMO.TXT").to!wstring
+                                //readText("./SYS/EX8TECDEMO.TXT").to!wstring
                                 //readText("./SYS/EX1TEXT.TXT").to!wstring
                                 //readText("FIZZBUZZ.TXT").to!wstring
                                 //readText("TEST.TXT").to!wstring
@@ -1123,27 +1205,11 @@ class PetitComputer
                                 CL=(CL+1) MOD 16 : VSYNC 1
                                 GOTO @LOOP`*/
                                 );
-            try
-            {
-                vm = parser.compile();
-                vm.init(this);
-                running = true;
-            }
-            catch(SmileBasicError sbe)
-            {
-                printConsole(sbe.getErrorMessage, "\n");
-                printConsole(sbe.getErrorMessage2, "\n");
-                //printConsole(sbe.to!string);
-                writeln(sbe.to!string);
-                writeln(sbe.getErrorMessage2);
-            }
-            catch(Throwable t)
-            {
-                writeln(t);
-            }
+            runSlot(0);
         }
         else
         {
+            printInformation();
             directMode = true;
             /*vm.code.append(parser.compiler.compileProgram());*/
             version(none)
@@ -1194,51 +1260,87 @@ class PetitComputer
                     vm = (new Parser("")).compile;
                     vm.init(this);
                 }
+                else
+                {
+                    printPrompt();
+                }
                 auto prg = input("", true);
-                parser = new Parser(prg);
-                try
+                auto lex = new Lexical(prg);
+                lex.popFront();
+                auto token = lex.front();
+                if(token.type == otya.smilebasic.token.TokenType.Iden && token.value.stringValue == "RUN")
                 {
-                    auto cc = parser.compiler;
-                    cc.compileDirectMode(vm);
+                    lex.popFront();
+                    token = lex.front();
+                    int slot;
+                    bool empty = lex.empty();
+                    if(!empty)
+                    {
+                        if(token.type != otya.smilebasic.token.TokenType.Integer)
+                        {
+                            printConsole("Illegal function call", "\n");
+                            continue;
+                        }
+                        else
+                        {
+                            slot = token.value.castInteger;
+                        }
+                    }
+                    isRunningDirectMode = false;
+                    runSlot(slot);
                 }
-                catch(SmileBasicError sbe)
+                else if(token.type == otya.smilebasic.token.TokenType.Iden && token.value.stringValue == "CONT")
                 {
+                    vm.pc = oldpc;
+                    isRunningDirectMode = false;
+                    directMode = false;
+                }
+                else
+                {
+                    isRunningDirectMode = true;
+                    parser = new Parser(prg);
                     try
                     {
-                        printConsole(sbe.getErrorMessage, "\n");
-                        if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
-                        //printConsole(sbe.to!string);
-                        writeln(sbe.to!string);
-                        writeln(sbe.getErrorMessage2);
-                        auto loc = vm.currentLocation;
-                        printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                        auto cc = parser.compiler;
+                        cc.compileDirectMode(vm);
+                    }
+                    catch(SmileBasicError sbe)
+                    {
+                        try
+                        {
+                            printConsole(sbe.getErrorMessage, "\n");
+                            if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
+                            writeln(sbe.to!string);
+                            writeln(sbe.getErrorMessage2);
+                            auto loc = vm.currentLocation;
+                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                        }
+                        catch(Throwable t)
+                        {
+                            writeln(t);
+                        }
+                        continue;
                     }
                     catch(Throwable t)
                     {
-                        writeln(t);
+                        try
+                        {
+                            printConsole(t.to!string);
+                            writeln(t);
+                            printConsole(parser.getLine(vm.currentLocation));
+                        }
+                        catch(Throwable t)
+                        {
+                            writeln(t);
+                        }
+                        continue;
                     }
-                    continue;
                 }
-                catch(Throwable t)
-                {
-                    try
-                    {
-                        printConsole(t.to!string);
-                        writeln(t);
-                        printConsole(parser.getLine(vm.currentLocation));
-                    }
-                    catch(Throwable t)
-                    {
-                        writeln(t);
-                    }
-                    continue;
-                }
-                vm.dump();
                 running = true;
             }
             //vm.dump;
             this.vm = vm;
-            bg[0].put(0,0,1);
+            //bg[0].put(0,0,1);
             //gpset(0, 10, 10, 0xFF00FF00);
             //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
             //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
@@ -1305,6 +1407,9 @@ class PetitComputer
                             loc = vm.currentLocation;
                             printConsole("Break on ", vm.currentSlotNumber, ":", loc.line, "\n");
                             stopflg = false;
+                            directMode = true;
+                            if(!isRunningDirectMode)
+                                oldpc = vm.pc;
                         }
                         if(directMode) break;
                     }
@@ -1362,26 +1467,42 @@ class PetitComputer
             wchar k;
             //文字入力中はカーソルを表示する
             animationCursor = true;
-            foreach(key; keybuffer[oldpos..kbp])
+            foreach(key1; keybuffer[oldpos..kbp])
             {
-                if(key == 8)
+                wchar key = key1.key;
+                wstring ks;
+                if(key1.op == KeyOp.KEY)
                 {
-                    k = key;
-                    if(!buffer.length) continue;
-                    buffer = buffer[0..$ - 1];
-                    CSRX--;
-                    printConsoleString(" ");
-                    CSRX--;
-                    continue;
+                    if(key == 8)
+                    {
+                        k = key;
+                        if(!buffer.length) continue;
+                        buffer = buffer[0..$ - 1];
+                        CSRX--;
+                        printConsoleString(" ");
+                        CSRX--;
+                        continue;
+                    }
+                    if(key == '\r')
+                    {
+                        k = key;
+                        printConsole("\n");
+                        break;
+                    }
+                    immutable(wchar[1]) a = key;
+                    ks = a[];
                 }
-                if(key == '\r')
+                else if(key1.op == KeyOp.PASTE)
                 {
-                    k = key;
-                    printConsole("\n");
-                    break;
+                    if(SDL_HasClipboardText())
+                    {
+                        char* cl = SDL_GetClipboardText();
+                        string an = cast(string)(cl[0..std.c.string.strlen(cl)]);
+                        ks = an.to!wstring;
+                    }
                 }
-                printConsole(key);
-                buffer ~= key;
+                printConsole(ks);
+                buffer ~= ks;
             }
             clearKeyBuffer();
             if(k == '\r')

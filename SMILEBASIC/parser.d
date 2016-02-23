@@ -6,16 +6,16 @@ import otya.smilebasic.compiler;
 import std.ascii;
 import std.stdio;
 import std.conv;
+import std.range;
 class Lexical
 {
-    TokenType[] table;
-    TokenType[wstring] reserved;
+    static TokenType[] table;
+    static TokenType[wstring] reserved;
     wstring code;
     int index;
     int line;
-    this(wstring input)
+    static this()
     {
-        this.code = input;
         table = new TokenType[256];
         for(int i = 0;i<256;i++)
         {
@@ -75,6 +75,10 @@ class Lexical
         reserved["TRUE"] = TokenType.True;
         reserved["FALSE"] = TokenType.False;
         reserved.rehash();
+    }
+    this(wstring input)
+    {
+        this.code = input;
         line = 1;
     }
     bool empty()
@@ -88,10 +92,17 @@ class Lexical
     SourceLocation location;
     Token token;
     private int pos;
+    bool isEmpty;
     void popFront()
     {
-        if(empty())
-        {
+        if(index >= code.length)
+        {/*
+            if(!isEmpty)
+            {
+                //token = Token(TokenType.NewLine);
+                isEmpty = true;
+                //return;
+            }*/
             token = Token(TokenType.Unknown);
             return;
         }
@@ -509,7 +520,7 @@ class Parser
     {
         lex.popFront();
         auto statements = new Statements(lex.location);
-        while(!lex.empty())
+        do
         {
             auto token = lex.front();
             Statement statement;
@@ -525,7 +536,7 @@ class Parser
             {
                 statements.addStatement(statement);
             }
-        }
+        } while(!lex.empty());
         return statements;
     }
     bool isFuncReturnExpr = false;

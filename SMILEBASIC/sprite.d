@@ -678,8 +678,8 @@ class Sprite
                 }
                 sprite.linkx = x;
                 sprite.linky = y;
-                auto homex2 = ((sprite.w / 2 ) - sprite.homex);
-                auto homey2 = ((sprite.h / 2 ) - sprite.homey);
+                auto homex2 = ((sprite.w / 2f ) - sprite.homex);
+                auto homey2 = ((sprite.h / 2f ) - sprite.homey);
                 int w = sprite.w;
                 int h = sprite.h;
                 
@@ -710,25 +710,26 @@ class Sprite
                 glTranslatef((flipx2),
                              ((flipy2)), 0);
                 //glTranslatef((flipx2) / dish - 1,1 - ((flipy2) / dish), 0);
-                glScalef(flipx, flipy, 1f); 
                 //アスペクト比を調節しないといけないらしい
                 //https://groups.google.com/forum/#!topic/android-group-japan/45mjecPSY4s
                 //http://www.tnksoft.com/blog/?p=2889
                 //glScalef(1.0f / aspect, 1.0f, 1.0f);
                 glRotatef(360 - sprite.r, 0.0f, 0.0f, 1.0f );
                 //glScalef(flipx * aspect, flipy, 1f);
+                glScalef(flipx, flipy, 1f); 
                 glBegin(GL_QUADS);
                 glColor4ubv(cast(ubyte*)&sprite.color);
                 if((sprite.attr& 0b111) == SpriteAttr.show)
                 {
                     glTexCoord2f(u / 512f - 1, v / 512f - 1);
-                    glVertex3f(-((sprite.w / 2) - homex2) , -((sprite.h / 2) - homey2), z);//1
+                    auto kbc= (-((sprite.w / 2f) - homex2));
+                    glVertex3f(-((sprite.w / 2f) - homex2) , -((sprite.h / 2f) - homey2), z);//1
                     glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
-                    glVertex3f(-((sprite.w / 2) - homex2), ((sprite.h / 2) + homey2), z);//2
+                    glVertex3f(-((sprite.w / 2f) - homex2), ((sprite.h / 2f) + homey2), z);//2
                     glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
-                    glVertex3f((sprite.w / 2) + homex2, ((sprite.h / 2) + homey2), z);//3//y+--+x--++
+                    glVertex3f((sprite.w / 2f) + homex2, ((sprite.h / 2f) + homey2), z);//3//y+--+x--++
                     glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
-                    glVertex3f((sprite.w / 2) + homex2, -((sprite.h / 2) - homey2), z);//4
+                    glVertex3f((sprite.w / 2f) + homex2, -((sprite.h / 2f) - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
                     continue;
