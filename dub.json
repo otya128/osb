@@ -4,7 +4,7 @@
 		"derelict-sdl2": "*",
 		"derelict-gl3": "*"
 	},
-	"sourceFiles": ["SMILEBASIC/bg.d","SMILEBASIC/builtinfunctions.d","SMILEBASIC/compiler.d","SMILEBASIC/error.d","SMILEBASIC/main.d","SMILEBASIC/node.d","SMILEBASIC/parser.d","SMILEBASIC/petitcomputer.d","SMILEBASIC/sprite.d","SMILEBASIC/systemvariable.d","SMILEBASIC/token.d","SMILEBASIC/type.d","SMILEBASIC/VM.d","SMILEBASIC/projects.d"],
+	"sourceFiles": ["SMILEBASIC/bg.d","SMILEBASIC/builtinfunctions.d","SMILEBASIC/compiler.d","SMILEBASIC/error.d","SMILEBASIC/main.d","SMILEBASIC/node.d","SMILEBASIC/parser.d","SMILEBASIC/petitcomputer.d","SMILEBASIC/sprite.d","SMILEBASIC/systemvariable.d","SMILEBASIC/token.d","SMILEBASIC/type.d","SMILEBASIC/VM.d","SMILEBASIC/project.d"],
 	"targetType": "executable",
 	"buildRequirements": ["allowWarnings"],
 	"targetPath": "out",
