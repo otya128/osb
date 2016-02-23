@@ -387,9 +387,9 @@ class Parser
     wstring getLine(SourceLocation loc)
     {
         import std.string;
-        int mae = code[0 .. loc.pos2].lastIndexOf('\n');
+        auto mae = code[0 .. loc.pos2].lastIndexOf('\n');
         mae++;
-        int ushiro = code[mae..$].indexOf('\n');
+        auto ushiro = code[mae..$].indexOf('\n');
         if(ushiro == -1) ushiro = code.length;
         return code[mae .. mae + ushiro];
     }

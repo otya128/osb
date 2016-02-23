@@ -8,7 +8,7 @@ import otya.smilebasic.systemvariable;
 import std.stdio;
 class DebugInfo
 {
-    int old;
+    sizediff_t old;
     std.container.Array!SourceLocation location;
     this()
     {

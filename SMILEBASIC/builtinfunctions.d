@@ -67,7 +67,7 @@ class BuiltinFunctions
     {
         this.func ~= func;
     }
-    BuiltinFunction overloadResolution(int argc, int outargc)
+    BuiltinFunction overloadResolution(size_t argc, size_t outargc)
     {
         BuiltinFunction va;
         //とりあえず引数の数で解決させる,というよりコンパイル時に型を取得する方法がない
