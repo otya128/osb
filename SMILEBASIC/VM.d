@@ -65,10 +65,10 @@ class VM
         currentSlot = slots[slot];
         this.slot = slot;
     }
-    void directSlot(int start, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+    void directSlot(sizediff_t start, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
                     int[wstring] globalLabel, DebugInfo dinfo)
     {
-        this.pc = start;
+        this.pc = cast(int)start;
         auto c = this.currentSlot;
         c.globalTable = globalTable;
         c.code = code;
