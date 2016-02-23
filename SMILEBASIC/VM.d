@@ -65,7 +65,7 @@ class VM
         currentSlot = slots[slot];
         this.slot = slot;
     }
-    void directSlot(int start, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+    void directSlot(int start, Code[] code, sizediff_t len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
                     int[wstring] globalLabel, DebugInfo dinfo)
     {
         this.pc = start;
@@ -82,7 +82,7 @@ class VM
                 c.global[v.index] = Value(v.type);
         }
     }
-    void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
+    void loadSlot(int slot, Code[] code, sizediff_t len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
          int[wstring] globalLabel, DebugInfo dinfo)
     {
         auto s = this.slots[slot];

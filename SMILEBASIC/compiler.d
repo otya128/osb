@@ -221,7 +221,7 @@ class Compiler
     VMVariable[wstring] global;
     int[wstring] globalLabel;
     Function[wstring] functions;
-    int globalIndex = 0;
+    sizediff_t globalIndex = 0;
     void genCode(Code c)
     {
         code ~= c;

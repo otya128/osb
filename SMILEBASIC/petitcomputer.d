@@ -1503,7 +1503,7 @@ class PetitComputer
                     if(SDL_HasClipboardText())
                     {
                         char* cl = SDL_GetClipboardText();
-                        string an = cast(string)(cl[0..std.c.string.strlen(cl)]);
+                        string an = cast(string)(cl[0..core.stdc.string.strlen(cl)]);
                         ks = an.to!wstring;
                     }
                 }
