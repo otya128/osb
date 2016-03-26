@@ -1,4 +1,5 @@
 module otya.smilebasic.project;
+import otya.smilebasic.error;
 import std.path;
 import std.file;
 import std.string;
@@ -6,6 +7,7 @@ import std.traits;
 import std.conv;
 import std.uni;
 import std.typecons;
+import std.range;
 class Projects
 {
     wstring rootPath;
@@ -30,7 +32,7 @@ class Projects
         createProjectInternal("[DEFAULT]");
         createProjectInternal("SYS");
     }
-    bool isValidProjectName(C)(C[] filename) if(isSomeChar!(C))
+    static bool isValidProjectName(C)(C[] filename) if(isSomeChar!(C))
     {
         if(filename.length > 14)
         {
@@ -45,7 +47,7 @@ class Projects
         }
         return true;
     }
-    bool isValidFileName(C)(C[] filename) if(isSomeChar!(C))
+    static bool isValidFileName(C)(C[] filename) if(isSomeChar!(C))
     {
         if(filename.length > 12)
         {
@@ -94,6 +96,36 @@ class Projects
             name = name[sep + 1..$];
         }
         return tuple(type, project, name);
+    }
+    wstring[] getFileList(wstring project, wstring type)
+    {
+        import std.algorithm;
+        import std.functional;
+        if(!isValidProjectName(project))
+        {
+            return null;
+        }
+        if(project == "") project = "[DEFAULT]";
+        auto dir(wstring type)
+        {
+            auto path = buildPath(projectPath, project, type).to!string;
+            return dirEntries(path, SpanMode.shallow, false);
+        }
+        
+        if(type == "")
+        {
+            return chain(dir("TXT").filter!(x=>x.isFile&&isValidFileName(baseName(x.name))).map!((x) => "*"w ~ baseName(x.name).to!wstring),
+                         dir("DAT").filter!(x=>x.isFile&&isValidFileName(baseName(x.name))).map!((x) => " " ~ baseName(x.name).to!wstring)).array;
+        }
+        if(type == "TXT")
+        {
+            return dir("TXT").filter!(x=>x.isFile&&isValidFileName(baseName(x.name))).map!((x) => "*" ~ baseName(x.name).to!wstring).array;
+        }
+        if(type == "DAT")
+        {
+            return dir("DAT").filter!(x=>x.isFile&&isValidFileName(baseName(x.name))).map!((x) => " " ~ baseName(x.name).to!wstring).array;
+        }
+        return null;
     }
     bool loadFile(wstring project, wstring type, wstring name, out wstring contents)
     {

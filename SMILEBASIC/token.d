@@ -65,6 +65,9 @@ enum TokenType
     Input,
     True,
     False,
+    Use,
+    Exec,
+    Call,
 }
 
 struct Token

@@ -182,6 +182,8 @@ struct Value
         }
     }
 }
+//import std.experimental.ndslice;
+//ndsliceがこれに相当?
 class Array(T)
 {
     T[] array;

@@ -34,6 +34,7 @@ class VMSlot
     Value[] global;
     VMVariable[wstring] globalTable;
     Function[wstring] functions;
+    Function[] functionTable;
     int[wstring] globalLabel;
     DebugInfo debugInfo;
     Value[wstring] directModeVariable;
@@ -78,7 +79,7 @@ class VM
             c.global ~= Value(ValueType.Void);
         foreach(wstring k, VMVariable v ; globalTable)
         {
-            if(v.index >= 0 && v.index >= oldlen)
+            if(v.index >= 0 && v.index >= oldlen && v.index < c.global.length)
                 c.global[v.index] = Value(v.type);
         }
     }

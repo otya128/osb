@@ -7,6 +7,7 @@ import std.traits;
 import std.stdio;
 import std.ascii;
 import std.range;
+import std.string;
 import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
@@ -725,7 +726,6 @@ class BuiltinFunction
             {
                 return str[2..$].to!int(2);
             }
-            import std.string : munch;
             munch(str, " ");
             if(str.empty) return 0;
             /*
@@ -805,7 +805,6 @@ class BuiltinFunction
     }
     static int INSTR(Value vstart, Value vstr1, DefaultValue!(wstring, false) vstr2)
     {
-        import std.string;
         int start = 0;
         wstring str1, str2;
         if(!vstr2.isDefault)
@@ -1141,7 +1140,6 @@ class BuiltinFunction
         auto format = args[0].castString;
         import std.array : appender;
         import std.format;
-        import std.string;
         auto w = appender!wstring();
         int j = 1;
         for(int i = 0; i < format.length; i++)
@@ -1311,7 +1309,6 @@ class BuiltinFunction
     static Value LOAD1(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
     {
         import otya.smilebasic.project;
-        import std.string;
         flag.setDefaultValue(0);
         auto type = Projects.splitResourceName(name);
         wstring txt;
@@ -1340,7 +1337,6 @@ class BuiltinFunction
     static void LOAD2(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
     {
         import otya.smilebasic.project;
-        import std.string;
         flag.setDefaultValue(0);
         auto type = Projects.splitResourceName(name);
         wstring txt;
@@ -1398,6 +1394,39 @@ class BuiltinFunction
     static void PROJECT(PetitComputer p, out wstring name)
     {
         name = p.currentProject;
+    }
+    //FILES TYPE$
+    //((TXT|DAT):)?\w+/?
+    static void FILES(PetitComputer p, DefaultValue!(wstring, false) name)
+    {
+        import otya.smilebasic.project;
+        if(name.isDefault)
+        {
+            name.setDefaultValue(p.currentProject);
+        }
+        auto t = Projects.splitResourceName(name.value);
+        auto res = t[0];
+        if(t[1].length && t[2].length)
+        {
+            throw new IllegalFunctionCall("FILES");
+        }
+        if(t[2].length && name.value.indexOf("/") != -1)
+        {
+            //"TXT:A":OK
+            //"TXT:A/":OK
+            //"TXT:/A":X
+            //"TXT:A/A":X
+            throw new IllegalFunctionCall("FILES");
+        }
+        auto project = t[1].length ? t[1] : t[2];
+        //project:.->hidden project
+        //project:/->project list
+        auto l = p.project.getFileList(project, res);
+        p.printConsole(res, "\t", project, "\n");
+        foreach(i; l)
+        {
+            p.printConsole(i, "\n");
+        }
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;

@@ -924,6 +924,7 @@ class PetitComputer
             glAlphaFunc(GL_GEQUAL, 0.1f);
             glEnable(GL_ALPHA_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            xscreen(0, 512, 4);
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -1111,7 +1112,7 @@ class PetitComputer
     }
     void printPrompt()
     {
-        //printConsole("[","]");
+        if(currentProject.length) printConsole("[", currentProject, "]");
         printConsole("OK\n");
     }
     Slot[] slot;
@@ -1449,7 +1450,7 @@ class PetitComputer
     wstring input(wstring prompt, bool useClipBoard)
     {
         auto olddisplay = displaynum;
-        displaynum = 0;
+        //displaynum = 0;
         printConsole(prompt);
         clearKeyBuffer();
         wstring buffer;
@@ -1517,7 +1518,7 @@ class PetitComputer
             }
         }
         showCursor = false;
-        display = olddisplay;
+        //display = olddisplay;
         return buffer;
     }
     int CSRX;
@@ -1741,7 +1742,7 @@ class PetitComputer
                     glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
                 }
             }
-        if(showCursor && animationCursor)
+        if(displaynum == 0 && showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
             glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
@@ -1792,7 +1793,7 @@ class PetitComputer
                     glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
                 }
             }
-        if(showCursor && animationCursor)
+        if(displaynum == 1 && showCursor && animationCursor)
         {
             glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
             glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);

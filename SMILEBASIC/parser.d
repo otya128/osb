@@ -103,7 +103,7 @@ class Lexical
                 isEmpty = true;
                 //return;
             }*/
-            token = Token(TokenType.Unknown);
+            token = Token(TokenType.NewLine);
             return;
         }
         int i = index;
@@ -789,20 +789,24 @@ class Parser
             case TokenType.Print:
                 node = print();
                 return node;
+            case TokenType.Call:
             case TokenType.Iden:
                 {
                     wstring name = token.value.stringValue;
                     lex.popFront();
-                    token = lex.front();
-                    if(token.type == TokenType.Assign)
+                    if (token.type != TokenType.Call)
                     {
-                        node = assign(name);
-                        return node;
-                    }
-                    if(token.type == TokenType.LBracket)//配列代入
-                    {
-                        node = arrayAssign(name);
-                        return node;
+                        token = lex.front();
+                        if(token.type == TokenType.Assign)
+                        {
+                            node = assign(name);
+                            return node;
+                        }
+                        if(token.type == TokenType.LBracket)//配列代入
+                        {
+                            node = arrayAssign(name);
+                            return node;
+                        }
                     }
                     //命令呼び出し
                     auto func = new CallFunctionStatement(name, lex.location);
@@ -932,6 +936,20 @@ class Parser
                 break;
             case TokenType.Input:
                 return inputStatement();
+            case TokenType.Use:
+                {
+                    lex.popFront();
+                    auto expr = expression();
+                    writeln("NOTIMPL:USE");
+                }
+                break;
+            case TokenType.Exec:
+                {
+                    lex.popFront();
+                    auto expr = expression();
+                    writeln("NOTIMPL:EXEC");
+                }
+                break;
             default:
                 syntaxError();
                 break;
