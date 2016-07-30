@@ -319,21 +319,24 @@ class PetitComputer
     int sppage, bgpage;
     void createFontTable()
     {
-        string html = cast(string)get("http://smileboom.com/special/ptcm3/download/unicode/");
-        int pos = 0, index;
         auto file = File(fontTableFile, "w");
         std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
+        for (int i = 1; i <= 16; i++)
+        {
+        string html = cast(string)get("http://smilebasic.com/supplements/unicode" ~ format("%02d",i));
+        std.stdio.writeln("http://smilebasic.com/supplements/unicode" ~ format("%02d",i));
+        int pos = 0, index;
         while(true)
         {
-            pos = cast(int)html.indexOf("<tr><th>U+");
+            pos = cast(int)html.indexOf("<tr>\r\n<th>U+");
             if(pos == -1) break;
-            pos += "<tr><th>U+".length;
+            pos += "<tr>\r\n<th>U+".length;
             html = html[pos..$];
             writeln(index = html.parse!int(16));
             file.write(index, ',');
-            pos = cast(int)html.indexOf("</td><td>(");
+            pos = cast(int)html.indexOf("</td>\r\n<td>(");
             if(pos == -1) break;
-            pos += "</td><td>(".length;
+            pos += "</td>\r\n<td>(".length;
             html = html[pos..$];
             writeln(fontTable[index].x = html.parse!int);
             file.write(fontTable[index].x, ',');
@@ -344,6 +347,7 @@ class PetitComputer
             file.write(fontTable[index].y, '\n');
             fontTable[index].w = 8;
             fontTable[index].h = 8;
+        }
         }
     }
     void loadFontTable()
