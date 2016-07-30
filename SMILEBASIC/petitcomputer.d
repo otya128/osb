@@ -241,7 +241,7 @@ class PetitComputer
     GraphicPage createGRPF(string file)
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
-        auto src = IMG_LoadPNG_RW(stream);
+        auto src = IMG_Load_RW(stream, 0);
         SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);//0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
         SDL_Rect rect;
         rect.x = 0;
@@ -381,19 +381,19 @@ class PetitComputer
         if(!exists(fontFile))
         {
             writeln("download font");
-            download("http://smileboom.com/special/ptcm3/download/unicode/image/res_font_table-320.png",
+            download("http://smilebasic.com/wordpress/wp-content/themes/smilebasic/publishimage/appendix/res_font_table-320.png",
                      fontFile);
         }
         if(!exists(spriteFile))
         {
             writeln("download sprite");
-            download("http://smileboom.com/special/ptcm3/image/ss-story-attachment-1.png",
+            download("http://dengekionline.com/elem/000/000/927/927124/petitcom_16_cs1w1_512x512.jpg",
                      spriteFile);
         }
         if(!exists(BGFile))
         {
             writeln("download BG");
-            download("http://smileboom.com/special/ptcm3/image/ss-story-attachment-2.png",
+            download("http://dengekionline.com/elem/000/000/927/927125/petitcom_17_cs1w1_512x512.jpg",
                      BGFile);
         }
         if(!exists(fontTableFile))
@@ -833,23 +833,30 @@ class PetitComputer
     bool quit;
     void render()
     {
-        paint.buffer = new uint[512 * 512];
-        DerelictSDL2.load();
-        DerelictSDL2Image.load();
-        GRPF = createGRPF(fontFile);
-        GRP = new GraphicPage[6];
-        for(int i = 0; i < 4; i++)
+        try
         {
-            GRP[i] = createEmptyPage();
-        }
-        sppage = 4;
-        GRP[4] = createGRPF(spriteFile);
-        bgpage = 5;
-        GRP[5] = createGRPF(BGFile);
-        SDL_Init(SDL_INIT_VIDEO);
+            paint.buffer = new uint[512 * 512];
+            DerelictSDL2.load();
+            DerelictSDL2Image.load();
+            GRPF = createGRPF(fontFile);
+            GRP = new GraphicPage[6];
+            for(int i = 0; i < 4; i++)
+            {
+                GRP[i] = createEmptyPage();
+            }
+            sppage = 4;
+            GRP[4] = createGRPF(spriteFile);
+            bgpage = 5;
+            GRP[5] = createGRPF(BGFile);
+            SDL_Init(SDL_INIT_VIDEO);
 
-        DerelictGL.load();
-        DerelictGL3.load();
+            DerelictGL.load();
+            DerelictGL3.load();
+        }
+        catch(Throwable t)
+        {
+            writeln(t);
+        }
         bool renderprofile;// = true;
         try
         {
