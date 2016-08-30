@@ -145,7 +145,7 @@ struct Slot
         program.clear();
         foreach(l; splitter(data, "\n"))
         {
-            program.insertBack(l);
+            program.insertBack(l ~ '\n');
         }
     }
 }

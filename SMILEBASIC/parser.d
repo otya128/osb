@@ -770,6 +770,7 @@ class Parser
     void syntaxError()
     {
         stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
+        stderr.writeln(this.getLine(lex.location));
         try
         {
             throw new Exception("Stacktrace");
