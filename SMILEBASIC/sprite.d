@@ -714,7 +714,7 @@ class Sprite
                 //https://groups.google.com/forum/#!topic/android-group-japan/45mjecPSY4s
                 //http://www.tnksoft.com/blog/?p=2889
                 //glScalef(1.0f / aspect, 1.0f, 1.0f);
-                glRotatef(360 - sprite.r, 0.0f, 0.0f, 1.0f );
+                glRotatef(sprite.r, 0.0f, 0.0f, 1.0f );
                 //glScalef(flipx * aspect, flipy, 1f);
                 glScalef(flipx, flipy, 1f); 
                 glBegin(GL_QUADS);
