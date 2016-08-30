@@ -558,6 +558,9 @@ class Operate : Code
                 }
             }
         }
+        if (!l.isNumber || !r.isNumber)
+            throw new TypeMismatch();
+
         int li = l.integerValue;
         double ld = l.integerValue;
         if(l.type == ValueType.Double)
