@@ -1267,9 +1267,9 @@ class PetitComputer
                     break;
                 } while(!quit);
         }
-        if(quit) return;
         do
         {
+			if(quit) return;
             if(directMode)
             {
                 if(!vm)
