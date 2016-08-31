@@ -656,8 +656,11 @@ class Compiler
             {
                 DefineVariable var = cast(DefineVariable)v;
                 defineVarIndex(var.name, sc);
-                compileExpression(var.expression, sc);
-                genCodePopVar(var.name, sc);
+                if (var.expression)
+                {
+                    compileExpression(var.expression, sc);
+                    genCodePopVar(var.name, sc);
+                }
                 continue;
             }
             if(v.type == NodeType.DefineArray)
