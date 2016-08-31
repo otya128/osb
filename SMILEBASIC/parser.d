@@ -75,6 +75,7 @@ class Lexical
         reserved["TRUE"] = TokenType.True;
         reserved["FALSE"] = TokenType.False;
         reserved["CALL"] = TokenType.Call;
+        reserved["COMMON"] = TokenType.Common;
         reserved.rehash();
     }
     this(wstring input)
@@ -526,7 +527,20 @@ class Parser
         {
             auto token = lex.front();
             Statement statement;
-            if(token.type == TokenType.Def)
+            if(token.type == TokenType.Common)
+            {
+                lex.popFront();
+                token = lex.front();
+                if (token.type != TokenType.Def)
+                {
+                    syntaxError();
+                }
+                else
+                {
+                    statement = defineFunction();
+                }
+            }
+            else if(token.type == TokenType.Def)
             {
                 statement = defineFunction();
             }

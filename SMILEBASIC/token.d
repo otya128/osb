@@ -68,6 +68,7 @@ enum TokenType
     Use,
     Exec,
     Call,
+    Common,
 }
 
 struct Token
