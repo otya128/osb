@@ -1447,6 +1447,10 @@ class BuiltinFunction
     {
         return (label in p.vm.currentSlot.globalLabel) != null;
     }
+    static wstring INKEY(PetitComputer p)
+    {
+        return p.inkey();
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

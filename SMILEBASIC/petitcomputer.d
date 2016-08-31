@@ -1536,6 +1536,16 @@ class PetitComputer
         //display = olddisplay;
         return buffer;
     }
+    wstring inkey()
+    {
+        if (!keybufferlen)
+        {
+            return "";
+        }
+        auto result = keybuffer[(keybufferpos - keybufferlen)];
+        keybufferlen--;
+        return result.key.to!wstring;
+    }
     int CSRX;
     int CSRY;
     int CSRZ;
