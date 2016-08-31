@@ -202,6 +202,7 @@ class Lexical
                     if(c == '"' || c == '\r' || c == '\n')//"を閉じない文も許容
                     {
                         i++;
+                        if (c == '\r' || c == '\n') i--;
                         break;
                     }
                     str ~= c;
@@ -1272,7 +1273,7 @@ class Parser
         else
         {
             //VAR iden=expr
-            if(token.type == TokenType.Equal)
+            if(token.type == TokenType.Assign)
             {
                 lex.popFront();
                 expr = expression();
