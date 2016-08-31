@@ -279,7 +279,7 @@ class Lexical
                         }
                     }
                     wstring numstr = code[start..i];
-                    int num = numstr.to!int(16);
+                    int num = numstr.to!uint(16);
                     token = Token(TokenType.Integer, Value(num));
                     break;
                 }
@@ -296,7 +296,7 @@ class Lexical
                         }
                     }
                     wstring numstr = code[start..i];
-                    int num = numstr.to!int(2);
+                    int num = numstr.to!uint(2);
                     token = Token(TokenType.Integer, Value(num));
                     break;
                 }
