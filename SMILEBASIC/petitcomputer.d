@@ -1175,7 +1175,7 @@ class PetitComputer
         //デバッグ用
         version(NDirectMode)
         {
-            slot[0].load(readText("./SYS/EX8TECDEMO.TXT").to!wstring);
+            slot[0].load(readText("./TEST.TXT").to!wstring);
             version(none)
                 parser = new Parser(
                                 //readText("./SYS/GAME6TALK.TXT").to!wstring

@@ -1124,6 +1124,114 @@ class CallFunctionCode : Code
         return "callfunc " ~ name.to!string;
     }
 }
+class CallFunctionS : Code
+{
+    int argCount;
+    int outArgCount;
+    this(int argCount, int outArgCount)
+    {
+        this.argCount = argCount;
+        this.outArgCount = outArgCount;
+    }
+    void callBuintinFunc(BuiltinFunction func, VM vm)
+    {
+        Value[] arg;
+        Value[] oldresult;
+        Value[] result;
+        arg = vm.stack[vm.stacki - argCount..vm.stacki];
+        result = vm.stack[vm.stacki/* - argcount */+ 1..vm.stacki + 1/* - argcount */+ outArgCount];//雑;
+        oldresult = result;
+        if (argCount != func.argments.length && func.hasSkipArgument)
+        {
+            auto newarg = new Value[func.argments.length];
+            newarg[$ - argCount .. $] = arg[0..$];
+            arg = newarg;
+        }
+        if (outArgCount != func.results.length)
+        {
+            auto newarg = new Value[func.results.length];
+            newarg[$ - outArgCount .. $] = result[0..$];
+            result = newarg;
+        }
+        func.func(vm.petitcomputer, arg, result);
+        if(func.variadic)
+        {
+            vm.stacki -= argCount;
+        }
+        else
+        {
+            vm.stacki -= func.argments.length;// - outcount;
+        }
+        ////vm.stacki += outcount;
+        //vm.stacki = old;
+        for(int i = 0; i < outArgCount; i++)
+        {
+            vm.push(result[i]);
+        }
+    }
+    void callFunc(Function func, VM vm)
+    {
+        if(func.argCount != this.argCount)
+        {
+            throw new IllegalFunctionCall(func.name.to!string);
+        }
+        if(func.outArgCount != this.outArgCount)
+        {
+            throw new IllegalFunctionCall(func.name.to!string);
+        }
+        //TODO:args
+        auto bp = vm.stacki;
+        vm.push(Value());
+        vm.push(Value(vm.bp));
+        vm.pushpc;//vm.push(Value(vm.pc));
+        vm.bp = bp;
+        vm.pc = func.address - 1;
+        vm.stacki += func.variableIndex - 1;
+        foreach(wstring k, VMVariable v ; func.variable)
+        {
+            if(v.index > 0)
+            {
+                vm.stack[bp + v.index] = Value(v.type);
+            }
+        }
+    }
+    override void execute(VM vm)
+    {
+        Value vname;
+        vm.pop(vname);
+        if (!vname.isString)
+        {
+            throw new TypeMismatch();
+        }
+        auto name = vname.castString;
+        Function func = vm.currentSlot.functions.get(name, null);
+        if(!func)
+        {
+            auto bfuncs = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(name, null);
+            if (!bfuncs)
+            {
+                throw new SyntaxError(name);
+            }
+
+            auto bfunc = bfuncs.overloadResolution(argCount, outArgCount);
+          /*  if(bfunc.argments.length >= argCount)
+            {
+                auto k = bfunc.argments.length - argCount;
+                foreach(l;0..k)
+                {
+                    vm.push(Value(ValueType.Void));
+                }
+            }*/
+            callBuintinFunc(bfunc, vm);
+            return;
+        }
+        callFunc(func, vm);
+    }
+    override string toString(VM vm)
+    {
+        return "callfuncS " ~ argCount.to!string ~ "," ~ outArgCount.to!string;
+    }
+}
 import otya.smilebasic.builtinfunctions;
 class CallBuiltinFunction : Code
 {

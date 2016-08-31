@@ -496,9 +496,16 @@ class Compiler
                     {
                         genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, 1));
                     }
+                    else if (func.name == "CALL")
+                    {
+                        if (func.args.length < 1)
+                        {
+                            throw new SyntaxError();
+                        }
+                        genCode(new CallFunctionS((cast(int)func.args.length) - 1, 1));
+                    }
                     else
                     {
-                        writeln(func.name);
                         genCode(new CallFunctionCode(func.name, cast(int)func.args.length));
                     }
                 }
@@ -911,9 +918,12 @@ class Compiler
                     {
                         genCode(new CallBuiltinFunction(bfun, cast(int)func.args.length, cast(int)bfun.results.length));//func.outVariable.length));
                     }
+                    else if (func.name == "CALL")
+                    {
+                        genCode(new CallFunctionS((cast(int)func.args.length) - 1, cast(int)func.outVariable.length));
+                    }
                     else
                     {
-                        writeln(func.name);
                         genCode(new CallFunctionCode(func.name, cast(int)func.args.length, cast(int)func.outVariable.length));
                     }
                     if(bfun)

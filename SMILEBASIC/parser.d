@@ -74,6 +74,7 @@ class Lexical
         reserved["INPUT"] = TokenType.Input;
         reserved["TRUE"] = TokenType.True;
         reserved["FALSE"] = TokenType.False;
+        reserved["CALL"] = TokenType.Call;
         reserved.rehash();
     }
     this(wstring input)
@@ -184,7 +185,7 @@ class Lexical
                     }
                     if(r != TokenType.Unknown)
                     {
-                        token = Token(r);
+                        token = Token(r, Value(iden));
                         break;
                     }
                 }
@@ -1522,6 +1523,7 @@ class Parser
                 version(none)stdout.flush();
                 node = new Constant(token.value, lex.location);
                 break;
+            case TokenType.Call:
             case TokenType.Iden:
                 if(!lex.empty())
                     lex.popFront();
