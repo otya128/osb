@@ -443,7 +443,7 @@ class CallFunctionStatement : Statement
 {
     wstring name;
     Expression[] args;
-    wstring[] outVariable;
+    Expression[] outVariable;
     this(wstring n, SourceLocation loc)
     {
         super.location = loc;
@@ -455,7 +455,7 @@ class CallFunctionStatement : Statement
     {
         args ~= arg;
     }
-    void addOut(wstring var)
+    void addOut(Expression var)
     {
         outVariable ~= var;
     }

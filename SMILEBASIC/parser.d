@@ -858,13 +858,13 @@ class Parser
                         while(true)
                         {
                             token = lex.front();
-                            if(token.type != TokenType.Iden)
+                            Expression arg = expression();
+                            if(!isLValue(arg))
                             {
+                                syntaxError();
                                 return null;
                             }
-                            wstring arg = token.value.stringValue;
                             func.addOut(arg);
-                            lex.popFront();
                             token = lex.front();
                             if(token.type == TokenType.Comma)
                             {

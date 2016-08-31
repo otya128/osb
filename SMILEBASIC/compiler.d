@@ -940,9 +940,9 @@ class Compiler
                         }
                     }
                     //TODO:OUT
-                    foreach_reverse(wstring var; func.outVariable)
+                    foreach_reverse(var; func.outVariable)
                     {
-                        genCodePopVar(var, s);
+                        compilePopVar(var, s);
                     }
                 }
                 break;
