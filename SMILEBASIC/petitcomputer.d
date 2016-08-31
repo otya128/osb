@@ -10,6 +10,7 @@ import std.conv;
 import std.string;
 import std.c.stdio;
 import core.sync.mutex;
+import core.sync.condition;
 import otya.smilebasic.sprite;
 import otya.smilebasic.error;
 import otya.smilebasic.bg;
@@ -831,6 +832,7 @@ class PetitComputer
     }
     protected BG[4] bg;
     bool quit;
+    Condition renderCondition;
     void render()
     {
         try
@@ -936,6 +938,7 @@ class PetitComputer
             glEnable(GL_ALPHA_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             xscreen(0, 512, 4);
+            renderCondition.notify();
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -1140,8 +1143,9 @@ class PetitComputer
         for(int i = 0; i < bg.length; i++)
             bg[i] = new BG(this);
         core.thread.Thread thread = new core.thread.Thread(&render);
+        renderCondition = new Condition(new Mutex());
         thread.start();
-        while(!buttonTable){}
+        renderCondition.wait();
         auto startTicks = SDL_GetTicks();
         Parser parser;
         otya.smilebasic.vm.VM vm;
