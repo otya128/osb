@@ -76,6 +76,8 @@ class Lexical
         reserved["FALSE"] = TokenType.False;
         reserved["CALL"] = TokenType.Call;
         reserved["COMMON"] = TokenType.Common;
+        reserved["USE"] = TokenType.Use;
+        reserved["EXEC"] = TokenType.Exec;
         reserved.rehash();
     }
     this(wstring input)
