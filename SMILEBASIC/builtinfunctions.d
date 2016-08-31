@@ -1443,6 +1443,10 @@ class BuiltinFunction
     {
         return (func in p.vm.currentSlot.functions) != null || (func in otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions) != null;
     }
+    static int CHKLABEL(PetitComputer p, wstring label)
+    {
+        return (label in p.vm.currentSlot.globalLabel) != null;
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
