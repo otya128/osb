@@ -1151,14 +1151,12 @@ class Parser
         bool dec = token.type == TokenType.Dec;
         lex.popFront();
         token = lex.front();
-        if(token.type != TokenType.Iden)
+        Expression var = expression();
+        if(!isLValue(var))
         {
             syntaxError();
             return null;
         }
-        wstring var = token.value.stringValue;
-        //TODO:Array
-        lex.popFront();
         token = lex.front();
         Expression expr;
         if(token.type == TokenType.Comma)

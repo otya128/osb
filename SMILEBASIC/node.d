@@ -474,9 +474,9 @@ class While : Statement
 }
 class Inc : Statement
 {
-    wstring name;
+    Expression name;
     Expression expression;
-    this(wstring name, Expression expr, SourceLocation loc)
+    this(Expression name, Expression expr, SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.Inc;

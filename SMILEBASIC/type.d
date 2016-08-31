@@ -12,6 +12,10 @@ enum ValueType : byte
     StringArray,
     InternalAddress,
     InternalSlotAddress,
+    Reference,
+    IntegerReference,
+    DoubleReference,
+    StringReference,
 }
 struct VMAddress
 {
@@ -31,6 +35,10 @@ struct Value
         Array!double doubleArray;
         Array!wstring stringArray;
         VMAddress internalAddress;
+        Value* reference;
+        int* integerReference;
+        double* doubleReference;
+        wstring* stringReference;
     }
     this(int value)
     {
@@ -54,6 +62,26 @@ struct Value
         {
             stringValue = "";
         }
+    }
+    this(Value* r)
+    {
+        this.type = ValueType.Reference;
+        reference = r;
+    }
+    this(int* r)
+    {
+        this.type = ValueType.IntegerReference;
+        integerReference = r;
+    }
+    this(double* r)
+    {
+        this.type = ValueType.DoubleReference;
+        doubleReference = r;
+    }
+    this(wstring* r)
+    {
+        this.type = ValueType.StringReference;
+        stringReference = r;
     }
     void castOp(ValueType type)
     {
@@ -93,6 +121,14 @@ struct Value
     bool isNumber()
     {
         return this.type == ValueType.Integer || this.type == ValueType.Double;
+    }
+    bool isInteger()
+    {
+        return this.type == ValueType.Integer;
+    }
+    bool isDouble()
+    {
+        return this.type == ValueType.Double;
     }
     bool isString()
     {
@@ -240,7 +276,7 @@ class Array(T)
                 throw new RangeError();
         }
     }
-    T opIndex(int[] dim)
+    ref T opIndex(int[] dim)
     {
         import core.exception;
         switch(dim.length)
@@ -257,25 +293,25 @@ class Array(T)
                 throw new RangeError();
         }
     }
-    T opIndex(int i1)
+    ref T opIndex(int i1)
     {
         if(dimCount != 1) throw new SyntaxError();
         if(i1 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1];
     }
-    T opIndex(int i1, int i2)
+    ref T opIndex(int i1, int i2)
     {
         if(dimCount != 2) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] + i2];
     }
-    T opIndex(int i1, int i2, int i3)
+    ref T opIndex(int i1, int i2, int i3)
     {
         if(dimCount != 3) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3];
     }
-    T opIndex(int i1, int i2, int i3, int i4)
+    ref T opIndex(int i1, int i2, int i3, int i4)
     {
         if(dimCount != 4) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();

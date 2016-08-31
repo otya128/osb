@@ -346,6 +346,22 @@ class PushG : Code
         return "pushglobal " ~ vm.getGlobalVarName(var).to!string;
     }
 }
+class PushGRef : Code
+{
+    int var;
+    this(int var)
+    {
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(Value(&vm.currentSlot.global[var]));
+    }
+    override string toString(VM vm)
+    {
+        return "pushglobalref " ~ vm.getGlobalVarName(var).to!string;
+    }
+}
 class PopG : Code
 {
     int var;
@@ -400,6 +416,22 @@ class PushL : Code
     override string toString(VM vm)
     {
         return "pushlocal " ~ var.to!string;
+    }
+}
+class PushLRef : Code
+{
+    int var;
+    this(int var)
+    {
+        this.var = var;
+    }
+    override void execute(VM vm)
+    {
+        vm.push(Value(&vm.stack[vm.bp + var]));
+    }
+    override string toString(VM vm)
+    {
+        return "pushlocalref " ~ var.to!string;
     }
 }
 class PopL : Code
@@ -949,6 +981,70 @@ class PushArray : Code
     override string toString(VM vm)
     {
         return "pusharray " ~ dim.to!string;
+    }
+}
+class PushArrayRef : Code
+{
+    int dim;
+    this(int dim)
+    {
+        this.dim = dim;
+    }
+    override void execute(VM vm)
+    {
+        int[4] index;
+        for(int i = 0; i < dim; i++)
+        {
+            Value v;
+            vm.pop(v);
+            if(v.type == ValueType.Integer)
+            {
+                index[i] = v.integerValue;
+                continue;
+            }
+            if(v.type == ValueType.Double)
+            {
+                index[i] = cast(int)v.doubleValue;
+                continue;
+            }
+            throw new TypeMismatch();
+        }
+        Value array;
+        vm.pop(array);
+        if(!array.isArray)
+        {
+            throw new TypeMismatch();
+        }
+        if(array.type == ValueType.IntegerArray)
+        {
+            vm.push(Value(&array.integerArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.DoubleArray)
+        {
+            vm.push(Value(&array.doubleArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.StringArray)
+        {
+            vm.push(Value(&array.stringArray[index[0..dim]]));
+            return;
+        }
+        if(array.type == ValueType.String)
+        {
+            if(dim != 1)
+            {
+                //TODO:syntaxError
+                throw new TypeMismatch();
+            }
+            //String?
+            throw new TypeMismatch();
+        }
+        throw new TypeMismatch();
+    }
+    override string toString(VM vm)
+    {
+        return "pusharrayref " ~ dim.to!string;
     }
 }
 class PopArray : Code
@@ -1637,5 +1733,100 @@ class DecSP : Code
     override void execute(VM vm)
     {
         vm.decSP;
+    }
+}
+class PopRererence : Code
+{
+    override void execute(VM vm)
+    {
+        Value refv, value;
+        vm.pop(refv);
+        vm.pop(value);
+        if (refv.type == ValueType.Reference)
+        {
+            //TODO:型チェック?
+            *refv.reference = value;
+            return;
+        }
+        if (refv.type == ValueType.IntegerReference)
+        {
+            if (!value.isNumber)
+            {
+                throw new TypeMismatch();
+            }
+            *refv.integerReference = value.castInteger;
+            return;
+        }
+        if (refv.type == ValueType.DoubleReference)
+        {
+            if (!value.isNumber)
+            {
+                throw new TypeMismatch();
+            }
+            *refv.doubleReference = value.castDouble;
+            return;
+        }
+        if (refv.type == ValueType.StringReference)
+        {
+            if (!value.isString)
+            {
+                throw new TypeMismatch();
+            }
+            *refv.stringReference = value.castString;
+            return;
+        }
+    }
+}
+class IncRef : Code
+{
+    //TODO:文字列INCの挙動
+    override void execute(VM vm)
+    {
+        Value refv;
+        vm.pop(refv);
+        Value v;
+        vm.pop(v);
+        if (refv.type == ValueType.Reference)
+        {
+            if (refv.reference.isNumber && v.isNumber)
+            {
+                if (refv.reference.isDouble)
+                {
+                    refv.reference.doubleValue += v.castDouble;
+                    return;
+                }
+                if (refv.reference.isInteger)
+                {
+                    refv.reference.integerValue += v.castInteger;
+                    return;
+                }
+            }
+            if (refv.reference.isString && v.isString)
+            {
+                refv.reference.stringValue~= v.stringValue;
+                return;
+            }
+        }
+
+        if (refv.type == ValueType.IntegerReference && v.isNumber)
+        {
+            *refv.integerReference += v.castInteger;
+            return;
+        }
+        if (refv.type == ValueType.DoubleReference && v.isNumber)
+        {
+            *refv.doubleReference += v.castDouble;
+            return;
+        }
+        if (refv.type == ValueType.StringReference && v.isString)
+        {
+            *refv.stringReference ~= v.castString;
+            return;
+        }
+        throw new TypeMismatch();
+    }
+    override string toString(VM vm)
+    {
+        return "incref";
     }
 }

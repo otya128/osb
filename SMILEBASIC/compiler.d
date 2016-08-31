@@ -280,6 +280,34 @@ class Compiler
         }
         code ~= new PushG(getGlobalVarIndex(name));
     }
+    void genCodePushVarRef(wstring name, Scope sc)
+    {
+        if(sc.func)
+        {
+            auto local = sc.func.hasLocalVarIndex(name);
+            if(local)
+            {
+                code ~= new PushLRef(local);
+                return;
+            }
+        }
+        auto global = hasGlobalVarIndex(name);
+        if(global)
+        {
+            if(global < 0)
+            {
+                throw new SyntaxError();
+            }
+            code ~= new PushGRef(global);
+            return;
+        }
+        if(sc.func)
+        {
+            code ~= new PushLRef(sc.func.getLocalVarIndex(name, this));
+            return;
+        }
+        code ~= new PushGRef(getGlobalVarIndex(name));
+    }
     void genCodePopVar(wstring name, Scope sc)
     {
         if(sc.func)
@@ -527,6 +555,56 @@ class Compiler
                 break;
         }
     }
+    void compilePushReference(Expression exp, Scope sc)
+    {
+        if(!exp)
+        {
+            genCodeImm(Value(ValueType.Void));
+            return;
+        }
+        switch(exp.type)
+        {
+            case NodeType.BinaryOperator:
+                {
+                    auto binop = cast(BinaryOperator)exp;
+                    compileExpression(binop.item1, sc);
+                    compileExpression(binop.item2, sc);
+                    if(binop.operator == TokenType.LBracket)
+                    {
+                        IndexExpressions ie = cast(IndexExpressions)binop.item2;
+                        if(ie)
+                        {
+                            genCode(new PushArrayRef(cast(int)ie.expressions.length));
+                        }
+                        else
+                        {
+                            genCode(new PushArrayRef(1));
+                        }
+                        break;
+                    }
+                }
+                break;
+            case NodeType.Variable:
+                auto var = cast(Variable)exp;
+                genCodePushVarRef(var.name, sc);
+                break;
+            case NodeType.IndexExpressions://[expr,expr,expr,expr]用
+                {
+                    auto index = cast(IndexExpressions)exp;
+                    int count = 0;
+                    foreach_reverse(Expression i; index.expressions)
+                    {
+                        compileExpression(i, sc);
+                        count++;
+                        if(count >= 4) break;//念のため
+                    }
+                }
+                break;
+            default:
+                stderr.writeln("Compile:NotImpl ", exp.type);
+                break;
+        }
+    }
     void compilePopVar(Expression expr, Scope sc)
     {
         switch(expr.type)
@@ -684,15 +762,8 @@ class Compiler
     void compileInc(Inc node, Scope sc)
     {
         compileExpression(node.expression, sc);
-        int index = sc.func ? sc.func.hasLocalVarIndex(node.name) : 0;
-        if(index)
-        {
-            genCode(new IncCodeL(index));
-        }
-        else
-        {
-            genCode(new IncCodeG(this.getGlobalVarIndex(node.name)));
-        }
+        compilePushReference(node.name, sc);
+        genCode(new IncRef());
     }
     void compileStatements(Statements statements, Scope sc)
     {
