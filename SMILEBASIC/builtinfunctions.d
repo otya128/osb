@@ -1372,7 +1372,7 @@ class BuiltinFunction
         }
         throw new IllegalFunctionCall("LOAD");
     }
-    static Value LOAD(wstring name, Value arr, DefaultValue!(int, false) flag)
+    static void LOAD(wstring name, Value arr, DefaultValue!(int, false) flag)
     {
         flag.setDefaultValue(0);
         throw new IllegalFunctionCall("NOTIMPL:LOAD");
@@ -1427,6 +1427,17 @@ class BuiltinFunction
         {
             p.printConsole(i, "\n");
         }
+    }
+    static void FILES(PetitComputer p, wstring name, Value[] array)
+    {
+        writeln("NOTIMPL");
+    }
+    static void ACLS(PetitComputer p)
+    {
+        p.cls;
+        SPCLR(p, DefaultValue!(int, false)(true));
+        BGCLR(p, DefaultValue!(int, false)(true));
+        GCLS(p, DefaultValue!(int, false)(true));
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
