@@ -1439,6 +1439,10 @@ class BuiltinFunction
         BGCLR(p, DefaultValue!(int, false)(true));
         GCLS(p, DefaultValue!(int, false)(true));
     }
+    static int CHKCALL(PetitComputer p, wstring func)
+    {
+        return (func in p.vm.currentSlot.functions) != null || (func in otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions) != null;
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
