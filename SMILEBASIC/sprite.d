@@ -868,7 +868,11 @@ class Sprite
             target = target[0..$-1];
             relative = true;
         }
-        spanim(id, spriteAnimTarget[target] | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0), data);
+        target = std.uni.toUpper(target);
+        if (!(target in spriteAnimTarget))
+            throw new IllegalFunctionCall("SPANIM");
+        auto tgete = spriteAnimTarget[target];
+        spanim(id, tgete | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0), data);
         
     }
     static SpriteAnimTarget[wstring] spriteAnimTarget;
