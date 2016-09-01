@@ -1151,6 +1151,7 @@ class Compiler
         globalIndex = cast(int)vm.currentSlot.global.length;
         functions = vm.currentSlot.functions;
         compileProgram();
+        registerSystemVariable(vm);
         vm.directSlot(start, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
     }
     VM compile()
