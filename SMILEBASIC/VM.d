@@ -1250,14 +1250,7 @@ class CallFunctionS : Code
             result = newarg;
         }
         func.func(vm.petitcomputer, arg, result);
-        if(func.variadic)
-        {
-            vm.stacki -= argCount;
-        }
-        else
-        {
-            vm.stacki -= func.argments.length;// - outcount;
-        }
+        vm.stacki -= argCount;
         ////vm.stacki += outcount;
         //vm.stacki = old;
         for(int i = 0; i < outArgCount; i++)
@@ -1299,7 +1292,7 @@ class CallFunctionS : Code
         {
             throw new TypeMismatch();
         }
-        auto name = vname.castString;
+        auto name = vname.castString.toUpper;
         Function func = vm.currentSlot.functions.get(name, null);
         if(!func)
         {
@@ -1310,14 +1303,6 @@ class CallFunctionS : Code
             }
 
             auto bfunc = bfuncs.overloadResolution(argCount, outArgCount);
-          /*  if(bfunc.argments.length >= argCount)
-            {
-                auto k = bfunc.argments.length - argCount;
-                foreach(l;0..k)
-                {
-                    vm.push(Value(ValueType.Void));
-                }
-            }*/
             callBuintinFunc(bfunc, vm);
             return;
         }
