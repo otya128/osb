@@ -3,6 +3,9 @@ SMILEBASIC 3.x互換BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
+## ライセンス
+MIT
+
 # ビルド方法
 ```sh
 git clone git@github.com:otya128/otyaSMILEBASIC.git

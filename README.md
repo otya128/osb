@@ -3,6 +3,9 @@ SmileBASIC 3.x Compatible BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
+## LICENSE
+MIT
+
 # How to build
 ```sh
 git clone git@github.com:otya128/otyaSMILEBASIC.git
