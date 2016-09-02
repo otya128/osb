@@ -1131,7 +1131,7 @@ class PetitComputer
     }
     Slot[] slot;
     bool isRunningDirectMode = false;
-    void run()
+    void run(bool nodirectmode = false, string inputfile = "")
     {
         slot = new Slot[5];
         keybuffer = new Key[128];
@@ -1174,59 +1174,10 @@ class PetitComputer
         }
         //デバッグ用
         version(NDirectMode)
+            nodirectmode = true;
+        if (nodirectmode)
         {
-            slot[0].load(readText("./TEST.TXT").to!wstring);
-            version(none)
-                parser = new Parser(
-                                //readText("./SYS/GAME6TALK.TXT").to!wstring
-                                //readText("./SYS/GAME7EXPAD.TXT").to!wstring
-                                //readText("./SYS/GAME4SHOOTER.TXT").to!wstring
-                                //readText("./SYS/GAME2RPG.TXT").to!wstring
-                                //readText("./SYS/GAME1DOTRC.TXT").to!wstring
-                                //readText(input("LOAD PROGRAM:", true).to!string).to!wstring
-                                //readText("./SYS/EX8TECDEMO.TXT").to!wstring
-                                //readText("./SYS/EX1TEXT.TXT").to!wstring
-                                //readText("FIZZBUZZ.TXT").to!wstring
-                                //readText("TEST.TXT").to!wstring
-                                /*"?ABS(-1)
-                                LOCATE 0,10
-                                COLOR 5
-                                FOR I=0 TO 10
-                                ?I;\"!\",\"=\",FACT(I)
-                                NEXT
-                                DEF FACT(N)
-                                IF N<=1 THEN RETURN 1
-                                RETURN N*FACT(N-1)
-                                END"*/
-                                /*
-                                `CLS : CL=0 : Z=0
-                                WHILE 1
-                                INC Z : IF Z>200 THEN Z=0
-                                FOR I=0 TO 15
-                                LOCATE 9,4+I,Z : COLOR (CL+I) MOD 16
-                                PRINT "★ 梅雨で雨が多い季節ですね ★"
-                                NEXT
-                                CL=(CL+1) MOD 16 
-                                WEND`*/
-                                /*
-                                `CLS : CL=0
-                                WHILE 1
-                                FOR I=0 TO 15
-                                LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                PRINT "Ё プチコン3ゴウ Ж"
-                                NEXT
-                                CL=(CL+1) MOD 16 : VSYNC 1
-                                WEND`
-                                /*
-                                `CLS : CL=0
-                                @LOOP
-                                FOR I=0 TO 15
-                                LOCATE 9,4+I : COLOR (CL+I) MOD 16
-                                PRINT "Ё プチコン3ゴウ Ж"
-                                NEXT
-                                CL=(CL+1) MOD 16 : VSYNC 1
-                                GOTO @LOOP`*/
-                                );
+            slot[0].load(readText(inputfile).to!wstring);
             runSlot(0);
         }
         else
