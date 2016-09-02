@@ -6,25 +6,43 @@ import otya.smilebasic.type;
 import otya.smilebasic.error;
 import otya.smilebasic.systemvariable;
 import std.stdio;
+struct DebugData
+{
+    SourceLocation location;
+    bool isBreakPoint;
+}
 class DebugInfo
 {
     sizediff_t old;
-    std.container.Array!SourceLocation location;
+    std.container.Array!DebugData location;
+    std.container.Array!int line;
     this()
     {
     }
     void addLocation(SourceLocation loc, Code[] code)
     {
+        while (line.length < loc.line)
+        {
+            line ~= location.length;
+        }
         for(int i = 0; i < code.length - old; i++)
         {
-            location ~= loc;
+            location ~= DebugData (loc, false);
         }
         old = location.length;
     }
     SourceLocation getLocationByAddress(int addr)
     {
         if(location.length <= addr) return SourceLocation(0, 0, 0);
-        return location[addr];
+        return location[addr].location;
+    }
+    void setBreakPoint(int line)
+    {
+        location[this.line[line - 1]].isBreakPoint = true;
+    }
+    bool isBreakPoint(int line)
+    {
+        return location[this.line[line - 1]].isBreakPoint;
     }
 }
 class Scope

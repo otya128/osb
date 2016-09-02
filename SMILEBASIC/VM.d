@@ -110,6 +110,7 @@ class VM
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
         for(pc = 0; pc < this.currentSlot.code.length; pc++)
         {
+            processBreakPoint;
             currentSlot.code[pc].execute(this);
         }
         if(stacki != 0)
@@ -126,10 +127,20 @@ class VM
         this.petitcomputer = petitcomputer;
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
     }
+    void processBreakPoint()
+    {
+        if (currentSlot.debugInfo.location[pc].isBreakPoint)
+        {
+            //TODO:まともにする
+            writefln("break point\nslot:%d,pc:%d,line:%d", currentSlotNumber, pc, currentSlot.debugInfo.location[pc].location.line);
+            readln();
+        }
+    }
     bool runStep()
     {
         if(pc < this.currentSlot.code.length)
         {
+            processBreakPoint;
             currentSlot.code[pc].execute(this);
             pc++;
             return true;
