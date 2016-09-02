@@ -42,6 +42,7 @@ enum NodeType
     On,
     Input,
     RepeatUntil,
+    Option,
 }
 abstract class Node
 {
@@ -576,5 +577,16 @@ class RepeatUntil : Statement
         this.type = NodeType.RepeatUntil;
         this.condExpression = condExpression;
         this.statements = statements;
+    }
+}
+
+class Option : Statement
+{
+    wstring argument;
+    this(wstring arg, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.Option;
+        argument = arg;
     }
 }

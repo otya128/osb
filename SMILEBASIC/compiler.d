@@ -165,6 +165,8 @@ class Function
 class Compiler
 {
     bool isDirectMode;
+    bool isDefint;
+    bool isStrictMode;
     ValueType getType(wstring name)
     {
         wchar s = name[name.length - 1];
@@ -177,8 +179,10 @@ class Compiler
             case '%':
                 return ValueType.Integer;
             default:
-                return ValueType.Double;//非DEFINT時
-                //return ValueType.Integer;//DEFINT時
+                if (!isDefint)
+                    return ValueType.Double;//非DEFINT時
+                else
+                    return ValueType.Integer;//DEFINT時
         }
     }
     Statements statements;
@@ -437,6 +441,10 @@ class Compiler
         {
             //local変数をあたる
             //それでもだめならOPTION STRICTならエラー
+            if (isStrictMode)
+            {
+                throw new UndefinedVariable();
+            }
             this.global[name] = VMVariable(global = ++globalIndex, getType(name));
         }
         return global;
@@ -1087,6 +1095,24 @@ class Compiler
                 break;
             case NodeType.RepeatUntil:
                 compileRepeat(cast(RepeatUntil)i, s);
+                break;
+            case NodeType.Option:
+                if(isDirectMode)
+                {
+                    throw new CantUseFromDirectMode();
+                }
+                else
+                {
+                    auto option = cast(Option)i;
+                    if (option.argument == "STRICT")
+                    {
+                        isStrictMode = true;
+                    }
+                    else if (option.argument == "DEFINT")
+                    {
+                        isDefint = true;
+                    }
+                }
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

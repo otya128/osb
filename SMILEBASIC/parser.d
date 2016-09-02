@@ -847,6 +847,22 @@ class Parser
                             return node;
                         }
                     }
+                    if (name == "OPTION")
+                    {
+                        if (token.type != TokenType.Iden)
+                        {
+                            syntaxError();
+                            return null;
+                        }
+                        auto arg = std.uni.toUpper(token.value.stringValue);
+                        if (arg != "STRICT" && arg != "DEFINT" && arg != "TOOL")
+                        {
+                            syntaxError();
+                            return null;
+                        }
+                        lex.popFront();
+                        return new Option(arg, lex.location);
+                    }
                     //命令呼び出し
                     auto func = new CallFunctionStatement(name, lex.location);
                     node = func;

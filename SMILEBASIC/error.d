@@ -80,6 +80,14 @@ class OutOfDATA : SmileBasicError
         super("Out of DATA");
     }
 }
+class UndefinedVariable : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 15;
+        super("Undefined variable");
+    }
+}
 class DuplicateVariable : SmileBasicError
 {
     this()
