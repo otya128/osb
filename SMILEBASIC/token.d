@@ -70,6 +70,8 @@ enum TokenType
     Call,
     Common,
     Elseif,
+    Repeat,
+    Until,
 }
 
 struct Token

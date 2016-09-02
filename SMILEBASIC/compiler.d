@@ -656,28 +656,6 @@ class Compiler
         compileStatements(node.then, sc);
         //もしelseもあるのならば、endifに飛ぶ
         GotoAddr then;
-        /*
-        if 0 then
-        elseif 0 then
-        elseif 1 then
-        else
-        endif
-        push 0
-        gotofalse else
-        goto endif
-        else:
-        push 0
-        gototrue elif1else
-        push 1
-        gototrue elif2
-        goto else
-        elif1:
-        goto endif
-        elif2:
-        goto endif
-        else:
-        endif:
-        */
         if (node.hasElseif)
         {
             then = genCodeGoto();
@@ -764,6 +742,17 @@ class Compiler
         genCode(s.continueAddr);
         s.breakAddr.address = cast(int)code.length;
         breakAddr.address = cast(int)code.length;
+    }
+    void compileRepeat(RepeatUntil node, Scope s)
+    {
+        auto start = cast(int)code.length;
+        s = new Scope(new GotoAddr(-1), new GotoAddr(-1), s);
+        compileStatements(node.statements, s);
+        s.continueAddr.address = cast(int)code.length;
+        compileExpression(node.condExpression, s);
+        auto a = genCodeGotoFalse();
+        a.address = start;
+        s.breakAddr.address = cast(int)code.length;
     }
     void compileVar(Var node, Scope sc)
     {
@@ -1095,6 +1084,9 @@ class Compiler
                 break;
             case NodeType.Input:
                 compileInput(cast(Input)i, s);
+                break;
+            case NodeType.RepeatUntil:
+                compileRepeat(cast(RepeatUntil)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

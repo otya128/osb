@@ -41,6 +41,7 @@ enum NodeType
     Restore,
     On,
     Input,
+    RepeatUntil,
 }
 abstract class Node
 {
@@ -562,5 +563,18 @@ class Input : Statement
     void addVariable(Expression lvalue)
     {
         variables ~= lvalue;
+    }
+}
+
+class RepeatUntil : Statement
+{
+    Expression condExpression;
+    Statements statements;
+    this(Expression condExpression, Statements statements, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.RepeatUntil;
+        this.condExpression = condExpression;
+        this.statements = statements;
     }
 }

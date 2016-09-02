@@ -79,6 +79,8 @@ class Lexical
         reserved["USE"] = TokenType.Use;
         reserved["EXEC"] = TokenType.Exec;
         reserved["ELSEIF"] = TokenType.Elseif;
+        reserved["REPEAT"] = TokenType.Repeat;
+        reserved["UNTIL"] = TokenType.Until;
         reserved.rehash();
     }
     this(wstring input)
@@ -788,6 +790,21 @@ class Parser
         lex.popFront();
         return statements;
     }
+    Statements repeatStatements()
+    {
+        auto statements = new Statements(lex.location);
+        while(!lex.empty())
+        {
+            auto type = lex.front().type;
+            if(type == TokenType.Until) break;
+            auto statement = statement();
+            if(statement != Statement.NOP)
+            {
+                statements.addStatement(statement);
+            }
+        }
+        return statements;
+    }
     void syntaxError()
     {
         stderr.writeln("Syntax error (", lex.getLine(), ')', " Mysterious ", lex.front().type);
@@ -943,6 +960,9 @@ class Parser
                 return node;
             case TokenType.While:
                 node = whileStatement();
+                break;
+            case TokenType.Repeat:
+                node = repeatStatement();
                 break;
             case TokenType.Inc:
             case TokenType.Dec:
@@ -1350,6 +1370,27 @@ class Parser
         }
         Statements statements = whileStatements();
         auto node = new While(expr, statements, lex.location);
+        return node;
+    }
+    RepeatUntil repeatStatement()
+    {
+        lex.popFront();
+        Statements statements = repeatStatements();
+        auto token = lex.front;
+        if (token.type != TokenType.Until)
+        {
+            //TODO:REPEAT without UNTIL
+            syntaxError();
+            return null;
+        }
+        lex.popFront();
+        auto expr = expression();
+        if(expr is null)
+        {
+            syntaxError();
+            return null;
+        }
+        auto node = new RepeatUntil(expr, statements, lex.location);
         return node;
     }
     If if_()
