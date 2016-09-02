@@ -78,6 +78,7 @@ class Lexical
         reserved["COMMON"] = TokenType.Common;
         reserved["USE"] = TokenType.Use;
         reserved["EXEC"] = TokenType.Exec;
+        reserved["ELSEIF"] = TokenType.Elseif;
         reserved.rehash();
     }
     this(wstring input)
@@ -708,6 +709,7 @@ class Parser
             flag = false;
             if(type == TokenType.NewLine) break;
             if(type == TokenType.Else) break;
+            if(type == TokenType.Elseif) break;
             if(type == TokenType.Endif) break;
             if(type == TokenType.Label)
             {
@@ -730,6 +732,7 @@ class Parser
         {
             auto type = lex.front().type;
             if(type == TokenType.Else) break;
+            if(type == TokenType.Elseif) break;
             if(type == TokenType.Endif) break;
             auto statement = statement();
             if(statement != Statement.NOP)
@@ -1388,6 +1391,47 @@ class Parser
         }
         token = lex.front();
         lex.popFront();
+        import std.typecons;
+        Tuple!(Statements, Expression)[] elseif = new Tuple!(Statements, Expression)[0];
+        while(token.type == TokenType.Elseif)
+        {
+            token = lex.front();
+            auto elseifcond = expression();
+            if(elseifcond is null)
+            {
+                syntaxError();
+                return null;
+            }
+            token = lex.front();
+            if(token.type != TokenType.Then)
+            {
+                if(token.type != TokenType.Goto)
+                {
+                    //IF expr GOSUBは不可
+                    syntaxError();
+                    return null;
+                }
+            }
+            if(token.type != TokenType.Goto)
+            {
+                lex.popFront();
+                token = lex.front();
+            }
+            if(!multiline && lex.front().type == TokenType.NewLine)
+            {
+                syntaxError();
+            }
+            if(multiline)
+            {
+                elseif ~= tuple(multilineIfStatements(), elseifcond);
+            }
+            else
+            {
+                elseif ~= tuple(ifStatements(), elseifcond);
+            }
+            token = lex.front();
+            lex.popFront();
+        }
         Statements else_;
         if(token.type == TokenType.Else)
         {
@@ -1399,14 +1443,14 @@ class Parser
             if(multiline)
             {
                 else_ = multilineIfStatements();
-                lex.popFront();
             }
             else
             {
                 else_ = ifStatements();
             }
+            lex.popFront();
         }
-        auto if_ = new If(expr, then, else_, lex.location);
+        auto if_ = new If(expr, then, else_, elseif, lex.location);
         return if_;
     }
     Assign assign(wstring name)
@@ -1449,14 +1493,16 @@ class Parser
             }
             if(token.type != TokenType.Colon && token.type != TokenType.NewLine && 
                token.type != TokenType.Semicolon && token.type != TokenType.Comma &&
-               token.type != TokenType.Else && token.type != TokenType.Endif)
+               token.type != TokenType.Else && token.type != TokenType.Endif &&
+               token.type != TokenType.Elseif && token.type != TokenType.Print)
             {
                 syntaxError();
             }
             else
             {
                 if(token.type == TokenType.Colon || token.type == TokenType.NewLine ||
-                   token.type == TokenType.Else || token.type == TokenType.Endif)
+                   token.type == TokenType.Else || token.type == TokenType.Endif ||
+                   token.type == TokenType.Elseif || token.type == TokenType.Print)
                 {
                     print.addLine();
                     break;

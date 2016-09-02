@@ -247,20 +247,27 @@ class Goto : Statement
 }
 class If : Statement
 {
+    import std.typecons;
     Expression condition;
     Statements then;
     Statements else_;
-    this(Expression condition, Statements t, Statements e, SourceLocation loc)
+    Tuple!(Statements, Expression)[] elseif;
+    this(Expression condition, Statements t, Statements e, Tuple!(Statements, Expression)[] elif, SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.If;
         this.condition = condition;
         this.then = t;
         this.else_ = e;
+        this.elseif = elif;
     }
     bool hasElse()
     {
         return !(else_ is null) && else_.statements.length != 0;
+    }
+    bool hasElseif()
+    {
+        return !(elseif is null) && elseif.length != 0;
     }
 }
 class For : Statement

@@ -656,7 +656,46 @@ class Compiler
         compileStatements(node.then, sc);
         //もしelseもあるのならば、endifに飛ぶ
         GotoAddr then;
-        if(node.hasElse)
+        /*
+        if 0 then
+        elseif 0 then
+        elseif 1 then
+        else
+        endif
+        push 0
+        gotofalse else
+        goto endif
+        else:
+        push 0
+        gototrue elif1else
+        push 1
+        gototrue elif2
+        goto else
+        elif1:
+        goto endif
+        elif2:
+        goto endif
+        else:
+        endif:
+        */
+        if (node.hasElseif)
+        {
+            then = genCodeGoto();
+            else_.address = cast(int)code.length;
+            GotoFalse else2;
+            foreach(t; node.elseif)
+            {
+                compileExpression(t[1], sc);
+                else2 = genCodeGotoFalse();
+                compileStatements(t[0], sc);
+                genCode(then);
+                else2.address = cast(int)code.length;
+            }
+            if(node.hasElse)
+                compileStatements(node.else_, sc);
+            then.address = cast(int)code.length;
+        }
+        else if(node.hasElse)
         {
             then = genCodeGoto();
             else_.address = cast(int)code.length;
