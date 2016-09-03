@@ -403,8 +403,6 @@ class BuiltinFunction
                     p.popFront();
                     if(p.empty) return 0;
                     //enforce(!p.empty, bailOut());
-                    if (std.ascii.toLower(p.front) == 'i')
-                        goto case 'i';
                     if(p.empty) return 0;
                     //enforce(!p.empty, bailOut());
                     break;
@@ -413,23 +411,6 @@ class BuiltinFunction
                     if(p.empty) return 0;
                     //enforce(!p.empty, bailOut());
                     break;
-                case 'i': case 'I':
-                    p.popFront();
-                    if(p.empty) return 0;
-                    //enforce(!p.empty, bailOut());
-                    if (std.ascii.toLower(p.front) == 'n')
-                    {
-                        p.popFront();
-                        if(p.empty) return 0;
-                        if(std.ascii.toLower(p.front) == 'f')
-                        {
-                            // 'inf'
-                            p.popFront();
-                            result = sign ? -Target.infinity : Target.infinity;
-                            return 0;
-                        }
-                    }
-                    goto default;
                 default: {}
             }
 
@@ -584,19 +565,6 @@ class BuiltinFunction
             }
             else // not hex
             {
-                if (std.ascii.toUpper(p.front) == 'N' && !startsWithZero)
-                {
-                    // nan
-                    if(!((p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'A') &&
-                         (p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'N'))) return 0;
-                    //enforce((p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'A')
-                    //        && (p.popFront(), !p.empty && std.ascii.toUpper(p.front) == 'N'),
-                    //       new ConvException("error converting input to floating point"));
-                    // skip past the last 'n'
-                    p.popFront();
-                    result = typeof(result).nan;
-                    return true;
-                }
 
                 bool sawDigits = startsWithZero;
 
@@ -713,39 +681,103 @@ class BuiltinFunction
             result = (sign) ? -ldval : ldval;
             return true;
         }
+
+    /// ditto
+    static bool tryParse(Target, Source)(ref Source s, uint radix, out Target result)
+        if (isSomeChar!(ElementType!Source) &&
+            isIntegral!Target && !is(Target == enum))
+    {
+        if (!(radix >= 2 && radix <= 36))
+        {
+            result = 0;
+            return false;
+        }
+        import core.checkedint : mulu, addu;
+
+        immutable uint beyond = (radix < 10 ? '0' : 'a'-10) + radix;
+
+        Target v = 0;
+        bool atStart = true;
+
+        for (; !s.empty; s.popFront())
+        {
+            uint c = s.front;
+            if (c < '0')
+                break;
+            if (radix < 10)
+            {
+                if (c >= beyond)
+                    break;
+            }
+            else
+            {
+                if (c > '9')
+                {
+                    c |= 0x20;//poorman's tolower
+                    if (c < 'a' || c >= beyond)
+                        break;
+                    c -= 'a'-10-'0';
+                }
+            }
+
+            bool overflow = false;
+            auto nextv = v.mulu(radix, overflow).addu(c - '0', overflow);
+            if (overflow || nextv > Target.max)
+                goto Loverflow;
+            v = cast(Target) nextv;
+
+            atStart = false;
+        }
+        if (atStart)
+            goto Lerr;
+        result = v;
+        return true;
+
+    Loverflow:
+        result = 0;
+        return false;
+    Lerr:
+        result = 0;
+        return false;
+    }
     static double VAL(wstring str)
     {
-        try
+        munch(str, " ");
+        if(str.length > 2 && str[0..2] == "&H")
         {
-            if(str.empty) return 0;
-            if(str.length > 2 && str[0..2] == "&H")
+            int r;
+            str = str[2..$];
+            if (tryParse!(int, wstring)(str, 16, r))
             {
-                return str[2..$].to!int(16);
+                if (!str.empty)
+                    return 0;
+                return r;
             }
-            if(str.length > 2 && str[0..2] == "&B")
-            {
-                return str[2..$].to!int(2);
-            }
-            munch(str, " ");
-            if(str.empty) return 0;
-            /*
-            wchar c = str[0];
-            if((c > '9' || c < '0') && (c != '-' && c != '+' && c != '.'))
-                return 0;*/
-            double val;
-            if(tryParse(str, val))
-                return val;
             else
+            {
                 return 0;
-            //例外は遅い
-            //TryParse欲しい...
-            //double val = str.to!double;
-            //return val;
+            }
         }
-        catch(Exception e)
+        if(str.length > 2 && str[0..2] == "&B")
         {
-            return 0;//toriaezu
+            int r;
+            str = str[2..$];
+            if (tryParse!(int, wstring)(str, 2, r))
+            {
+                if (!str.empty)
+                    return 0;
+                return r;
+            }
+            else
+            {
+                return 0;
+            }
         }
+        double val;
+        if(tryParse(str, val) && str.empty)
+            return val;
+        else
+            return 0;
     }
     static nothrow double FLOOR(double val)
     {
