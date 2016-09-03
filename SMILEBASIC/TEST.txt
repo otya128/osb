@@ -1,4 +1,16 @@
 '--no-direct-mode --file TEST.TXT
+DEF MAXMINTEST
+ ASSERT__ MAX(0,1,2,3,4,5,4,3,2,1,0)==5,"MAX"
+ ASSERT__ MIN(5,4,3,2,1,0,1,2,3,4,5)==0,"MIN"
+ DIM A[5]
+ FOR I=0 TO LEN(A)-1
+  A[I]=I+1
+ NEXT
+ ASSERT__ MAX(A)==5,"MAX"
+ ASSERT__ MIN(A)==1,"MIN"
+END
+MAXMINTEST
+
 DEF SORTTEST
  DIM A[4]
  DIM B$[4]

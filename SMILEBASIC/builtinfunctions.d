@@ -1831,6 +1831,50 @@ class BuiltinFunction
             }
         }
     }
+    static double MAX(Value array)
+    {
+        import std.algorithm.searching;
+        if (array.type == ValueType.IntegerArray)
+        {
+            return minPos!"a > b"(array.integerArray.array)[0];
+        }
+        if (array.type == ValueType.DoubleArray)
+        {
+            return minPos!"a > b"(array.doubleArray.array)[0];
+        }
+        throw new TypeMismatch();
+    }
+    static double MAX(Value[] args)
+    {
+        import std.algorithm.searching;
+        if (args.length == 0)
+        {
+            throw new IllegalFunctionCall("MAX");
+        }
+        return minPos!"a.castDouble > b.castDouble"(args)[0].castDouble;
+    }
+    static double MIN(Value array)
+    {
+        import std.algorithm.searching;
+        if (array.type == ValueType.IntegerArray)
+        {
+            return minPos!"a < b"(array.integerArray.array)[0];
+        }
+        if (array.type == ValueType.DoubleArray)
+        {
+            return minPos!"a < b"(array.doubleArray.array)[0];
+        }
+        throw new TypeMismatch();
+    }
+    static double MIN(Value[] args)
+    {
+        import std.algorithm.searching;
+        if (args.length == 0)
+        {
+            throw new IllegalFunctionCall("MIN");
+        }
+        return minPos!"a.castDouble < b.castDouble"(args)[0].castDouble;
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

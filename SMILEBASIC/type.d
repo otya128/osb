@@ -136,15 +136,33 @@ struct Value
     }
     int castInteger()
     {
-        return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? cast(int)this.doubleValue : 0);
+        if (this.type == ValueType.Integer)
+        {
+            return this.integerValue;
+        }
+        if (this.type == ValueType.Double)
+        {
+            return cast(int)this.doubleValue;
+        }
+        throw new TypeMismatch();
     }
     double castDouble()
     {
-        return this.type == ValueType.Integer ? this.integerValue : (this.type == ValueType.Double ? this.doubleValue : 0);
+        if (this.type == ValueType.Integer)
+        {
+            return this.integerValue;
+        }
+        if (this.type == ValueType.Double)
+        {
+            return this.doubleValue;
+        }
+        throw new TypeMismatch();
     }
     wstring castString()
     {
-        return this.type == ValueType.String ? this.stringValue : "";
+        if (this.type == ValueType.String)
+            return this.stringValue;
+        throw new TypeMismatch();
     }
     string toString()
     {
