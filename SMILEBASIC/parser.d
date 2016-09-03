@@ -1729,12 +1729,12 @@ class Parser
                 //TODO:UnaryOperatorの実装
                 //とりあえず0-exprを作成
                 lex.popFront();
-                node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, factor(), lex.location);
+                node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, term(2/*array*/, null), lex.location);
                 return node;
             case TokenType.LogicalNot:
             case TokenType.Not:
                 lex.popFront();
-                node = new UnaryOperator(token.type, factor(), lex.location);
+                node = new UnaryOperator(token.type, term(2/*array*/, null), lex.location);
                 return node;
             default:
                 return node;
