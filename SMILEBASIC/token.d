@@ -72,6 +72,7 @@ enum TokenType
     Elseif,
     Repeat,
     Until,
+    Swap,
 }
 
 struct Token

@@ -43,6 +43,7 @@ enum NodeType
     Input,
     RepeatUntil,
     Option,
+    Swap,
 }
 abstract class Node
 {
@@ -588,5 +589,18 @@ class Option : Statement
         super.location = loc;
         this.type = NodeType.Option;
         argument = arg;
+    }
+}
+
+class Swap : Statement
+{
+    Expression item1;
+    Expression item2;
+    this(Expression item1, Expression item2, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.Swap;
+        this.item1 = item1;
+        this.item2 = item2;
     }
 }

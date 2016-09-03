@@ -1742,3 +1742,88 @@ class IncRef : Code
         return "incref";
     }
 }
+
+class SwapCode : Code
+{
+    void getPointer(ref Value v, out int* ip, out double* dp, out wstring* sp)
+    {
+        ip = null;
+        dp = null;
+        sp = null;
+        if (v.type == ValueType.Reference)
+        {
+            if(v.reference.type == ValueType.Integer)
+            {
+                ip = &v.reference.integerValue;
+                return;
+            }
+            if(v.reference.type == ValueType.Double)
+            {
+                dp = &v.reference.doubleValue;
+                return;
+            }
+            if(v.reference.type == ValueType.String)
+            {
+                sp = &v.reference.stringValue;
+                return;
+            }
+        }
+        if (v.type == ValueType.IntegerReference)
+        {
+            ip = v.integerReference;
+            return;
+        }
+        if (v.type == ValueType.DoubleReference)
+        {
+            dp = v.doubleReference;
+            return;
+        }
+        if (v.type == ValueType.StringReference)
+        {
+            sp = v.stringReference;
+            return;
+        }
+        throw new TypeMismatch();
+    }
+    override void execute(VM vm)
+    {
+        Value refitem2, refitem1;
+        vm.pop(refitem2);
+        vm.pop(refitem1);
+        double* dp1, dp2;
+        int* ip1, ip2;
+        wstring* sp1, sp2;
+        getPointer(refitem1, ip1, dp1, sp1);
+        getPointer(refitem2, ip2, dp2, sp2);
+        if ((sp1 && (dp2 || ip2)) || (sp2 && (dp1 || ip1)))
+        {
+            throw new TypeMismatch();
+        }
+        import std.algorithm.mutation : swap;
+        if (sp1)
+        {
+            swap(*sp1, *sp2);
+            return;
+        }
+        if (ip1 && ip2)
+        {
+            swap(*ip1, *ip2);
+            return;
+        }
+        if (dp1 && dp2)
+        {
+            swap(*dp1, *dp2);
+            return;
+        }
+        double num1 = ip1 ? *ip1 : *dp1;
+        double num2 = ip2 ? *ip2 : *dp2;
+        if (ip2)
+            *ip2 = cast(int)num1;
+        else
+            *dp2 = num1;
+        if (ip1)
+            *ip1 = cast(int)num2;
+        else
+            *dp1 = num2;
+    }
+}

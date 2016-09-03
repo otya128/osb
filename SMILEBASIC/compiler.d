@@ -886,6 +886,12 @@ class Compiler
             compilePopVar(i, sc);
         }
     }
+    void compileSwap(Swap swap, Scope sc)
+    {
+        compilePushReference(swap.item2, sc);
+        compilePushReference(swap.item1, sc);
+        genCode(new SwapCode());
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -1131,6 +1137,9 @@ class Compiler
                         isDefint = true;
                     }
                 }
+                break;
+            case NodeType.Swap:
+                compileSwap(cast(Swap)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

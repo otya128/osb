@@ -81,6 +81,7 @@ class Lexical
         reserved["ELSEIF"] = TokenType.Elseif;
         reserved["REPEAT"] = TokenType.Repeat;
         reserved["UNTIL"] = TokenType.Until;
+        reserved["SWAP"] = TokenType.Swap;
         reserved.rehash();
     }
     this(wstring input)
@@ -1023,12 +1024,37 @@ class Parser
                     writeln("NOTIMPL:EXEC");
                 }
                 break;
+            case TokenType.Swap:
+                return swapStatement();
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    Swap swapStatement()
+    {
+        lex.popFront();
+        auto expr1 = expression();
+        if (lex.front.type == TokenType.Comma)
+        {
+            lex.popFront();
+        }
+        else
+        {
+            syntaxError();
+        }
+        auto expr2 = expression();
+        if (!expr1 || !expr2)
+        {
+            syntaxError();
+        }
+        if (!isLValue(expr1) || !isLValue(expr2))
+        {
+            syntaxError();
+        }
+        return new Swap(expr1, expr2, lex.location);
     }
     //左辺値か
     bool isLValue(Expression expr)
