@@ -804,17 +804,32 @@ class BuiltinFunction
         else
             return 0;
     }
-    static nothrow double FLOOR(double val)
+    static Value FLOOR(Value val)
     {
-        return val.floor;
+        if (val.isInteger)
+        {
+            return val;
+        }
+
+        return Value(val.doubleValue.floor);
     }
-    static nothrow double ROUND(double val)
+    static Value ROUND(Value val)
     {
-        return val.round;
+        if (val.isInteger)
+        {
+            return val;
+        }
+
+        return Value(val.doubleValue.round);
     }
-    static nothrow double CEIL(double val)
+    static Value CEIL(Value val)
     {
-        return val.ceil;
+        if (val.isInteger)
+        {
+            return val;
+        }
+
+        return Value(val.doubleValue.ceil);
     }
     static wstring MID(wstring str, int i, int len)
     {
