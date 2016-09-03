@@ -129,9 +129,16 @@ class BuiltinFunction
     }*/
     //static double function(double) ABS = &abs!double;
     //static double function(double) SGN = &sgn!double;
-    static pure nothrow double ABS(double arg1)
+    static Value ABS(Value arg1)
     {
-        return abs(arg1);
+        if (arg1.isInteger)
+        {
+            return Value(abs(arg1.integerValue));
+        }
+        else
+        {
+            return Value(abs(arg1.castDouble));
+        }
     }
     static pure nothrow double SGN(double arg1)
     {
