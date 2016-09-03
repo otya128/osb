@@ -1,3 +1,43 @@
+'--no-direct-mode --file TEST.TXT
+DEF SORTTEST
+ DIM A[4]
+ DIM B$[4]
+ DIM C$[4]
+ A[0]=3
+ A[1]=2
+ A[2]=1
+ A[3]=0
+ B$[0]="0"
+ B$[1]="1"
+ B$[2]="2"
+ B$[3]="3"
+ C$[0]="A"
+ C$[1]="B"
+ C$[2]="C"
+ C$[3]="D"
+ SORT A,B$,C$
+ ASSERT__ A[0]==0,"SORT"
+ ASSERT__ B$[0]=="3","SORT"
+ ASSERT__ C$[0]=="D","SORT"
+ RSORT A,B$,C$
+ ASSERT__ A[3]==0,"RSORT"
+ ASSERT__ B$[3]=="3","RSORT"
+ ASSERT__ C$[3]=="D","RSORT"
+ SORTTEST2
+END
+DEF SORTTEST2
+ DIM A[10]
+ DIM B[10]
+ A[9]=-1
+ B[9]=12345
+ SORT 1,9,A,B
+ ASSERT__ A[1]==-1,"SORT"
+ ASSERT__ B[1]==12345,"SORT"
+ RSORT 1,8,A,B
+ ASSERT__ A[8]==-1,"RSORT"
+ ASSERT__ B[8]==12345,"RSORT"
+END
+SORTTEST
 'SWAP TEST
 SWAPTEST
 DEF SWAPTEST

@@ -1453,6 +1453,384 @@ class BuiltinFunction
     {
         return p.inkey();
     }
+    static auto getSortArgument(Value[] arg, out int start, out int count)
+    {
+        auto args = retro(arg);
+        //引数何も指定しなくても実行前エラーは出ない
+        if (args.length < 1)
+            throw new IllegalFunctionCall("");
+        if (args.length > 2)
+        {
+            if (args[0].isNumber || args[1].isNumber)
+            {
+                if (args[0].isNumber && args[1].isNumber)
+                {
+                    start = args[0].castInteger();
+                    count = args[1].castInteger();
+                    args = args[2..$];
+                }
+                else
+                {
+                    throw new IllegalFunctionCall("");
+                }
+            }
+            else
+            {
+                start = 0;
+                count = args[0].length;
+            }
+        }
+        else
+        {
+            start = 0;
+            count = args[0].length;
+        }
+        if (args.length > 8)
+            throw new IllegalFunctionCall("");
+        foreach (ref a; args)
+        {
+            if (a.isString || !a.isArray)
+            {
+                throw new TypeMismatch();
+            }
+        }
+        return args;
+    }
+    struct wrappeeer
+    {
+        Value value;
+        union
+        {
+            int[] integerArray;
+            double[] doubleArray;
+            wstring[] stringArray;
+        }
+        this(ref Value v)
+        {
+            value = v;
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray = value.integerArray.array;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray = value.doubleArray.array;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray = value.stringArray.array;
+            }
+        }
+        private void slice(int x, int y)
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray = integerArray[x..y];
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray = doubleArray[x..y];
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray = stringArray[x..y];
+            }
+        }
+        size_t length()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                return integerArray.length;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                return doubleArray.length;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                return stringArray.length;
+            }
+            throw new TypeMismatch();
+        }
+        bool empty()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                return integerArray.empty;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                return doubleArray.empty;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                return stringArray.empty;
+            }
+            throw new TypeMismatch();
+        }
+        void popFront()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray.popFront;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray.popFront;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray.popFront;
+            }
+        }
+        void front(Value v)
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray.front = v.castInteger;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray.front = v.castDouble;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray.front = v.castString;
+            }
+        }
+        void popBack()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray.popBack;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray.popBack;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray.popBack;
+            }
+        }
+        Value back()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                return Value(integerArray.back);
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                return Value(doubleArray.back);
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                return Value(stringArray.back);
+            }
+            throw new TypeMismatch();
+        }
+        void back(Value v)
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray.back = v.castInteger;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray.back = v.castDouble;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray.back = v.castString;
+            }
+        }
+        typeof(this) save()
+        {
+            return this;
+        }
+        Value front()
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                return Value(integerArray.front);
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                return Value(doubleArray.front);
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                return Value(stringArray.front);
+            }
+            throw new TypeMismatch();
+        }
+        void opIndexAssign(Value v, size_t index)
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                integerArray[index] = v.castInteger;
+                return;
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                doubleArray[index] = v.castDouble;
+                return;
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                stringArray[index] = v.castString;
+                return;
+            }
+            throw new TypeMismatch();
+        }
+        Value opIndex(size_t index)
+        {
+            if (value.type == ValueType.IntegerArray)
+            {
+                return Value(integerArray[index]);
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                return Value(doubleArray[index]);
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                return Value(stringArray[index]);
+            }
+            throw new TypeMismatch();
+        }
+        wrappeeer opSlice(size_t x, size_t y)
+        {
+            wrappeeer aa = wrappeeer(value);
+            if (value.type == ValueType.IntegerArray)
+            {
+                aa.integerArray = integerArray[x..y];
+            }
+            if (value.type == ValueType.DoubleArray)
+            {
+                aa.doubleArray = doubleArray[x..y];
+            }
+            if (value.type == ValueType.StringArray)
+            {
+                aa.stringArray = stringArray[x..y];
+            }
+            return aa;
+        }
+    }
+    static string sortGenerator(int count, string less)()
+    {
+        string buf = "switch(args.length){";
+        string args = "";
+        for (int i = 0; i < count; i++)
+        {
+            args ~= ",wrappeeer(args[" ~ (i + 1).to!string ~ "])[start..start + count]";
+            buf ~= "case " ~ (i + 2).to!string ~ ":";
+            buf ~= "if(args[0].type==ValueType.IntegerArray){sort!(" ~ less ~ ", SwapStrategy.stable)(zip(iarray" ~ args ~ "));}";
+            buf ~= "else if(args[0].type==ValueType.DoubleArray){sort!(" ~ less ~ ", SwapStrategy.stable)(zip(darray" ~ args ~ "));}";
+            buf ~= "else if(args[0].type==ValueType.StringArray){sort!(" ~ less ~ ", SwapStrategy.stable)(zip(sarray" ~ args ~ "));}";
+            buf ~= "break;";
+        }
+        buf ~= "default:}";
+        return buf;
+    }
+    //もう少しまともな実装できそう
+    static void SORT(Value[] arg)
+    {
+        import std.algorithm.sorting;
+        import std.range;
+        int start, count;
+        auto args = getSortArgument(arg, start, count);
+
+        int[] iarray;
+        double[] darray;
+        wstring[] sarray;
+        if (args[0].type == ValueType.IntegerArray)
+        {
+            iarray = args[0].integerArray.array[start..start + count];
+        }
+        if (args[0].type == ValueType.DoubleArray)
+        {
+            darray = args[0].doubleArray.array[start..start + count];
+        }
+        if (args[0].type == ValueType.StringArray)
+        {
+            sarray = args[0].stringArray.array[start..start + count];
+        }
+        if (args.length > 1)
+        {
+            mixin(sortGenerator!(8, "\"a[0]<b[0]\""));
+            /*
+            if (args[0].type == ValueType.IntegerArray)
+            {
+                sort!("a[0] < b[0]", SwapStrategy.stable)(zip(args[0].integerArray.array, wrappeeer(args[1])));
+            }
+            if (args[0].type == ValueType.DoubleArray)
+            {
+                sort!("a[0] < b[0]", SwapStrategy.stable)(zip(args[0].doubleArray.array, wrappeeer(args[1])));
+            }
+            if (args[0].type == ValueType.StringArray)
+            {
+                sort!("a[0] < b[0]", SwapStrategy.stable)(zip(args[0].stringArray.array, wrappeeer(args[1])));
+            }*/
+        }
+        else
+        {
+            if (args[0].type == ValueType.IntegerArray)
+            {
+                sort!("a < b", SwapStrategy.stable)(iarray);
+            }
+            if (args[0].type == ValueType.DoubleArray)
+            {
+                sort!("a < b", SwapStrategy.stable)(darray);
+            }
+            if (args[0].type == ValueType.StringArray)
+            {
+                sort!("a < b", SwapStrategy.stable)(sarray);
+            }
+        }
+    }
+    static void RSORT(Value[] arg)
+    {
+        import std.algorithm.sorting;
+        import std.range;
+        int start, count;
+        auto args = getSortArgument(arg, start, count);
+
+        int[] iarray;
+        double[] darray;
+        wstring[] sarray;
+        if (args[0].type == ValueType.IntegerArray)
+        {
+            iarray = args[0].integerArray.array[start..start + count];
+        }
+        if (args[0].type == ValueType.DoubleArray)
+        {
+            darray = args[0].doubleArray.array[start..start + count];
+        }
+        if (args[0].type == ValueType.StringArray)
+        {
+            sarray = args[0].stringArray.array[start..start + count];
+        }
+        if (args.length > 1)
+        {
+            mixin(sortGenerator!(8, "\"a[0]>b[0]\""));
+        }
+        else
+        {
+            if (args[0].type == ValueType.IntegerArray)
+            {
+                sort!("a > b", SwapStrategy.stable)(iarray);
+            }
+            if (args[0].type == ValueType.DoubleArray)
+            {
+                sort!("a > b", SwapStrategy.stable)(darray);
+            }
+            if (args[0].type == ValueType.StringArray)
+            {
+                sort!("a > b", SwapStrategy.stable)(sarray);
+            }
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
