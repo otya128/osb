@@ -141,9 +141,16 @@ class BuiltinFunction
     {
         return sin(arg1);
     }
-    static pure nothrow double ASIN(double arg1)
+    static double ASIN(double arg1)
     {
-        return asin(arg1);
+        if (arg1 >= -1 && arg1 <= 1)
+        {
+            return asin(arg1);
+        }
+        else
+        {
+            throw new OutOfRange();
+        }
     }
     static pure nothrow double SINH(double arg1)
     {
@@ -153,9 +160,16 @@ class BuiltinFunction
     {
         return cos(arg1);
     }
-    static pure nothrow double ACOS(double arg1)
+    static double ACOS(double arg1)
     {
-        return acos(arg1);
+        if (arg1 >= -1 && arg1 <= 1)
+        {
+            return acos(arg1);
+        }
+        else
+        {
+            throw new OutOfRange();
+        }
     }
     static pure nothrow double COSH(double arg1)
     {
