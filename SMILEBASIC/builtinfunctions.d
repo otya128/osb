@@ -862,6 +862,21 @@ class BuiltinFunction
     {
         return val.to!wstring;
     }
+    static wstring STR(double val, int digits)
+    {
+        //formatだとうまくいかない
+        if(digits > 63 || digits < 0)
+        {
+            throw new OutOfRange();
+        }
+        auto str = val.to!wstring;
+        if (str.length >= digits)
+            return str;
+        wchar[64] str2;
+        str2[0..digits - str.length] = ' ';
+        str2[digits - str.length..digits] = str;
+        return str2[0..digits].to!wstring;
+    }
     static wstring HEX(int val, DefaultValue!(int, false) digits)
     {
         import std.format;
