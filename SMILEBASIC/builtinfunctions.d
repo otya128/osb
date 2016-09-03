@@ -140,9 +140,13 @@ class BuiltinFunction
             return Value(abs(arg1.castDouble));
         }
     }
-    static pure nothrow double SGN(double arg1)
+    static pure nothrow @nogc @trusted int SGN(double arg1)
     {
-        return sgn(arg1);
+        if (isNaN(arg1))
+        {
+            return 1;
+        }
+        return arg1 > 0 ? 1 : arg1 ? -1 : 0;
     }
     static pure nothrow double SIN(double arg1)
     {
