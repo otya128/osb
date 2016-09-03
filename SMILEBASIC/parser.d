@@ -126,7 +126,8 @@ class Lexical
                     if(table[cast(char)c] == TokenType.NewLine) break;
                 }
                 token = Token(TokenType.NewLine);
-                break;
+                if (i >= code.length)
+                    break;
             }
             if(c.isDigit() || c == '.')
             {
@@ -195,8 +196,22 @@ class Lexical
                         break;
                     }
                 }
-                token = Token(TokenType.Iden, Value(iden));
-                break;
+                if (iden == "REM")
+                {
+                    for(;i < code.length;i++)
+                    {
+                        c = code[i];
+                        if(table[cast(char)c] == TokenType.NewLine) break;
+                    }
+                    token = Token(TokenType.NewLine);
+                    if (i >= code.length)
+                        break;
+                }
+                else
+                {
+                    token = Token(TokenType.Iden, Value(iden));
+                    break;
+                }
             }
             if(c == '"')
             {
