@@ -938,7 +938,12 @@ class PetitComputer
             glEnable(GL_ALPHA_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             xscreen(0, 512, 4);
-            renderCondition.notify();
+            {
+                renderCondition.mutex.lock;
+                scope (exit)
+                    renderCondition.mutex.unlock;
+                renderCondition.notify();
+            }
             while(true)
             {
                 auto profile = SDL_GetTicks();
@@ -1145,7 +1150,12 @@ class PetitComputer
         core.thread.Thread thread = new core.thread.Thread(&render);
         renderCondition = new Condition(new Mutex());
         thread.start();
-        renderCondition.wait();
+        {
+            renderCondition.mutex.lock;
+            scope (exit)
+                renderCondition.mutex.unlock;
+            renderCondition.wait();
+        }
         auto startTicks = SDL_GetTicks();
         Parser parser;
         otya.smilebasic.vm.VM vm;
