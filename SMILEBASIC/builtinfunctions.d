@@ -880,7 +880,7 @@ class BuiltinFunction
     static wstring HEX(int val, DefaultValue!(int, false) digits)
     {
         import std.format;
-        if(digits > 8)
+        if(digits > 8 || digits < 0)
         {
             throw new OutOfRange();
         }
