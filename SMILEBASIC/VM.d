@@ -129,7 +129,7 @@ class VM
     }
     void processBreakPoint()
     {
-        if (currentSlot.debugInfo.location[pc].isBreakPoint)
+        if (currentSlot.debugInfo.location.length > pc && currentSlot.debugInfo.location[pc].isBreakPoint)
         {
             //TODO:まともにする
             writefln("break point\nslot:%d,pc:%d,line:%d", currentSlotNumber, pc, currentSlot.debugInfo.location[pc].location.line);
