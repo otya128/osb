@@ -858,7 +858,7 @@ class BuiltinFunction
             throw new IllegalFunctionCall("ASC");
         return cast(int)str[0];
     }
-    static wstring STR(int val)
+    static wstring STR(double val)
     {
         return val.to!wstring;
     }
