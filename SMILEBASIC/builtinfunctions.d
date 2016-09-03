@@ -1943,6 +1943,34 @@ class BuiltinFunction
         }
         return Value(a1.castDouble < a2.castDouble ? a1.castDouble : a2.castDouble);
     }
+    static pure nothrow @nogc @safe double EXP()
+    {
+        return std.math.E;
+    }
+    static pure nothrow @nogc @safe double EXP(double d)
+    {
+        return std.math.exp(d);
+    }
+    static double LOG(double a)
+    {
+        if (a <= 0)
+        {
+            throw new OutOfRange();
+        }
+        return std.math.log(a);
+    }
+    static double LOG(double a, double b)
+    {
+        if (a <= 0)
+        {
+            throw new OutOfRange();
+        }
+        if (b <= 1)
+        {
+            throw new OutOfRange();
+        }
+        return std.math.log(a) / std.math.log(b);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
