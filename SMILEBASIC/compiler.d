@@ -23,7 +23,8 @@ class DebugInfo
     {
         while (line.length < loc.line)
         {
-            line ~= location.length;
+            import std.conv : to;
+            line ~= location.length.to!int;
         }
         for(int i = 0; i < code.length - old; i++)
         {
@@ -646,7 +647,7 @@ class Compiler
                 }
                 break;
             case NodeType.BinaryOperator:
-                { 
+                {
                     auto binop = cast(BinaryOperator)expr;
                     compileExpression(binop.item2, sc);
                     if(binop.operator == TokenType.LBracket)
