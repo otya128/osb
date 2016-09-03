@@ -601,15 +601,84 @@ class Operate : Code
                 }
             }
         }
+        int li = l.integerValue;
+        if (l.isInteger && r.isInteger)
+        {
+            switch(operator)
+            {
+                case TokenType.Plus:
+                    vm.push(Value(li + ri));
+                    return;
+                case TokenType.Minus:
+                    vm.push(Value(li - ri));
+                    return;
+                case TokenType.Mul:
+                    vm.push(Value(li * ri));
+                    return;
+                case TokenType.Div:
+                    vm.push(Value(li / ri));
+                    return;
+                case TokenType.IntDiv:
+                    //TODO:範囲外だとOverflow
+                    vm.push(Value(cast(int)(li / ri)));
+                    return;
+                case TokenType.Mod:
+                    vm.push(Value(li % ri));
+                    return;
+                case TokenType.And:
+                    vm.push(Value(li & ri));
+                    return;
+                case TokenType.Or:
+                    vm.push(Value(li | ri));
+                    return;
+                case TokenType.LogicalAnd:
+                    vm.push(Value(li && ri));
+                    return;
+                case TokenType.LogicalOr:
+                    vm.push(Value(li || ri));
+                    return;
+                case TokenType.Xor:
+                    vm.push(Value(li ^ ri));
+                    return;
+                case TokenType.Equal:
+                    vm.push(Value(li == ri));
+                    return;
+                case TokenType.NotEqual:
+                    vm.push(Value(li != ri));
+                    return;
+                case TokenType.Less:
+                    vm.push(Value(li < ri));
+                    return;
+                case TokenType.LessEqual:
+                    vm.push(Value(li <= ri));
+                    return;
+                case TokenType.Greater:
+                    vm.push(Value(li > ri));
+                    return;
+                case TokenType.GreaterEqual:
+                    vm.push(Value(li >= ri));
+                    return;
+                case TokenType.LeftShift:
+                    vm.push(Value(li << ri));
+                    return;
+                case TokenType.RightShift:
+                    vm.push(Value(li >> ri));
+                    return;
+                default:
+            }
+        }
+
         if (!l.isNumber || !r.isNumber)
             throw new TypeMismatch();
-
-        int li = l.integerValue;
-        double ld = l.integerValue;
+        double ld;
         if(l.type == ValueType.Double)
         {
             li = cast(int)l.doubleValue;
             ld = l.doubleValue;
+        }
+        else
+        {
+            ld = l.integerValue;
         }
         //とりあえずInteger
         switch(operator)

@@ -1875,6 +1875,23 @@ class BuiltinFunction
         }
         return minPos!"a.castDouble < b.castDouble"(args)[0].castDouble;
     }
+    //MAX(2,0)*&H7FFFFFFFF!=MAX(2,0,0)*&H7FFFFFFFF
+    static Value MAX(Value a1, Value a2)
+    {
+        if (a1.type == ValueType.Integer && a2.type == ValueType.Integer)
+        {
+            return Value(a1.integerValue > a2.integerValue ? a1.integerValue : a2.integerValue);
+        }
+        return Value(a1.castDouble > a2.castDouble ? a1.castDouble : a2.castDouble);
+    }
+    static Value MIN(Value a1, Value a2)
+    {
+        if (a1.type == ValueType.Integer && a2.type == ValueType.Integer)
+        {
+            return Value(a1.integerValue < a2.integerValue ? a1.integerValue : a2.integerValue);
+        }
+        return Value(a1.castDouble < a2.castDouble ? a1.castDouble : a2.castDouble);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
