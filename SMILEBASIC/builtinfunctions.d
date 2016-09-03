@@ -1248,8 +1248,12 @@ class BuiltinFunction
     {
         return a1 ^^ a2;
     }
-    static pure nothrow double SQR(double a1)
+    static double SQR(double a1)
     {
+        if (a1 < 0)
+        {
+            throw new OutOfRange();
+        }
         return sqrt(a1);
     }
     //GalateaTalk利用面倒くさい...
