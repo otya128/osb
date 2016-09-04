@@ -1052,12 +1052,14 @@ class PetitComputer
                         case SDL_QUIT:
                             return;
                         case SDL_KEYUP:
+                            synchronized (buttonLock)
                             {
                                 auto key = event.key.keysym.sym;
                                 button &= ~buttonTable[event.key.keysym.scancode];
                             }
                             break;
                         case SDL_KEYDOWN:
+                            synchronized (buttonLock)
                             {
                                 auto key = event.key.keysym.sym;
                                 button |= buttonTable[event.key.keysym.scancode];
@@ -1134,10 +1136,12 @@ class PetitComputer
         if(currentProject.length) printConsole("[", currentProject, "]");
         printConsole("OK\n");
     }
+    Object buttonLock;
     Slot[] slot;
     bool isRunningDirectMode = false;
     void run(bool nodirectmode = false, string inputfile = "")
     {
+        buttonLock = new Object();
         slot = new Slot[5];
         keybuffer = new Key[128];
         init();
@@ -1433,12 +1437,41 @@ class PetitComputer
         showCursor = true;
         int oldCSRX = this.CSRX;
         int oldCSRY = this.CSRY;
+        int pos;
+        void left()
+        {
+            pos--;
+            CSRX--;
+        }
+        void right()
+        {
+            CSRX++;
+        }
         while(!quit)
         {
             auto oldpos = keybufferpos;
             while(oldpos == keybufferpos && !quit)
             {
-                SDL_Delay(8);//適当 ストレスを感じないくらい
+                Button old;
+                synchronized(buttonLock)
+                {
+                    old = button;
+                }
+                SDL_Delay(16);//適当 ストレスを感じないくらい
+                Button button;
+                synchronized(buttonLock)
+                {
+                    button = this.button;
+                }
+                button = button ^ old & button;
+                if (button & Button.LEFT)
+                {
+                    left();
+                }
+                if (button & Button.RIGHT)
+                {
+                    right();
+                }
             }
             auto kbp = keybufferpos;
             auto len = kbp - oldpos;
@@ -1454,16 +1487,27 @@ class PetitComputer
             {
                 wchar key = key1.key;
                 wstring ks;
+                wstring obf = buffer;
                 if(key1.op == KeyOp.KEY)
                 {
                     if(key == 8)
                     {
                         k = key;
                         if(!buffer.length) continue;
-                        buffer = buffer[0..$ - 1];
-                        CSRX--;
-                        printConsoleString(" ");
-                        CSRX--;
+                        left();
+                        auto odcsrx = CSRX;
+                        auto odcsry = CSRY;
+                        buffer = (pos ? buffer[0..pos] : "");
+                        auto ocsrx = CSRX;
+                        auto ocsry = CSRY;
+                        if (obf.length > pos + 1)
+                        {
+                            buffer ~= obf[pos + 1..$];
+                            printConsole(obf[pos + 1..$]);
+                        }
+                        printConsole(" ");
+                        CSRX = odcsrx;
+                        CSRY = odcsry;
                         continue;
                     }
                     if(key == '\r')
@@ -1485,7 +1529,17 @@ class PetitComputer
                     }
                 }
                 printConsole(ks);
-                buffer ~= ks;
+                buffer = (pos ? buffer[0..pos] : "") ~ ks;
+                auto ocsrx = CSRX;
+                auto ocsry = CSRY;
+                if (obf.length > pos)
+                {
+                    buffer ~= obf[pos..$];
+                    printConsole(obf[pos..$]);
+                }
+                CSRX = ocsrx;
+                CSRY = ocsry;
+                pos += ks.length;
             }
             clearKeyBuffer();
             if(k == '\r')
