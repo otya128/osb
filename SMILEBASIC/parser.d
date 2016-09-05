@@ -1624,6 +1624,50 @@ class Parser
         }
         return print;
     }
+    //compilerでやるべきな気がする
+    bool constcalc(Value left, Value right, TokenType type, out double result)
+    {
+        switch (type)
+        {
+            case TokenType.Plus:
+                result = (left.castDouble + right.castDouble);
+                return true;
+            case TokenType.Minus:
+                result = (left.castDouble - right.castDouble);
+                return true;
+            case TokenType.Mul:
+                result = (left.castDouble * right.castDouble);
+                return true;
+            case TokenType.Div:
+                result = (left.castDouble / right.castDouble);
+                return true;
+            case TokenType.IntDiv:
+                //TODO:範囲外だとOverflow
+                result = (left.castInteger / right.castInteger);
+                return true;
+            case TokenType.Mod:
+                result = (left.castDouble % right.castDouble);
+                return true;
+            case TokenType.And:
+                result = (left.castInteger & right.castInteger);
+                return true;
+            case TokenType.Or:
+                result = (left.castInteger | right.castInteger);
+                return true;
+            case TokenType.Xor:
+                result = (left.castInteger ^ right.castInteger);
+                return true;
+            case TokenType.LeftShift:
+                result = (left.castInteger << right.castInteger);
+                return true;
+            case TokenType.RightShift:
+                result = (left.castInteger >> right.castInteger);
+                return true;
+            default:
+                result = double.init;
+                return !true;
+        }
+    }
     Expression expression()
     {
         Expression node = null;
@@ -1657,11 +1701,26 @@ class Parser
                     op.item2 = term(order - 1, node);
                 }
                 token = lex.front();
+                bool constexpr;
+                Expression op__ = op;
+                if (op.item1.type == NodeType.Constant && op.item2.type == NodeType.Constant)
+                {
+                    double result;
+                    if (constcalc((cast(Constant)op.item1).value, (cast(Constant)op.item2).value, op.operator, result))
+                    {
+                        op__ = new Constant(Value(result), lex.location);
+                        constexpr = true;
+                        if(order != getOPRank(token.type))
+                            return op__;
+                        op = new BinaryOperator(op__, lex.location);
+                        continue;
+                    }
+                }
                 version(none)
                     write(tt, " ");
                 if(order == getOPRank(token.type))
                 {
-                    BinaryOperator op2 = new BinaryOperator(op, lex.location);
+                    BinaryOperator op2 = new BinaryOperator(op__, lex.location);
                     op.item1 = op2;
                 }
                 version(none)stdout.flush();
