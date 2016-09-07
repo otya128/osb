@@ -1702,17 +1702,16 @@ class Parser
                 }
                 token = lex.front();
                 bool constexpr;
-                Expression op__ = op;
                 if (op.item1.type == NodeType.Constant && op.item2.type == NodeType.Constant)
                 {
                     double result;
                     if (constcalc((cast(Constant)op.item1).value, (cast(Constant)op.item2).value, op.operator, result))
                     {
-                        op__ = new Constant(Value(result), lex.location);
+                        auto l = new Constant(Value(result), lex.location);
                         constexpr = true;
                         if(order != getOPRank(token.type))
-                            return op__;
-                        op = new BinaryOperator(op__, lex.location);
+                            return l;
+                        op = new BinaryOperator(l, lex.location);
                         continue;
                     }
                 }
@@ -1720,7 +1719,7 @@ class Parser
                     write(tt, " ");
                 if(order == getOPRank(token.type))
                 {
-                    BinaryOperator op2 = new BinaryOperator(op__, lex.location);
+                    BinaryOperator op2 = new BinaryOperator(op, lex.location);
                     op.item1 = op2;
                 }
                 version(none)stdout.flush();

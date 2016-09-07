@@ -1257,12 +1257,12 @@ class PetitComputer
                 auto token = lex.front();
                 if(token.type == otya.smilebasic.token.TokenType.Iden && token.value.stringValue == "RUN")
                 {
-                    lex.popFront();
-                    token = lex.front();
-                    int slot;
                     bool empty = lex.empty();
+                    int slot;
                     if(!empty)
                     {
+                        lex.popFront();
+                        token = lex.front();
                         if(token.type != otya.smilebasic.token.TokenType.Integer)
                         {
                             printConsole("Illegal function call", "\n");
