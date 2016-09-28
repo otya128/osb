@@ -1,3 +1,4 @@
+[Japanese](README-ja.md)
 # otyaSMILEBASIC
 SmileBASIC 3.x Compatible BASIC
 
