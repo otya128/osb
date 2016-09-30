@@ -9,5 +9,6 @@
 	"buildRequirements": ["allowWarnings"],
 	"targetPath": "out",
 	"workingDirectory": "out",
-	"copyFiles": ["SMILEBASIC/spdef.csv"]
+	"copyFiles": ["SMILEBASIC/spdef.csv"],
+	"dflags-ldc":["-disable-linker-strip-dead"]
 }
