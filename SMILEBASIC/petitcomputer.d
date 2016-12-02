@@ -8,7 +8,7 @@ import std.file;
 import std.stdio;
 import std.conv;
 import std.string;
-import std.c.stdio;
+import core.stdc.stdio;
 import core.sync.mutex;
 import core.sync.condition;
 import otya.smilebasic.sprite;
@@ -674,6 +674,18 @@ class PetitComputer
         glLoadIdentity();
         glOrtho(0, w, h, 0, 1024, -2048);
     }
+    void drawCircle(int x, int y, int r, int startr, int endr, int flag)
+    {
+        import std.math : sin, cos, PI;
+        int count = r;
+        glBegin(GL_LINE_LOOP);
+        for (int i = 0; i <= r; i++)
+        {
+            //float a = i * (360f / r);
+            glVertex2f(sin(cast(float)i / count * 2f * PI) * r + x, cos(cast(float)i / count * 2f * PI) * r + y);
+        }
+        glEnd();
+    }
     void renderGraphic()
     {
         if(!drawMessageLength) return;
@@ -771,6 +783,12 @@ class PetitComputer
                             s = i + 1;
                             goto brk;
                         }
+                    }
+                    break;
+                case DrawType.CIRCLE:
+                    {
+                        glColor4ubv(cast(ubyte*)&dm.color);
+                        drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
                     }
                     break;
                 default:
@@ -1622,6 +1640,11 @@ class PetitComputer
         TRI,
         PAINT,
     }
+    struct Circle
+    {
+        short r, startr, endr;
+        short flag;
+    } 
     struct DrawMessage
     {
         DrawType type;
@@ -1631,13 +1654,14 @@ class PetitComputer
         uint color;
         short x2;
         short y2;
+        Circle circle;
         //
     }
     static const int dmqqueuelen = 8192;
     DrawMessage[] drawMessageQueue = new DrawMessage[dmqqueuelen];
     int drawMessageLength;
     bool drawflag;
-    void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
+    void sendDrawMessage(DrawMessage dm)
     {
         //grpmutex.lock();
         //scope(exit)
@@ -1650,30 +1674,31 @@ class PetitComputer
             }
         }
         while(drawflag){}
-        drawMessageQueue[drawMessageLength].type = type;
-        drawMessageQueue[drawMessageLength].page = page;
-        drawMessageQueue[drawMessageLength].x = x;
-        drawMessageQueue[drawMessageLength].y = y;
-        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
+        dm.color = toGLColor(this.GRP[0].textureFormat, dm.color & 0xFFF8F8F8);
+        drawMessageQueue[drawMessageLength] = dm;
         drawMessageLength++;
+    }
+    void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
+    {
+        DrawMessage dm;
+        dm.type = type;
+        dm.page = page;
+        dm.x = x;
+        dm.y = y;
+        dm.color = color;
+        sendDrawMessage(dm);
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
     {
-        if(drawMessageLength >= dmqqueuelen)
-        {
-            while(drawMessageLength)
-            {
-                SDL_Delay(1);
-            }
-        }
-        drawMessageQueue[drawMessageLength].type = type;
-        drawMessageQueue[drawMessageLength].page = page;
-        drawMessageQueue[drawMessageLength].x = x;
-        drawMessageQueue[drawMessageLength].y = y;
-        drawMessageQueue[drawMessageLength].x2 = x2;
-        drawMessageQueue[drawMessageLength].y2 = y2;
-        drawMessageQueue[drawMessageLength].color = toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
-        drawMessageLength++;
+        DrawMessage dm;
+        dm.type = type;
+        dm.page = page;
+        dm.x = x;
+        dm.y = y;
+        dm.x2 = x2;
+        dm.y2 = y2;
+        dm.color = color;
+        sendDrawMessage(dm);
     }
     //TODO:範囲チェック
     void gpset(int page, int x, int y, uint color)
@@ -1695,6 +1720,20 @@ class PetitComputer
     void gpaint(int page, int x, int y, uint color)
     {
         sendDrawMessage(DrawType.PAINT, cast(byte)page, cast(short)x, cast(short)y, color);
+    }
+    void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
+    {
+        DrawMessage dm;
+        dm.page = cast(byte)page;
+        dm.x = cast(short)x;
+        dm.y = cast(short)y;
+        dm.circle.r = cast(short)r;
+        dm.circle.startr = cast(short)startr;
+        dm.circle.endr = cast(short)endr;
+        dm.circle.flag = cast(short)flag;
+        dm.color = color;
+        dm.type = DrawType.CIRCLE;
+        sendDrawMessage(dm);
     }
     int gprio;
     void renderGraphicPage(int display, float w, float h)

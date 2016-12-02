@@ -321,10 +321,18 @@ class BuiltinFunction
         color.setDefaultValue(p.gcolor);
         p.gfill(p.useGRP, x, y, x2, y2, cast(int)color);
     }
-    static void GCIRCLE(PetitComputer p, Value[])
+    //X,Y,R[,COLOR]
+    //X,Y,R,SR,ER[,COLOR]
+    static void GCIRCLE(PetitComputer p, int x, int y, int r, DefaultValue!(int, false) color)
     {
-        //color.setDefaultValue(p.gcolor);
-        //p.gfill(p.useGRP, x, y, x2, y2, cast(int)color);
+        color.setDefaultValue(p.gcolor);
+        p.gcircle(p.useGRP, x, y, r, 0, 360, 0, cast(int)color);
+    }
+    static void GCIRCLE(PetitComputer p, int x, int y, int r, int sr, int er, DefaultValue!(int, false) flag, DefaultValue!(int, false) color)
+    {
+        color.setDefaultValue(p.gcolor);
+        flag.setDefaultValue(0);
+        p.gcircle(p.useGRP, x, y, r, sr, er, cast(int)flag, cast(int)color);
     }
     static void GCOLOR(PetitComputer p, int color)
     {
