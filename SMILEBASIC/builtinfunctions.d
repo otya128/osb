@@ -217,19 +217,19 @@ class BuiltinFunction
     //static ABS = function double(double x) => abs(this.result == ValueType.Double ? 1 : 0);
     static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, DefaultValue!(int, false) z)
     {
-        x.setDefaultValue(p.CSRX);
-        y.setDefaultValue(p.CSRY);
-        z.setDefaultValue(p.CSRZ);
-        p.CSRX = cast(int)x;
-        p.CSRY = cast(int)y;
-        p.CSRZ = cast(int)z;
+        x.setDefaultValue(p.console.CSRX);
+        y.setDefaultValue(p.console.CSRY);
+        z.setDefaultValue(p.console.CSRZ);
+        p.console.CSRX = cast(int)x;
+        p.console.CSRY = cast(int)y;
+        p.console.CSRZ = cast(int)z;
     }
     static void COLOR(PetitComputer p, DefaultValue!int fore, DefaultValue!(int, false) back)
     {
-        fore.setDefaultValue(p.consoleForeColor);
-        back.setDefaultValue(p.consoleBackColor);
-        p.consoleForeColor = cast(int)fore;
-        p.consoleBackColor = cast(int)back;
+        fore.setDefaultValue(p.console.consoleForeColor);
+        back.setDefaultValue(p.console.consoleBackColor);
+        p.console.consoleForeColor = cast(int)fore;
+        p.console.consoleBackColor = cast(int)back;
     }
     static void VSYNC(PetitComputer p, DefaultValue!int time)
     {
@@ -244,13 +244,13 @@ class BuiltinFunction
     //TODO:プチコンのCLSには引数の個数制限がない
     static void CLS(PetitComputer p/*vaarg*/)
     {
-        p.cls;
+        p.console.cls;
     }
     static void ASSERT__(PetitComputer p, int cond, wstring message)
     {
         if(!cond)
         {
-            p.printConsole("Assertion failed: ", message, "\n");
+            p.console.print("Assertion failed: ", message, "\n");
         }
         assert(cond, message.to!string);
     }
@@ -1226,7 +1226,7 @@ class BuiltinFunction
     }
     static int CHKCHR(PetitComputer p, int x, int y)
     {
-        return cast(int)(p.console[y][x].character);
+        return cast(int)(p.console.console[y][x].character);
     }
     static wstring FORMAT(PetitComputer p, Value[] va_args)
     {
@@ -1521,10 +1521,10 @@ class BuiltinFunction
         //project:.->hidden project
         //project:/->project list
         auto l = p.project.getFileList(project, res);
-        p.printConsole(res, "\t", project, "\n");
+        p.console.print(res, "\t", project, "\n");
         foreach(i; l)
         {
-            p.printConsole(i, "\n");
+            p.console.print(i, "\n");
         }
     }
     static void FILES(PetitComputer p, wstring name, Value[] array)
@@ -1533,7 +1533,7 @@ class BuiltinFunction
     }
     static void ACLS(PetitComputer p)
     {
-        p.cls;
+        p.console.cls;
         SPCLR(p, DefaultValue!(int, false)(true));
         BGCLR(p, DefaultValue!(int, false)(true));
         GCLS(p, DefaultValue!(int, false)(true));

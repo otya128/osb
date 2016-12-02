@@ -49,7 +49,7 @@ class CSRX : SystemVariable
     @property
         override Value value()
         {
-            return Value(vm.petitcomputer.CSRX);
+            return Value(vm.petitcomputer.console.CSRX);
         }
 }
 class CSRY : SystemVariable
@@ -57,7 +57,7 @@ class CSRY : SystemVariable
     @property
         override Value value()
         {
-            return Value(vm.petitcomputer.CSRY);
+            return Value(vm.petitcomputer.console.CSRY);
         }
 }
 class CSRZ : SystemVariable
@@ -65,7 +65,7 @@ class CSRZ : SystemVariable
     @property
         override Value value()
         {
-            return Value(vm.petitcomputer.CSRZ);
+            return Value(vm.petitcomputer.console.CSRZ);
         }
 }
 class TabStep : SystemVariable
@@ -73,7 +73,7 @@ class TabStep : SystemVariable
     @property
         override Value value()
         {
-            return Value(vm.petitcomputer.TABSTEP);
+            return Value(vm.petitcomputer.console.TABSTEP);
         }
     @property
         override void value(Value value)
@@ -87,7 +87,7 @@ class TabStep : SystemVariable
             {
                 throw new OutOfRange();
             }
-            vm.petitcomputer.TABSTEP = i;
+            vm.petitcomputer.console.TABSTEP = i;
         }
 }
 class Version : SystemVariable

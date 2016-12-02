@@ -296,17 +296,17 @@ class PrintCode : Code
                 case ValueType.Integer:
                     //write(arg.integerValue);
                     if(vm.petitcomputer)
-                        vm.petitcomputer.printConsole(arg.integerValue);
+                        vm.petitcomputer.console.print(arg.integerValue);
                     break;
                 case ValueType.Double:
                     //write(arg.doubleValue);
                     if(vm.petitcomputer)
-                        vm.petitcomputer.printConsole(arg.doubleValue);
+                        vm.petitcomputer.console.print(arg.doubleValue);
                     break;
                 case ValueType.String:
                     //write(arg.stringValue);
                     if(vm.petitcomputer)
-                        vm.petitcomputer.printConsoleString(arg.stringValue);
+                        vm.petitcomputer.console.printString(arg.stringValue);
                     break;
                 default:
                     //type mismatch
@@ -1555,7 +1555,7 @@ class InputCode : Code
         {
             if(error)
             {
-                vm.petitcomputer.printConsoleString("?Redo from start \n");
+                vm.petitcomputer.console.printString("?Redo from start \n");
             }
             wstring input = vm.petitcomputer.input("", false);
             wstring[] split = input.split(",");

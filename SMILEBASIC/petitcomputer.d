@@ -16,6 +16,7 @@ import otya.smilebasic.error;
 import otya.smilebasic.bg;
 import otya.smilebasic.parser;
 import otya.smilebasic.project;
+import otya.smilebasic.console;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -166,36 +167,6 @@ class PetitComputer
     int screenHeight;
     int screenWidthDisplay1;
     int screenHeightDisplay1;
-    int fontWidth;
-    int fontHeight;
-    int consoleWidth;
-    int consoleHeight;
-    int consoleWidthDisplay1;
-    int consoleHeightDisplay1;
-    int consoleWidth4;
-    int consoleHeight4;
-    int consoleHeightC, consoleWidthC;
-    ConsoleCharacter[][] consoleC;
-    int[] consoleColor = 
-    [
-        0x00000000,
-        0xFF000000,
-        0xFF7F0000,
-        0xFFFF0000,
-        0xFF007F00,
-        0xFF00FF00,
-        0xFF7F7F00,
-        0xFFFFFF00,
-        0xFF00007F,
-        0xFF0000FF,
-        0xFF7F007F,
-        0xFFFF00FF,
-        0xFF007F7F,
-        0xFF00FFFF,
-        0xFF7F7F7F,
-        0xFFFFFFFF,
-    ];
-    int[] consoleColorGL = new int[16];
     uint toGLColor(uint color)
     {
         //ARGB -> ABGR
@@ -214,9 +185,6 @@ class PetitComputer
         return SDL_Color(r >> 5 << 5, g >> 5 << 5, b >> 5 << 5, a == 255 ? 255 : 0);
     }
     Button button;
-    ConsoleCharacter[][] console;
-    ConsoleCharacter[][] consoleDisplay1;
-    ConsoleCharacter[][] console4;
     bool visibleGRP = true;
     private int[2] showPage = [0, 1];
     private int[2] usePage = [0, 1];
@@ -238,7 +206,6 @@ class PetitComputer
     }
     uint gcolor = -1;
     GraphicPage[] GRP;
-    GraphicPage GRPF;
     GraphicPage createGRPF(string file)
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
@@ -316,55 +283,7 @@ class PetitComputer
             this.y = y;
         }
     }
-    SDL_Rect[] fontTable = new SDL_Rect[65536];
     int sppage, bgpage;
-    void createFontTable()
-    {
-        auto file = File(fontTableFile, "w");
-        std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
-        for (int i = 1; i <= 16; i++)
-        {
-        string html = cast(string)get("http://smilebasic.com/supplements/unicode" ~ format("%02d",i));
-        std.stdio.writeln("http://smilebasic.com/supplements/unicode" ~ format("%02d",i));
-        int pos = 0, index;
-        while(true)
-        {
-            pos = cast(int)html.indexOf("<tr>\r\n<th>U+");
-            if(pos == -1) break;
-            pos += "<tr>\r\n<th>U+".length;
-            html = html[pos..$];
-            writeln(index = html.parse!int(16));
-            file.write(index, ',');
-            pos = cast(int)html.indexOf("</td>\r\n<td>(");
-            if(pos == -1) break;
-            pos += "</td>\r\n<td>(".length;
-            html = html[pos..$];
-            writeln(fontTable[index].x = html.parse!int);
-            file.write(fontTable[index].x, ',');
-            pos = cast(int)html.indexOf(',');
-            html = html[pos + 1..$];
-            munch(html, " ");
-            writeln(fontTable[index].y = html.parse!int);
-            file.write(fontTable[index].y, '\n');
-            fontTable[index].w = 8;
-            fontTable[index].h = 8;
-        }
-        }
-    }
-    void loadFontTable()
-    {
-        import std.csv;
-        import std.typecons;
-        std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
-        auto csv = csvReader!(Tuple!(int,int,int))(readText(fontTableFile));
-        foreach(record; csv)
-        {
-            fontTable[record[0]].x = record[1];
-            fontTable[record[0]].y = record[2];
-            fontTable[record[0]].w = 8;
-            fontTable[record[0]].h = 8;
-        }
-    }
     Projects project;
     wstring currentProject;
     void init()
@@ -372,8 +291,6 @@ class PetitComputer
         currentProject = "";
         project = new Projects(".");
         //   DerelictGL.load();
-        for(int i = 0; i < consoleColor.length; i++)
-            consoleColorGL[i] = toGLColor(consoleColor[i]);
         if(!exists(resourcePath))
         {
             writeln("create ./resources");
@@ -397,79 +314,28 @@ class PetitComputer
             download("http://dengekionline.com/elem/000/000/927/927125/petitcom_17_cs1w1_512x512.jpg",
                      BGFile);
         }
-        if(!exists(fontTableFile))
-        {
-            writeln("create font table");
-            //HTMLなんて解析したくないから適当
-            createFontTable();
-        }
-        else
-        {
-            loadFontTable();
-        }
-        writeln("OK");
         screenWidth = 400;
         screenHeight = 240;
         screenWidthDisplay1 = 320;
         screenHeightDisplay1 = 240;
-        fontWidth = 8;
-        fontHeight = 8;
-        consoleWidth = screenWidth / fontWidth;
-        consoleHeight = screenHeight / fontHeight;
-        consoleWidthDisplay1 = screenWidthDisplay1 / fontWidth;
-        consoleHeightDisplay1 = screenHeightDisplay1 / fontHeight;
-        consoleWidth4 = 320 / fontWidth;
-        consoleHeight4 = 480 / fontHeight;
-        console = new ConsoleCharacter[][consoleHeight];
-        consoleDisplay1 = new ConsoleCharacter[][consoleHeightDisplay1];
-        console4 = new ConsoleCharacter[][consoleHeight4];
-        consoleForeColor = 15;//#T_WHITE
-        for(int i = 0; i < console.length; i++)
+        console = new Console(this);
+        if(!exists(fontTableFile))
         {
-            console[i] = new ConsoleCharacter[consoleWidth];
-            console[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+            writeln("create font table");
+            //HTMLなんて解析したくないから適当
+            console.createFontTable();
         }
-        for(int i = 0; i < consoleDisplay1.length; i++)
+        else
         {
-            consoleDisplay1[i] = new ConsoleCharacter[consoleWidthDisplay1];
-            consoleDisplay1[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
-        }
-        for(int i = 0; i < console4.length; i++)
-        {
-            console4[i] = new ConsoleCharacter[consoleWidth4];
-            console4[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+            console.loadFontTable();
         }
         display(0);
+        writeln("OK");
     }
     void display(int number)
     {
         displaynum = number;
-        if(xscreenmode == 2)
-        {
-            consoleHeightC = consoleHeight4;
-            consoleWidthC = consoleWidth4;
-            consoleC = console4;
-            return;
-        }
-        if(number)
-        {
-            consoleHeightC = consoleHeightDisplay1;
-            consoleWidthC = consoleWidthDisplay1;
-            consoleC = consoleDisplay1;
-            return;
-        }
-        consoleHeightC = consoleHeight;
-        consoleWidthC = consoleWidth;
-        consoleC = console;
-    }
-    void cls()
-    {
-        for(int i = 0; i < consoleC.length; i++)
-        {
-            consoleC[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
-        }
-        CSRX = 0;
-        CSRY = 0;
+        console.display(number);
     }
     SDL_Renderer* renderer;
     int vsyncFrame;
@@ -858,7 +724,7 @@ class PetitComputer
             paint.buffer = new uint[512 * 512];
             DerelictSDL2.load();
             DerelictSDL2Image.load();
-            GRPF = createGRPF(fontFile);
+            console.GRPF = createGRPF(fontFile);
             GRP = new GraphicPage[6];
             for(int i = 0; i < 4; i++)
             {
@@ -925,7 +791,7 @@ class PetitComputer
                 writeln(SDL_GetError.to!string);
                 return;
             }
-            GRPF.createTexture(renderer);
+            console.GRPF.createTexture(renderer);
             chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
@@ -965,13 +831,13 @@ class PetitComputer
             while(true)
             {
                 auto profile = SDL_GetTicks();
-                if(showCursor)
+                if(console.showCursor)
                 {
                     loopcnt++;
                     //30フレームに一回
                     if(loopcnt >= 30)
                     {
-                        animationCursor = !animationCursor;
+                        console.animationCursor = !console.animationCursor;
                         loopcnt = 0;
                     }
                 }
@@ -991,7 +857,7 @@ class PetitComputer
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-                renderConsoleGL();
+                console.render();
 
                 if(xscreenmode == 1)
                 {
@@ -1143,17 +1009,18 @@ class PetitComputer
     }
     void printInformation()
     {
-        printConsole("otyaSMILEBASIC ver ", otya.smilebasic.systemvariable.Version.VERSIONSTRING, "\n");
-        printConsole("(C)2015-2016 otya\n");
-        printConsole("8327164 bytes free\n");
-        printConsole("\n");
+        console.print("otyaSMILEBASIC ver ", otya.smilebasic.systemvariable.Version.VERSIONSTRING, "\n");
+        console.print("(C)2015-2016 otya\n");
+        console.print("8327164 bytes free\n");
+        console.print("\n");
         printPrompt();
     }
     void printPrompt()
     {
-        if(currentProject.length) printConsole("[", currentProject, "]");
-        printConsole("OK\n");
+        if(currentProject.length) console.print("[", currentProject, "]");
+        console.print("OK\n");
     }
+    Console console;
     Object buttonLock;
     Slot[] slot;
     bool isRunningDirectMode = false;
@@ -1194,8 +1061,8 @@ class PetitComputer
             }
             catch(SmileBasicError sbe)
             {
-                printConsole(sbe.getErrorMessage, "\n");
-                if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
+                console.print(sbe.getErrorMessage, "\n");
+                if(sbe.getErrorMessage2.length) console.print(sbe.getErrorMessage2, "\n");
                 writeln(sbe.to!string);
                 writeln(sbe.getErrorMessage2);
             }
@@ -1228,7 +1095,7 @@ class PetitComputer
                     catch(Throwable t)
                     {
                         writeln(t);
-                        printConsole("can't open program \"", file, "\".\n");
+                        print("can't open program \"", file, "\".\n");
                         continue;
                     }
                     try
@@ -1239,9 +1106,9 @@ class PetitComputer
                     }
                     catch(SmileBasicError sbe)
                     {
-                        printConsole(sbe.getErrorMessage, "\n");
-                        printConsole(sbe.getErrorMessage2, "\n");
-                        //printConsole(sbe.to!string);
+                        print(sbe.getErrorMessage, "\n");
+                        print(sbe.getErrorMessage2, "\n");
+                        //print(sbe.to!string);
                         writeln(sbe.to!string);
                         writeln(sbe.getErrorMessage2);
                         continue;
@@ -1283,7 +1150,7 @@ class PetitComputer
                         token = lex.front();
                         if(token.type != otya.smilebasic.token.TokenType.Integer)
                         {
-                            printConsole("Illegal function call", "\n");
+                            console.print("Illegal function call", "\n");
                             continue;
                         }
                         else
@@ -1313,12 +1180,12 @@ class PetitComputer
                     {
                         try
                         {
-                            printConsole(sbe.getErrorMessage, "\n");
-                            if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
+                            console.print(sbe.getErrorMessage, "\n");
+                            if(sbe.getErrorMessage2.length) console.print(sbe.getErrorMessage2, "\n");
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             auto loc = vm.currentLocation;
-                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                            console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1330,9 +1197,9 @@ class PetitComputer
                     {
                         try
                         {
-                            printConsole(t.to!string);
+                            console.print(t.to!string);
                             writeln(t);
-                            printConsole(parser.getLine(vm.currentLocation));
+                            console.print(parser.getLine(vm.currentLocation));
                         }
                         catch(Throwable t)
                         {
@@ -1369,7 +1236,7 @@ class PetitComputer
                             debug if(trace && loc.line != vm.currentLocation.line)
                             {
                                 loc = vm.currentLocation;
-                                printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                                console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                             }
                         }
                     }
@@ -1378,13 +1245,13 @@ class PetitComputer
                         running = false;
                         try
                         {
-                            printConsole(sbe.getErrorMessage, "\n");
-                            if(sbe.getErrorMessage2.length) printConsole(sbe.getErrorMessage2, "\n");
-                            //printConsole(sbe.to!string);
+                            console.print(sbe.getErrorMessage, "\n");
+                            if(sbe.getErrorMessage2.length) console.print(sbe.getErrorMessage2, "\n");
+                            //print(sbe.to!string);
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             loc = vm.currentLocation;
-                            printConsole(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                            console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1396,9 +1263,9 @@ class PetitComputer
                         running = false;
                         try
                         {
-                            printConsole(t.to!string);
+                            console.print(t.to!string);
                             writeln(t);
-                            printConsole(parser.getLine(vm.currentLocation));
+                            console.print(parser.getLine(vm.currentLocation));
                         }
                         catch(Throwable t)
                         {
@@ -1410,7 +1277,7 @@ class PetitComputer
                         if(stopflg)
                         {
                             loc = vm.currentLocation;
-                            printConsole("Break on ", vm.currentSlotNumber, ":", loc.line, "\n");
+                            console.print("Break on ", vm.currentSlotNumber, ":", loc.line, "\n");
                             stopflg = false;
                             directMode = true;
                             if(!isRunningDirectMode)
@@ -1449,21 +1316,21 @@ class PetitComputer
     {
         auto olddisplay = displaynum;
         //displaynum = 0;
-        printConsole(prompt);
+        console.print(prompt);
         clearKeyBuffer();
         wstring buffer;
-        showCursor = true;
-        int oldCSRX = this.CSRX;
-        int oldCSRY = this.CSRY;
+        console.showCursor = true;
+        int oldCSRX = this.console.CSRX;
+        int oldCSRY = this.console.CSRY;
         int pos;
         void left()
         {
             pos--;
-            CSRX--;
+            console.CSRX--;
         }
         void right()
         {
-            CSRX++;
+            console.CSRX++;
         }
         while(!quit)
         {
@@ -1500,7 +1367,7 @@ class PetitComputer
             }
             wchar k;
             //文字入力中はカーソルを表示する
-            animationCursor = true;
+            console.animationCursor = true;
             foreach(key1; keybuffer[oldpos..kbp])
             {
                 wchar key = key1.key;
@@ -1513,25 +1380,25 @@ class PetitComputer
                         k = key;
                         if(!buffer.length) continue;
                         left();
-                        auto odcsrx = CSRX;
-                        auto odcsry = CSRY;
+                        auto odcsrx = console.CSRX;
+                        auto odcsry = console.CSRY;
                         buffer = (pos ? buffer[0..pos] : "");
-                        auto ocsrx = CSRX;
-                        auto ocsry = CSRY;
+                        auto ocsrx = console.CSRX;
+                        auto ocsry = console.CSRY;
                         if (obf.length > pos + 1)
                         {
                             buffer ~= obf[pos + 1..$];
-                            printConsole(obf[pos + 1..$]);
+                            console.print(obf[pos + 1..$]);
                         }
-                        printConsole(" ");
-                        CSRX = odcsrx;
-                        CSRY = odcsry;
+                        console.print(" ");
+                        console.CSRX = odcsrx;
+                        console.CSRY = odcsry;
                         continue;
                     }
                     if(key == '\r')
                     {
                         k = key;
-                        printConsole("\n");
+                        console.print("\n");
                         break;
                     }
                     immutable(wchar[1]) a = key;
@@ -1546,17 +1413,17 @@ class PetitComputer
                         ks = an.to!wstring;
                     }
                 }
-                printConsole(ks);
+                console.print(ks);
                 buffer = (pos ? buffer[0..pos] : "") ~ ks;
-                auto ocsrx = CSRX;
-                auto ocsry = CSRY;
+                auto ocsrx = console.CSRX;
+                auto ocsry = console.CSRY;
                 if (obf.length > pos)
                 {
                     buffer ~= obf[pos..$];
-                    printConsole(obf[pos..$]);
+                    console.print(obf[pos..$]);
                 }
-                CSRX = ocsrx;
-                CSRY = ocsry;
+                console.CSRX = ocsrx;
+                console.CSRY = ocsry;
                 pos += ks.length;
             }
             clearKeyBuffer();
@@ -1565,7 +1432,7 @@ class PetitComputer
                 break;
             }
         }
-        showCursor = false;
+        console.showCursor = false;
         //display = olddisplay;
         return buffer;
     }
@@ -1579,12 +1446,6 @@ class PetitComputer
         keybufferlen--;
         return result.key.to!wstring;
     }
-    int CSRX;
-    int CSRY;
-    int CSRZ;
-    int consoleForeColor, consoleBackColor;
-    bool showCursor;
-    bool animationCursor;
     Mutex consolem;
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
@@ -1753,218 +1614,5 @@ class PetitComputer
         glVertex3f(w, h, z);
         glEnd();
         //glFlush();
-    }
-    void renderConsoleGL()
-    {
-        if(xscreenmode == 2)
-        {
-            glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
-            glDisable(GL_TEXTURE_2D);
-            glBegin(GL_QUADS);
-            for(int y = 0; y < consoleHeight4; y++)
-                for(int x = 0; x < consoleWidth4; x++)
-                {
-                    auto back = consoleColorGL[console4[y][x].backColor];
-                    if(back)
-                    {
-                        glColor4ubv(cast(ubyte*)&back);
-                        glVertex3f(x * 8, y * 8 + 8, 1024);
-                        glVertex3f(x * 8, y * 8, 1024);
-                        glVertex3f(x * 8 + 8, y * 8, 1024);
-                        glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
-                    }
-                }
-            if(showCursor && animationCursor)
-            {
-                glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
-                glVertex3f((CSRX * 8), (CSRY * 8), -256);
-                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
-                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
-            }
-            glEnd();
-            glEnable(GL_TEXTURE_2D);
-
-            glBegin(GL_QUADS);
-            for(int y = 0; y < consoleHeight4; y++)
-                for(int x = 0; x < consoleWidth4; x++)
-                {
-                    auto fore = consoleColorGL[console4[y][x].foreColor];
-                    auto rect = &fontTable[console4[y][x].character];
-                    glColor4ubv(cast(ubyte*)&fore);
-                    int z = console4[y][x].z;
-                    glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                    glVertex3f((x * 8), (y * 8 + 8), z);
-                    glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8), (y * 8), z);
-                    glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8 + 8), (y * 8), z);
-                    glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                    glVertex3f((x * 8 + 8), (y * 8 + 8), z);
-                }
-            glEnd();
-            return;
-        }
-        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeight; y++)
-            for(int x = 0; x < consoleWidth; x++)
-            {
-                auto back = consoleColorGL[console[y][x].backColor];
-                if(back)
-                {
-                    glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f(x * 8, y * 8 + 8, 1024);
-                    glVertex3f(x * 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
-                }
-            }
-        if(displaynum == 0 && showCursor && animationCursor)
-        {
-            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
-            glVertex3f((CSRX * 8), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
-        }
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeight; y++)
-            for(int x = 0; x < consoleWidth; x++)
-            {
-                auto fore = consoleColorGL[console[y][x].foreColor];
-                auto rect = &fontTable[console[y][x].character];
-                float z = console[y][x].z;
-                glColor4ubv(cast(ubyte*)&fore);
-                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8), (y * 8 + 8), z);
-                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
-            }
-        glEnd();
-        if(xscreenmode != 1)
-        {
-            return;
-        }
-        //下画面
-        chScreen(40, 0, 400, 240);
-        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeightDisplay1; y++)
-            for(int x = 0; x < consoleWidthDisplay1; x++)
-            {
-                auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
-                if(back)
-                {
-                    glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f(x * 8, y * 8 + 8, 1024);
-                    glVertex3f(x * 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
-                }
-            }
-        if(displaynum == 1 && showCursor && animationCursor)
-        {
-            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
-            glVertex3f((CSRX * 8), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
-        }
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeightDisplay1; y++)
-            for(int x = 0; x < consoleWidthDisplay1; x++)
-            {
-                auto fore = consoleColorGL[consoleDisplay1[y][x].foreColor];
-                auto rect = &fontTable[consoleDisplay1[y][x].character];
-                float z = consoleDisplay1[y][x].z;
-                glColor4ubv(cast(ubyte*)&fore);
-                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8), (y * 8 + 8), z);
-                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
-            }
-        glEnd();
-    }
-    void printConsole(T...)(T args)
-    {
-        foreach(i; args)
-        {
-            printConsoleString(i.to!wstring);
-        }
-    }
-    //0<=TABSTEP<=16
-    int TABSTEP = 4;
-    byte consoleAttr;
-    int tab;
-    void printConsoleString(wstring text)
-    {
-        //consolem.lock();
-        //scope(exit) consolem.unlock();
-        //write(text);
-        foreach(wchar c; text)
-        {
-            if(CSRY >= consoleHeightC)
-            {
-                CSRY = consoleHeightC - 1;
-            }
-            if(c == '\t')
-            {
-                import std.algorithm : min;
-                if(tab == 2 && CSRX == 0)
-                {
-                    CSRX--;
-                }
-                else
-                {
-                    auto t = min(CSRX + TABSTEP - CSRX % TABSTEP, consoleWidthC - 1);
-                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
-                    CSRX += TABSTEP - (CSRX % TABSTEP) - 1;
-                    if(CSRX + 1 >= consoleWidthC)
-                    {
-                        CSRX = consoleWidthC - 2;
-                    }
-                    tab = true;
-                }
-            }
-            else if(c != '\n')
-            {
-                consoleC[CSRY][CSRX] = ConsoleCharacter(c, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
-                tab = tab ? 2 : 0;
-            }
-            CSRX++;
-            if(CSRX >= consoleWidthC || c == '\n')
-            {
-                CSRX = 0;
-                CSRY++;
-            }
-            if(CSRY >= consoleHeightC)
-            {
-                auto tmp = consoleC[0];
-                for(int i = 0; i < consoleHeightC - 1; i++)
-                {
-                    consoleC[i] = consoleC[i + 1];
-                }
-                consoleC[consoleHeightC - 1] = tmp;
-                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
-                CSRY = consoleHeightC - 1;
-            }
-        }
     }
 }
