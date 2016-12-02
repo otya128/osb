@@ -1227,6 +1227,7 @@ class Compiler
         genCode(new EndVM());
         return code;
     }
+    VM vm;
     void compileDirectMode(VM vm)
     {
         isDirectMode = true;
@@ -1242,8 +1243,9 @@ class Compiler
     VM compile()
     {
         isDirectMode = false;
-        compileProgram();
         VM vm = new VM();
+        this.vm = vm;
+        compileProgram();
         vm.loadSlot(0, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
         vm.setCurrentSlot(0);
         registerSystemVariable(vm);

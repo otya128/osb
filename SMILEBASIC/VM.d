@@ -42,6 +42,7 @@ class VMSlot
 class VM
 {
     VMSlot[5] slots;
+    Function[wstring] commonFunctions;
     int slot;
     VMSlot currentSlot;
     int stacki;
@@ -1264,12 +1265,18 @@ class CallFunctionCode : Code
         this.argCount = argCount;
         this.outArgCount = outArgCount;
     }
+    Function func;
+    void resolve(VM vm)
+    {
+        func = vm.currentSlot.functions.get(name, null);
+        throw new SyntaxError(name);
+    }
     override void execute(VM vm)
     {
-        Function func = vm.currentSlot.functions.get(name, null);
         if(!func)
         {
-            throw new SyntaxError(name);
+            //楽だし実行時に解決させる
+            resolve(vm);
         }
         if(func.argCount != this.argCount)
         {

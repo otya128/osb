@@ -558,12 +558,12 @@ class Parser
                 }
                 else
                 {
-                    statement = defineFunction();
+                    statement = defineFunction(true);
                 }
             }
             else if(token.type == TokenType.Def)
             {
-                statement = defineFunction();
+                statement = defineFunction(false);
             }
             else
             {
@@ -598,7 +598,7 @@ class Parser
         }
         return token.value.stringValue;
     }
-    DefineFunction defineFunction()
+    DefineFunction defineFunction(bool isCommon)
     {
         lex.popFront();
         auto token = lex.front();
@@ -607,7 +607,7 @@ class Parser
             syntaxError();
             return null;
         }
-        DefineFunction node = new DefineFunction(token.value.stringValue, lex.location);
+        DefineFunction node = new DefineFunction(token.value.stringValue, isCommon, lex.location);
         lex.popFront();
         token = lex.front();
         if(token.type == TokenType.LParen)

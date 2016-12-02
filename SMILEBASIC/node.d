@@ -426,19 +426,22 @@ class DefineFunction : Statement
     wstring name;
     Statements functionBody;
     bool returnExpr;
-    this(wstring name, bool returnExpr, SourceLocation loc)
+    bool isCommon;
+    this(wstring name, bool returnExpr, bool isCommon, SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.DefineFunction;
         this.name = name;
         this.returnExpr = returnExpr;
+        this.isCommon = isCommon;
     }
-    this(wstring name, SourceLocation loc)
+    this(wstring name, bool isCommon, SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.DefineFunction;
         this.name = name;
         this.returnExpr = false;
+        this.isCommon = isCommon;
     }
     void addArgument(wstring name)
     {
