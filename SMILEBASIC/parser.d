@@ -1705,14 +1705,18 @@ class Parser
                 if (op.item1.type == NodeType.Constant && op.item2.type == NodeType.Constant)
                 {
                     double result;
-                    if (constcalc((cast(Constant)op.item1).value, (cast(Constant)op.item2).value, op.operator, result))
+                    Constant leftconst = (cast(Constant)op.item1), rightconst = (cast(Constant)op.item2);
+                    if (rightconst.value.isNumber && leftconst.value.isNumber)
                     {
-                        auto l = new Constant(Value(result), lex.location);
-                        constexpr = true;
-                        if(order != getOPRank(token.type))
-                            return l;
-                        op = new BinaryOperator(l, lex.location);
-                        continue;
+                        if (constcalc(leftconst.value, rightconst.value, op.operator, result))
+                        {
+                            auto l = new Constant(Value(result), lex.location);
+                            constexpr = true;
+                            if(order != getOPRank(token.type))
+                                return l;
+                            op = new BinaryOperator(l, lex.location);
+                            continue;
+                        }
                     }
                 }
                 version(none)
