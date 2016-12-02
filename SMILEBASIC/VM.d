@@ -1269,7 +1269,8 @@ class CallFunctionCode : Code
     void resolve(VM vm)
     {
         func = vm.currentSlot.functions.get(name, null);
-        throw new SyntaxError(name);
+        if (!func)
+            throw new SyntaxError(name);
     }
     override void execute(VM vm)
     {
