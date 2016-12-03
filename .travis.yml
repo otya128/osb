@@ -4,6 +4,6 @@ d:
   - dmd
   - gdc
   - ldc
-dub test --compiler=${DC} -- -h
+script: dub test --compiler=${DC} -- -h
 
 
