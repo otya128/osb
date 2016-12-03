@@ -326,7 +326,7 @@ class BuiltinFunction
     static void GCIRCLE(PetitComputer p, int x, int y, int r, DefaultValue!(int, false) color)
     {
         color.setDefaultValue(p.graphic.gcolor);
-        p.graphic.gcircle(p.graphic.useGRP, x, y, r, 0, 360, 0, cast(int)color);
+        p.graphic.gcircle(p.graphic.useGRP, x, y, r, cast(int)color);
     }
     static void GCIRCLE(PetitComputer p, int x, int y, int r, int sr, int er, DefaultValue!(int, false) flag, DefaultValue!(int, false) color)
     {

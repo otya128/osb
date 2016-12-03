@@ -182,15 +182,45 @@ class Graphic
         }
     }
     Paint paint;
+    //(x+r,y):0°
+    //(x,y+r):90°
     void drawCircle(int x, int y, int r, int startr, int endr, int flag)
     {
         import std.math : sin, cos, PI;
         int count = r;
-        glBegin(GL_LINE_LOOP);
+        if (flag)
+        {
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y);
+        }
+        else
+        {
+            glBegin(GL_LINE_STRIP);
+        }
+        startr = startr % 360;
+        endr = endr % 360;
+        if (startr > endr)
+        {
+            endr += 360;
+        }
+        for (int i = 0; i <= r; i++)
+        {
+            //float a = i * (360f / count);
+            float angle = (cast(float)i / count) * ((endr - startr) / 180f) * PI + (startr / 180f * PI);
+            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
+        }
+        glEnd();
+    }
+    void drawCircle(int x, int y, int r)
+    {
+        import std.math : sin, cos, PI;
+        int count = r;
+        glBegin(GL_LINE_STRIP);
         for (int i = 0; i <= r; i++)
         {
             //float a = i * (360f / r);
-            glVertex2f(sin(cast(float)i / count * 2f * PI) * r + x, cos(cast(float)i / count * 2f * PI) * r + y);
+            float angle = cast(float)i / count * 2f * PI;
+            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
         }
         glEnd();
     }
@@ -289,7 +319,13 @@ class Graphic
                         }
                     }
                     break;
-                case DrawType.CIRCLE:
+                case DrawType.CIRCLE1:
+                    {
+                        glColor4ubv(cast(ubyte*)&dm.color);
+                        drawCircle(dm.x, dm.y, dm.circle.r);
+                    }
+                    break;
+                case DrawType.CIRCLE2:
                     {
                         glColor4ubv(cast(ubyte*)&dm.color);
                         drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
@@ -321,7 +357,8 @@ class Graphic
         LINE,
         FILL,
         BOX,
-        CIRCLE,
+        CIRCLE1,
+        CIRCLE2,//startangle, endangle
         TRI,
         PAINT,
     }
@@ -406,6 +443,17 @@ class Graphic
     {
         sendDrawMessage(DrawType.PAINT, cast(byte)page, cast(short)x, cast(short)y, color);
     }
+    void gcircle(int page, int x, int y, int r, uint color)
+    {
+        DrawMessage dm;
+        dm.page = cast(byte)page;
+        dm.x = cast(short)x;
+        dm.y = cast(short)y;
+        dm.circle.r = cast(short)r;
+        dm.color = color;
+        dm.type = DrawType.CIRCLE1;
+        sendDrawMessage(dm);
+    }
     void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
     {
         DrawMessage dm;
@@ -417,7 +465,7 @@ class Graphic
         dm.circle.endr = cast(short)endr;
         dm.circle.flag = cast(short)flag;
         dm.color = color;
-        dm.type = DrawType.CIRCLE;
+        dm.type = DrawType.CIRCLE2;
         sendDrawMessage(dm);
     }
     int gprio;
