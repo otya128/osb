@@ -490,7 +490,7 @@ class Parser
         switch(exp.type)
         {
             case NodeType.Constant:
-                return (cast(Constant)exp).value.integerValue;
+                return (cast(Constant)exp).value.castInteger;
             case NodeType.BinaryOperator:
                 {
                     auto binop = cast(BinaryOperator)exp;
