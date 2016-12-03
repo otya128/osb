@@ -53,7 +53,7 @@ class Graphic
             int y;  /* 領域のY座標 */
             int oy; /* 親ラインのY座標 */
         };
-        BufStr buff[MAXSIZE]; /* シード登録用バッファ */
+        BufStr[MAXSIZE] buff; /* シード登録用バッファ */
         BufStr* sIdx, eIdx;  /* buffの先頭・末尾ポインタ */
         uint point(int x, int y)
         {

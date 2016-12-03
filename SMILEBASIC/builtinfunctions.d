@@ -410,10 +410,10 @@ class BuiltinFunction
         if (isInputRange!Source && isSomeChar!(ElementType!Source) && !is(Source == enum) &&
             isFloatingPoint!Target && !is(Target == enum))
         {
-            static immutable real negtab[14] =
+            static immutable real[14] negtab =
             [ 1e-4096L,1e-2048L,1e-1024L,1e-512L,1e-256L,1e-128L,1e-64L,1e-32L,
             1e-16L,1e-8L,1e-4L,1e-2L,1e-1L,1.0L ];
-            static immutable real postab[13] =
+            static immutable real[13] postab =
             [ 1e+4096L,1e+2048L,1e+1024L,1e+512L,1e+256L,1e+128L,1e+64L,1e+32L,
             1e+16L,1e+8L,1e+4L,1e+2L,1e+1L ];
             // static immutable string infinity = "infinity";
@@ -2033,6 +2033,7 @@ class BuiltinFunction
         }
         return def;
     }
+
     static this()
     {
         foreach(name; __traits(derivedMembers, BuiltinFunction))
