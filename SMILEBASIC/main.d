@@ -12,6 +12,12 @@ int main(string[] argv)
     bool nodirectmode;
     string inputfile;
     auto helpInformation = getopt(argv, "no-direct-mode", &nodirectmode, "file", &inputfile);
+    if (helpInformation.helpWanted)
+    {
+        defaultGetoptPrinter("Some information about the program.",
+                             helpInformation.options);
+        return 0;
+    }
     //try
     {
         auto pc = new PetitComputer();
