@@ -299,58 +299,58 @@ class BuiltinFunction
     static void GCLS(PetitComputer p, DefaultValue!(int, false) color)
     {
         color.setDefaultValue(0);
-        p.gfill(p.useGRP, 0, 0, 511, 511, cast(int)color);
+        p.graphic.gfill(p.graphic.useGRP, 0, 0, 511, 511, cast(int)color);
     }
     static void GPSET(PetitComputer p, int x, int y, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gpset(p.useGRP, x, y, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gpset(p.graphic.useGRP, x, y, cast(int)color);
     }
     static void GLINE(PetitComputer p, int x, int y, int x2, int y2, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gline(p.useGRP, x, y, x2, y2, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gline(p.graphic.useGRP, x, y, x2, y2, cast(int)color);
     }
     static void GBOX(PetitComputer p, int x, int y, int x2, int y2, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gbox(p.useGRP, x, y, x2, y2, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gbox(p.graphic.useGRP, x, y, x2, y2, cast(int)color);
     }
     static void GFILL(PetitComputer p, int x, int y, int x2, int y2, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gfill(p.useGRP, x, y, x2, y2, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gfill(p.graphic.useGRP, x, y, x2, y2, cast(int)color);
     }
     //X,Y,R[,COLOR]
     //X,Y,R,SR,ER[,COLOR]
     static void GCIRCLE(PetitComputer p, int x, int y, int r, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gcircle(p.useGRP, x, y, r, 0, 360, 0, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gcircle(p.graphic.useGRP, x, y, r, 0, 360, 0, cast(int)color);
     }
     static void GCIRCLE(PetitComputer p, int x, int y, int r, int sr, int er, DefaultValue!(int, false) flag, DefaultValue!(int, false) color)
     {
-        color.setDefaultValue(p.gcolor);
+        color.setDefaultValue(p.graphic.gcolor);
         flag.setDefaultValue(0);
-        p.gcircle(p.useGRP, x, y, r, sr, er, cast(int)flag, cast(int)color);
+        p.graphic.gcircle(p.graphic.useGRP, x, y, r, sr, er, cast(int)flag, cast(int)color);
     }
     static void GCOLOR(PetitComputer p, int color)
     {
-        p.gcolor = color;
+        p.graphic.gcolor = color;
     }
     static void GPRIO(PetitComputer p, int z)
     {
-        p.gprio = z;
+        p.graphic.gprio = z;
     }
     static void GPAGE(PetitComputer p, int showPage, int usePage)
     {
-        p.showGRP = showPage;
-        p.useGRP = usePage;
+        p.graphic.showGRP = showPage;
+        p.graphic.useGRP = usePage;
     }
     static void GPAINT(PetitComputer p, int x, int y, DefaultValue!(int, false) color, DefaultValue!(int, false) color2)
     {
-        color.setDefaultValue(p.gcolor);
-        p.gpaint(p.useGRP, x, y, cast(int)color);
+        color.setDefaultValue(p.graphic.gcolor);
+        p.graphic.gpaint(p.graphic.useGRP, x, y, cast(int)color);
     }
     static void BGMPLAY(PetitComputer p, int music)
     {

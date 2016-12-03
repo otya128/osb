@@ -625,7 +625,7 @@ class Sprite
             dish2 = 480f;
             dis = -1;
         }
-        auto texture = petitcom.GRP[petitcom.sppage].glTexture;
+        auto texture = petitcom.graphic.GRP[petitcom.sppage].glTexture;
         float aspect = disw2 / dish2;
         float z = -0.01f;
         int spmax = petitcom.xscreenmode == 1 ? this.spmax : 512;//XSCREENが2,3じゃないと下画面は描画しない
