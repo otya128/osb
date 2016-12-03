@@ -782,43 +782,6 @@ class PetitComputer
         {
             printInformation();
             directMode = true;
-            /*vm.code.append(parser.compiler.compileProgram());*/
-            version(none)
-                do
-                {
-                    auto file = input("LOAD PROGRAM:", true).to!string;
-                    try
-                    {
-                        parser = new Parser(readText(file).to!wstring);
-                    }
-                    catch(Throwable t)
-                    {
-                        writeln(t);
-                        print("can't open program \"", file, "\".\n");
-                        continue;
-                    }
-                    try
-                    {
-                        vm = parser.compile();
-                        vm.init(this);
-                        running = true;
-                    }
-                    catch(SmileBasicError sbe)
-                    {
-                        print(sbe.getErrorMessage, "\n");
-                        print(sbe.getErrorMessage2, "\n");
-                        //print(sbe.to!string);
-                        writeln(sbe.to!string);
-                        writeln(sbe.getErrorMessage2);
-                        continue;
-                    }
-                    catch(Throwable t)
-                    {
-                        writeln(t);
-                        continue;
-                    }
-                    break;
-                } while(!quit);
         }
         do
         {
@@ -911,11 +874,6 @@ class PetitComputer
             }
             //vm.dump;
             this.vm = vm;
-            //bg[0].put(0,0,1);
-            //gpset(0, 10, 10, 0xFF00FF00);
-            //gline(0, 0, 0, 399, 239, RGB(0, 255, 0));
-            //gfill(0, 78, 78, 40, 40, RGB(0, 255, 255));
-            //gbox(0, 78, 78, 40, 40, RGB(255, 255, 0));
             int startcnt = SDL_GetTicks();
             float frame = 1000f / 60f;
             typeof(vm.currentLocation()) loc;
