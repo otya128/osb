@@ -4,6 +4,6 @@ d:
   - dmd
   - gdc
   - ldc
-script: dub test --compiler=${DC} -- -h
+script: dub test --compiler=${DC} -- --DRT-oncycle=print -h
 
 
