@@ -362,6 +362,34 @@ class BuiltinFunction
         p.graphic.showGRP = showPage;
         p.graphic.useGRP = usePage;
     }
+    static void GCLIP(PetitComputer p, int clipmode)
+    {
+        p.graphic.clip(cast(bool)clipmode/*not checked*/);
+    }
+    static void GCLIP(PetitComputer p, int clipmode, int sx, int sy, int ex, int ey)
+    {
+        import std.algorithm : swap;
+        if (sx < 0 || sy < 0 || ex < 0 || ey < 0)
+            throw new OutOfRange("GCLIP");
+        if (clipmode)
+        {
+            if (sx >= 512 || sy >= 512 || ex >= 512 || ey >= 512)
+                throw new OutOfRange("GCLIP");
+        }
+        if (sx > ex)
+        {
+            swap(sx, ex);
+        }
+        if (sy > ey)
+        {
+            swap(sy, ey);
+        }
+        int x = sx;
+        int y = sy;
+        int w = ex - sx + 1;
+        int h = ey - sy + 1;
+        p.graphic.clip(cast(bool)clipmode/*not checked*/, x, y, w, h);
+    }
     static void GPAINT(PetitComputer p, int x, int y, DefaultValue!(int, false) color, DefaultValue!(int, false) color2)
     {
         color.setDefaultValue(p.graphic.gcolor);

@@ -312,9 +312,32 @@ class PetitComputer
         display(0);
         writeln("OK");
     }
+    int currentScreenWidth;
+    int currentScreenHeight;
     void display(int number)
     {
+        import std.exception : enforce;
+        enforce(number >= 0);
+        if(xscreenmode == 0)
+        {
+            enforce(number == 0);
+            currentScreenWidth = screenWidth;
+            currentScreenHeight = screenHeight;
+        }
+        else if(xscreenmode == 1)
+        {
+            enforce(number == 0 || number == 1);
+            currentScreenWidth = screenWidthDisplay1;
+            currentScreenHeight = screenHeightDisplay1;
+        }
+        else
+        {
+            enforce(number == 0);
+            currentScreenWidth = screenWidthDisplay1;
+            currentScreenHeight = screenHeightDisplay1 * 2;
+        }
         displaynum = number;
+
         console.display(number);
     }
     SDL_Renderer* renderer;
@@ -394,12 +417,17 @@ class PetitComputer
         if(mode2 == 1)
         {
             SDL_SetWindowSize(window, 400, 480);
+            display(1);
+            graphic.clip(false);
+            graphic.clip(true);
         }
         if(mode == 4)
         {
             SDL_SetWindowSize(window, 320, 240 * 2);
-            display(0);
         }
+        display(0);
+        graphic.clip(false);
+        graphic.clip(true);
     }
     BG getBG(int layer)
     {

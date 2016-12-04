@@ -5,6 +5,45 @@ import derelict.opengl3.gl;
 import derelict.opengl3.gl3;
 import otya.smilebasic.petitcomputer;
 
+enum DrawType
+{
+    CLEAR,
+    PSET,
+    LINE,
+    FILL,
+    BOX,
+    CIRCLE1,
+    CIRCLE2,//startangle, endangle
+    TRI,
+    PAINT,
+    CLIPWRITE,
+}
+struct Circle
+{
+    short r, startr, endr;
+    short flag;
+} 
+struct DrawMessage
+{
+    DrawType type;
+    byte page;
+    byte display;
+    short x;
+    short y;
+    union
+    {
+        short x2;
+        short w;
+    }
+    union
+    {
+        short y2;
+        short h;
+    }
+    uint color;
+    Circle circle;
+    //
+}
 class Graphic
 {
     PetitComputer petitcom;
@@ -254,13 +293,14 @@ class Graphic
             glViewport(x, y, w, h);
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();
-            glOrtho(0, w, 0, h, -256, 1024);//wakaranai
+            glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
         }
         chScreen(0, 0, 511, 511);
         DrawType dt;
         auto start = SDL_GetTicks();
         int i = s;
         static const size = 255.5f;
+        int display = -1;
         for(; i < len; i++)
         {
             DrawMessage dm = drawMessageQueue[i];
@@ -269,8 +309,20 @@ class Graphic
                 oldpage = dm.page;
                 glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
             }
+            if (display != dm.display)
+            {
+                display = dm.display;
+                chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+            }
             switch(dm.type)
             {
+                case DrawType.CLIPWRITE:
+                    writeArea[display].x = dm.x;
+                    writeArea[display].y = dm.y;
+                    writeArea[display].w = dm.w;
+                    writeArea[display].h = dm.h;
+                    chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+                    break;
                 case DrawType.PSET:
                     glBegin(GL_POINTS);
                     glColor4ubv(cast(ubyte*)&dm.color);
@@ -358,35 +410,6 @@ class Graphic
         drawflag = false;
         glEnable(GL_ALPHA_TEST);
     }
-    enum DrawType
-    {
-        CLEAR,
-        PSET,
-        LINE,
-        FILL,
-        BOX,
-        CIRCLE1,
-        CIRCLE2,//startangle, endangle
-        TRI,
-        PAINT,
-    }
-    struct Circle
-    {
-        short r, startr, endr;
-        short flag;
-    } 
-    struct DrawMessage
-    {
-        DrawType type;
-        byte page;
-        short x;
-        short y;
-        uint color;
-        short x2;
-        short y2;
-        Circle circle;
-        //
-    }
     static const int dmqqueuelen = 8192;
     DrawMessage[] drawMessageQueue = new DrawMessage[dmqqueuelen];
     int drawMessageLength;
@@ -404,7 +427,10 @@ class Graphic
             }
         }
         while(drawflag){}
-        dm.color = petitcom.toGLColor(this.GRP[0].textureFormat, dm.color & 0xFFF8F8F8);
+        if (dm.type != DrawType.CLIPWRITE)
+        {
+            dm.color = petitcom.toGLColor(this.GRP[0].textureFormat, dm.color & 0xFFF8F8F8);
+        }
         drawMessageQueue[drawMessageLength] = dm;
         drawMessageLength++;
     }
@@ -416,6 +442,7 @@ class Graphic
         dm.x = x;
         dm.y = y;
         dm.color = color;
+        dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
@@ -428,6 +455,7 @@ class Graphic
         dm.x2 = x2;
         dm.y2 = y2;
         dm.color = color;
+        dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }
     //TODO:範囲チェック
@@ -460,6 +488,7 @@ class Graphic
         dm.circle.r = cast(short)r;
         dm.color = color;
         dm.type = DrawType.CIRCLE1;
+        dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }
     void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
@@ -474,10 +503,11 @@ class Graphic
         dm.circle.flag = cast(short)flag;
         dm.color = color;
         dm.type = DrawType.CIRCLE2;
+        dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }
     int gprio;
-    void render(int display, float w, float h)
+    void render(int display, int w, int h)
     {
         if (!visibles[display])
             return;
@@ -486,15 +516,54 @@ class Graphic
         glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);
         glEnable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
-        glTexCoord2f(0 / 512f - 1 , h / 512f - 1);
-        glVertex3f(0, h, z);
-        glTexCoord2f(0 / 512f - 1, 0 / 512f - 1);
-        glVertex3f(0, 0, z);
-        glTexCoord2f(w / 512f - 1, 0 / 512f - 1);
-        glVertex3f(w, 0, z);
-        glTexCoord2f(w / 512f - 1, h / 512f - 1);
-        glVertex3f(w, h, z);
+        int x1 = displayArea[display].x;
+        int y1 = displayArea[display].y;
+        int x2 = x1 + displayArea[display].w;
+        int y2 = y1 + displayArea[display].h;
+        glTexCoord2f(x1 / 512f - 1 , y2 / 512f - 1);
+        glVertex3f(x1, y2, z);
+        glTexCoord2f(x1 / 512f - 1, y1 / 512f - 1);
+        glVertex3f(x1, y1, z);
+        glTexCoord2f(x2 / 512f - 1, y1 / 512f - 1);
+        glVertex3f(x2, y1, z);
+        glTexCoord2f(x2 / 512f - 1, y2 / 512f - 1);
+        glVertex3f(x2, y2, z);
         glEnd();
         //glFlush();
+    }
+    bool writeClip;
+    SDL_Rect[2] writeArea;
+    bool displayClip;
+    SDL_Rect[2] displayArea;
+    void clip(bool clipmode)
+    {
+        if (clipmode)
+        {
+            clip(clipmode, 0, 0, 512, 512);
+            //displayArea = SDL_Rect(0, 0, 511, 511);
+        }
+        else
+        {
+            clip(clipmode, 0, 0, petitcom.currentScreenWidth, petitcom.currentScreenHeight);
+            //displayArea = SDL_Rect(0, 0, petitcom.currentScreenWidth - 1, petitcom.currentScreenHeight - 1);
+        }
+    }
+    void clip(bool clipmode, int x, int y, int w, int h)
+    {
+        if (clipmode)
+        {
+            DrawMessage dm;
+            dm.display = cast(byte)petitcom.displaynum;
+            dm.x = cast(short)x;
+            dm.y = cast(short)y;
+            dm.w = cast(short)w;
+            dm.h = cast(short)h;
+            dm.type = DrawType.CLIPWRITE;
+            sendDrawMessage(dm);
+        }
+        else
+        {
+            displayArea[petitcom.displaynum] = SDL_Rect(x, y, w, h);
+        }
     }
 }
