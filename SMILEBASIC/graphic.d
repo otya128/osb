@@ -531,21 +531,17 @@ class Graphic
         glEnd();
         //glFlush();
     }
-    bool writeClip;
     SDL_Rect[2] writeArea;
-    bool displayClip;
     SDL_Rect[2] displayArea;
     void clip(bool clipmode)
     {
         if (clipmode)
         {
             clip(clipmode, 0, 0, 512, 512);
-            //displayArea = SDL_Rect(0, 0, 511, 511);
         }
         else
         {
             clip(clipmode, 0, 0, petitcom.currentScreenWidth, petitcom.currentScreenHeight);
-            //displayArea = SDL_Rect(0, 0, petitcom.currentScreenWidth - 1, petitcom.currentScreenHeight - 1);
         }
     }
     void clip(bool clipmode, int x, int y, int w, int h)
