@@ -620,9 +620,7 @@ class PetitComputer
                         }
                         chScreen(0, 240, 400, 240);
                     }
-                    //glColor3f(1.0, 1.0, 1.0);
                     glMatrixMode(GL_MODELVIEW);
-                    //glLoadIdentity();
                 }
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
