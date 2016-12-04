@@ -2,7 +2,6 @@ language: d
 
 d:
   - dmd
-  - gdc
   - ldc
 script: dub test --compiler=${DC} -- -h
 
