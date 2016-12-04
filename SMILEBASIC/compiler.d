@@ -929,6 +929,10 @@ class Compiler
                 break;
             case NodeType.Label:
                 {
+                    if (this.isDirectMode)
+                    {
+                        throw new CantUseFromDirectMode();
+                    }
                     auto label = cast(Label)i;
                     if(s.func)
                     {
