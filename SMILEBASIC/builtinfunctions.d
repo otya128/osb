@@ -231,6 +231,12 @@ class BuiltinFunction
         p.console.consoleForeColor = cast(int)fore;
         p.console.consoleBackColor = cast(int)back;
     }
+    static void ATTR(PetitComputer p, int attr)
+    {
+        if (attr < 0 || attr > 15)
+            throw new OutOfRange("ATTR", 1);
+        p.console.attr = cast(otya.smilebasic.console.ConsoleAttribute)attr;
+    }
     static void VSYNC(PetitComputer p, DefaultValue!int time)
     {
         time.setDefaultValue(1);

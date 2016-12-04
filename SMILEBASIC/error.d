@@ -87,6 +87,11 @@ class OutOfRange : SmileBasicError
         this.errnum = 10;
         super("Out of range");
     }
+    this(string func, int arg)
+    {
+        this.errnum = 10;
+        super("Out of range(" ~ func ~ ":" ~ arg.to!string ~ ")");
+    }
 }
 class OutOfDATA : SmileBasicError
 {

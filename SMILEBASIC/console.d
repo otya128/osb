@@ -16,8 +16,18 @@ struct ConsoleCharacter
     wchar character;
     int foreColor;
     int backColor;
-    byte attr;
+    ConsoleAttribute attr;
     int z;
+}
+
+enum ConsoleAttribute
+{
+    TROT0 = 0,
+    TROT90 = 1,
+    TROT180= 2,
+    TROT270 = 3,
+    TREVH = 4,
+    TREVV = 8,
 }
 
 class Console
@@ -176,6 +186,71 @@ class Console
         consoleWidthC = consoleWidth;
         consoleC = console;
     }
+    void drawCharacter(int x, int y, ConsoleCharacter ch)
+    {
+        import std.algorithm.mutation : swap;
+        auto fore = consoleColorGL[ch.foreColor];
+        auto rect = &fontTable[ch.character];
+        ConsoleAttribute rot = ch.attr & ConsoleAttribute.TROT270;
+        int z = ch.z;
+        glColor4ubv(cast(ubyte*)&fore);
+        float tx1 = (rect.x) / 512f - 1;
+        float ty1 = (rect.y + 8) / 512f - 1;
+        float tx2 = (rect.x + 8) / 512f - 1;
+        float ty2 = (rect.y) / 512f - 1;
+        int x1 = x * 8;
+        int x2 = x * 8 + 8;
+        int y1 = y * 8;
+        int y2 = y * 8 + 8;
+        if (ch.attr & ConsoleAttribute.TREVH)
+            swap(x1, x2);
+        if (ch.attr & ConsoleAttribute.TREVV)
+            swap(y1, y2);
+        if (rot == ConsoleAttribute.TROT0)
+        {
+            glTexCoord2f(tx1 , ty1);
+            glVertex3i(x1, y2, z);
+            glTexCoord2f(tx1, ty2);
+            glVertex3i(x1, y1, z);
+            glTexCoord2f(tx2, ty2);
+            glVertex3i(x2, y1, z);
+            glTexCoord2f(tx2, ty1);
+            glVertex3i(x2, y2, z);
+        }
+        if (rot == ConsoleAttribute.TROT90)
+        {
+            glTexCoord2f(tx2, ty1);
+            glVertex3i(x1, y2, z);
+            glTexCoord2f(tx1 , ty1);
+            glVertex3i(x1, y1, z);
+            glTexCoord2f(tx1, ty2);
+            glVertex3i(x2, y1, z);
+            glTexCoord2f(tx2, ty2);
+            glVertex3i(x2, y2, z);
+        }
+        if (rot == ConsoleAttribute.TROT180)
+        {
+            glTexCoord2f(tx2, ty2);
+            glVertex3i(x1, y2, z);
+            glTexCoord2f(tx2, ty1);
+            glVertex3i(x1, y1, z);
+            glTexCoord2f(tx1 , ty1);
+            glVertex3i(x2, y1, z);
+            glTexCoord2f(tx1, ty2);
+            glVertex3i(x2, y2, z);
+        }
+        if (rot == ConsoleAttribute.TROT270)
+        {
+            glTexCoord2f(tx1, ty2);
+            glVertex3i(x1, y2, z);
+            glTexCoord2f(tx2, ty2);
+            glVertex3i(x1, y1, z);
+            glTexCoord2f(tx2, ty1);
+            glVertex3i(x2, y1, z);
+            glTexCoord2f(tx1 , ty1);
+            glVertex3i(x2, y2, z);
+        }
+    }
     void render()
     {
         if(petitcom.xscreenmode == 2)
@@ -211,18 +286,7 @@ class Console
             for(int y = 0; y < consoleHeight4; y++)
                 for(int x = 0; x < consoleWidth4; x++)
                 {
-                    auto fore = consoleColorGL[console4[y][x].foreColor];
-                    auto rect = &fontTable[console4[y][x].character];
-                    glColor4ubv(cast(ubyte*)&fore);
-                    int z = console4[y][x].z;
-                    glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                    glVertex3f((x * 8), (y * 8 + 8), z);
-                    glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8), (y * 8), z);
-                    glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                    glVertex3f((x * 8 + 8), (y * 8), z);
-                    glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                    glVertex3f((x * 8 + 8), (y * 8 + 8), z);
+                    drawCharacter(x, y, console4[y][x]);
                 }
             glEnd();
             return;
@@ -258,18 +322,7 @@ class Console
         for(int y = 0; y < consoleHeight; y++)
             for(int x = 0; x < consoleWidth; x++)
             {
-                auto fore = consoleColorGL[console[y][x].foreColor];
-                auto rect = &fontTable[console[y][x].character];
-                float z = console[y][x].z;
-                glColor4ubv(cast(ubyte*)&fore);
-                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8), (y * 8 + 8), z);
-                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
+                drawCharacter(x, y, console[y][x]);
             }
         glEnd();
         if(petitcom.xscreenmode != 1)
@@ -309,18 +362,7 @@ class Console
         for(int y = 0; y < consoleHeightDisplay1; y++)
             for(int x = 0; x < consoleWidthDisplay1; x++)
             {
-                auto fore = consoleColorGL[consoleDisplay1[y][x].foreColor];
-                auto rect = &fontTable[consoleDisplay1[y][x].character];
-                float z = consoleDisplay1[y][x].z;
-                glColor4ubv(cast(ubyte*)&fore);
-                glTexCoord2f((rect.x) / 512f - 1 , (rect.y + 8) / 512f - 1);
-                glVertex3f((x * 8), (y * 8 + 8), z);
-                glTexCoord2f((rect.x) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8), z);
-                glTexCoord2f((rect.x + 8) / 512f - 1, (rect.y +8) / 512f - 1);
-                glVertex3f((x * 8 + 8), (y * 8 + 8), z);
+                drawCharacter(x, y, consoleDisplay1[y][x]);
             }
         glEnd();
     }
@@ -333,7 +375,7 @@ class Console
     }
     //0<=TABSTEP<=16
     int TABSTEP = 4;
-    byte consoleAttr;
+    ConsoleAttribute attr;
     int tab;
     void printString(wstring text)
     {
@@ -356,7 +398,7 @@ class Console
                 else
                 {
                     auto t = min(CSRX + TABSTEP - CSRX % TABSTEP, consoleWidthC - 1);
-                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
+                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
                     CSRX += TABSTEP - (CSRX % TABSTEP) - 1;
                     if(CSRX + 1 >= consoleWidthC)
                     {
@@ -367,7 +409,7 @@ class Console
             }
             else if(c != '\n')
             {
-                consoleC[CSRY][CSRX] = ConsoleCharacter(c, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
+                consoleC[CSRY][CSRX] = ConsoleCharacter(c, consoleForeColor, consoleBackColor, attr, CSRZ);
                 tab = tab ? 2 : 0;
             }
             CSRX++;
@@ -384,7 +426,7 @@ class Console
                     consoleC[i] = consoleC[i + 1];
                 }
                 consoleC[consoleHeightC - 1] = tmp;
-                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, consoleAttr, CSRZ);
+                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
                 CSRY = consoleHeightC - 1;
             }
         }
