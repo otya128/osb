@@ -347,6 +347,7 @@ class Sprite
     }
     this(PetitComputer petitcom)
     {
+        initSpriteAnimationTable();
         sprites = new SpriteData[512];
         zsortedSprites = new SpriteData*[512];
         for(int i = 0; i < sprites.length; i++)
@@ -875,8 +876,8 @@ class Sprite
         spanim(id, tgete | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0), data);
         
     }
-    static SpriteAnimTarget[wstring] spriteAnimTarget;
-    static this()
+    SpriteAnimTarget[wstring] spriteAnimTarget;
+    void initSpriteAnimationTable()
     {
         spriteAnimTarget = [
             "XY": SpriteAnimTarget.XY,

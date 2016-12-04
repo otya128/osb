@@ -9,12 +9,12 @@ import std.conv;
 import std.range;
 class Lexical
 {
-    static TokenType[] table;
-    static TokenType[wstring] reserved;
+    TokenType[] table;
+    TokenType[wstring] reserved;
     wstring code;
     int index;
     int line;
-    static this()
+    void initReservedWordsTable()
     {
         table = new TokenType[256];
         for(int i = 0;i<256;i++)
@@ -86,6 +86,7 @@ class Lexical
     }
     this(wstring input)
     {
+        initReservedWordsTable();
         this.code = input;
         line = 1;
     }
