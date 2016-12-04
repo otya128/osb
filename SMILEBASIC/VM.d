@@ -838,8 +838,13 @@ class GotoExpr : Code
     {
         Value label;
         vm.pop(label);
-        if(!label.isString)
+        if(label.isString)
         {
+            if (sc && sc.func)
+            {
+                vm.pc = sc.func.label[label.castString] - 1;
+                return;
+            }
             vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
         }
         else
