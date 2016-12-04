@@ -413,6 +413,15 @@ class PetitComputer
     {
         return bg;
     }
+    bool[2] BGvisibles = [true, true];
+    bool BGvisible()
+    {
+        return BGvisibles[displaynum];
+    }
+    void BGvisible(bool value)
+    {
+        BGvisibles[displaynum] = value;
+    }
     protected BG[4] bg;
     bool quit;
     Condition renderCondition;
@@ -586,7 +595,7 @@ class PetitComputer
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                 glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage].glTexture);
-                if(xscreenmode == 2)
+                if(xscreenmode == 2 && BGvisibles[0])
                 {
                     for(int i = 0; i < bgmax; i++)
                     {
@@ -595,16 +604,22 @@ class PetitComputer
                 }
                 else
                 {
-                    for(int i = 0; i < bgmax; i++)
+                    if (BGvisibles[0])
                     {
-                        bg[i].render(400f, 240f);
+                        for(int i = 0; i < bgmax; i++)
+                        {
+                            bg[i].render(400f, 240f);
+                        }
                     }
                     if(xscreenmode == 1)
                     {
-                        chScreen(40, 0, 320, 240);
-                        for(int i = bgmax; i < bg.length; i++)
+                        if (BGvisibles[1])
                         {
-                            bg[i].render(320f, 240f);
+                            chScreen(40, 0, 320, 240);
+                            for(int i = bgmax; i < bg.length; i++)
+                            {
+                                bg[i].render(320f, 240f);
+                            }
                         }
                         chScreen(0, 240, 400, 240);
                     }

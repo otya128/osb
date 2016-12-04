@@ -15,9 +15,17 @@ class Graphic
         paint.buffer = new uint[512 * 512];
     }
 
-    bool visibleGRP = true;
+    bool[2] visibles = [true, true];
     private int[2] showPage = [0, 1];
     private int[2] usePage = [0, 1];
+    bool visible()
+    {
+        return visibles[petitcom.displaynum];
+    }
+    void visible(bool value)
+    {
+        visibles[petitcom.displaynum] = value;
+    }
     @property int useGRP()
     {
         return usePage[petitcom.displaynum];
@@ -471,6 +479,8 @@ class Graphic
     int gprio;
     void render(int display, float w, float h)
     {
+        if (!visibles[display])
+            return;
         float z = gprio;
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);

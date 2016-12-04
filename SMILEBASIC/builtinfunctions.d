@@ -268,8 +268,17 @@ class BuiltinFunction
         }
         return p.button;
     }
-    static void VISIBLE(PetitComputer p, DefaultValue!(int) console, DefaultValue!(int) graphic, DefaultValue!(int) BG, DefaultValue!(int) sprite)
+    static void VISIBLE(PetitComputer p, int console, int graphic, int BG, int sprite)
     {
+        import std.exception : enforce;
+        enforce(console == 0 || console == 1, new OutOfRange("VISIBLE", 1));
+        enforce(graphic == 0 || graphic == 1, new OutOfRange("VISIBLE", 2));
+        enforce(BG == 0 || BG == 1, new OutOfRange("VISIBLE", 3));
+        enforce(sprite == 0 || sprite == 1, new OutOfRange("VISIBLE", 4));
+        p.console.visible = cast(bool)console;
+        p.graphic.visible = cast(bool)graphic;
+        p.BGvisible = cast(bool)BG;
+        p.sprite.visible = cast(bool)sprite;
     }
     static void XON(PetitComputer p, Value mode/*!?!???!?*/)
     {

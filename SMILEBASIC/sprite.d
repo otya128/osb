@@ -300,6 +300,15 @@ class Sprite
     PetitComputer petitcom;
     string spdefTableFile = "spdef.csv";
     int spmax = 512;
+    bool[2] visibles = [true, true];
+    bool visible()
+    {
+        return visibles[petitcom.displaynum];
+    }
+    void visible(bool value)
+    {
+        visibles[petitcom.displaynum] = value;
+    }
     void initUVTable()
     {
         SPDEFTable = new SpriteDef[4096];
@@ -558,6 +567,17 @@ class Sprite
     SpriteBucket* bucketsptr;
     void render()
     {
+        if (!visibles[0] && !visibles[1])
+        {
+            foreach(ref sprite; sprites)
+            {
+                if(sprite.define)
+                {
+                    animation(&sprite);
+                }
+            }
+            return;
+        }
         //とりあえずZ更新されたら描画時にまとめてソート
         //thread safe.....
         if(zChange)
@@ -648,6 +668,8 @@ class Sprite
                 {
                     if(!dis && sprite.id >= spmax)
                     {
+                        if (!visibles[1])
+                            continue;
                         disw = 160f;
                         disw2 = 320f;
                         petitcom.chScreen(40, 0, 320, 240);
@@ -658,6 +680,8 @@ class Sprite
                     {
                         if(sprite.id < spmax && dis)
                         {
+                            if (!visibles[0])
+                                continue;
                             disw = 200f;
                             disw2 = 400f;
                             petitcom.chScreen(0, 240, 400, 240);

@@ -75,6 +75,15 @@ class Console
     SDL_Rect[] fontTable = new SDL_Rect[65536];
     GraphicPage GRPF;
     PetitComputer petitcom;
+    bool[2] visibles = [true, true];
+    bool visible()
+    {
+        return visibles[petitcom.displaynum];
+    }
+    void visible(bool value)
+    {
+        visibles[petitcom.displaynum] = value;
+    }
     this(PetitComputer p)
     {
         petitcom = p;
@@ -253,7 +262,7 @@ class Console
     }
     void render()
     {
-        if(petitcom.xscreenmode == 2)
+        if(petitcom.xscreenmode == 2 && (visibles[0] || showCursor)/*XSCREEN4*/)
         {
             glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
             glDisable(GL_TEXTURE_2D);
@@ -291,80 +300,86 @@ class Console
             glEnd();
             return;
         }
-        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeight; y++)
-            for(int x = 0; x < consoleWidth; x++)
-            {
-                auto back = consoleColorGL[console[y][x].backColor];
-                if(back)
+        if (showCursor || visibles[0])
+        {
+            glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
+            glDisable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+            for(int y = 0; y < consoleHeight; y++)
+                for(int x = 0; x < consoleWidth; x++)
                 {
-                    glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f(x * 8, y * 8 + 8, 1024);
-                    glVertex3f(x * 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                    auto back = consoleColorGL[console[y][x].backColor];
+                    if(back)
+                    {
+                        glColor4ubv(cast(ubyte*)&back);
+                        glVertex3f(x * 8, y * 8 + 8, 1024);
+                        glVertex3f(x * 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                    }
                 }
+            if(petitcom.displaynum == 0 && showCursor && animationCursor)
+            {
+                glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
+                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
+                glVertex3f((CSRX * 8), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
             }
-        if(petitcom.displaynum == 0 && showCursor && animationCursor)
-        {
-            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
-            glVertex3f((CSRX * 8), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
-        }
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
+            glEnd();
+            glEnable(GL_TEXTURE_2D);
 
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeight; y++)
-            for(int x = 0; x < consoleWidth; x++)
-            {
-                drawCharacter(x, y, console[y][x]);
-            }
-        glEnd();
-        if(petitcom.xscreenmode != 1)
-        {
-            return;
-        }
-        //下画面
-        petitcom.chScreen(40, 0, 400, 240);
-        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeightDisplay1; y++)
-            for(int x = 0; x < consoleWidthDisplay1; x++)
-            {
-                auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
-                if(back)
+            glBegin(GL_QUADS);
+            for(int y = 0; y < consoleHeight; y++)
+                for(int x = 0; x < consoleWidth; x++)
                 {
-                    glColor4ubv(cast(ubyte*)&back);
-                    glVertex3f(x * 8, y * 8 + 8, 1024);
-                    glVertex3f(x * 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8, 1024);
-                    glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                    drawCharacter(x, y, console[y][x]);
                 }
-            }
-        if(petitcom.displaynum == 1 && showCursor && animationCursor)
-        {
-            glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
-            glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
-            glVertex3f((CSRX * 8), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
-            glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
-        }
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-
-        glBegin(GL_QUADS);
-        for(int y = 0; y < consoleHeightDisplay1; y++)
-            for(int x = 0; x < consoleWidthDisplay1; x++)
+            glEnd();
+            if(petitcom.xscreenmode != 1)
             {
-                drawCharacter(x, y, consoleDisplay1[y][x]);
+                return;
             }
-        glEnd();
+        }
+        if (visibles[1] || showCursor)
+        {
+            //下画面
+            petitcom.chScreen(40, 0, 400, 240);
+            glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
+            glDisable(GL_TEXTURE_2D);
+            glBegin(GL_QUADS);
+            for(int y = 0; y < consoleHeightDisplay1; y++)
+                for(int x = 0; x < consoleWidthDisplay1; x++)
+                {
+                    auto back = consoleColorGL[consoleDisplay1[y][x].backColor];
+                    if(back)
+                    {
+                        glColor4ubv(cast(ubyte*)&back);
+                        glVertex3f(x * 8, y * 8 + 8, 1024);
+                        glVertex3f(x * 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8, 1024);
+                        glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                    }
+                }
+            if(petitcom.displaynum == 1 && showCursor && animationCursor)
+            {
+                glColor4ubv(cast(ubyte*)&consoleColorGL[15]);
+                glVertex3f((CSRX * 8), (CSRY * 8 + 8), -256);
+                glVertex3f((CSRX * 8), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
+                glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
+            }
+            glEnd();
+            glEnable(GL_TEXTURE_2D);
+
+            glBegin(GL_QUADS);
+            for(int y = 0; y < consoleHeightDisplay1; y++)
+                for(int x = 0; x < consoleWidthDisplay1; x++)
+                {
+                    drawCharacter(x, y, consoleDisplay1[y][x]);
+                }
+            glEnd();
+        }
     }
     void print(T...)(T args)
     {
