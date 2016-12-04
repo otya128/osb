@@ -1167,11 +1167,21 @@ class Compiler
                 auto label = cast(GotoS)c;
                 if(label.sc.func)
                 {
-                    code[i] = new GotoAddr(label.sc.func.label[label.label]);
+                    int addr = label.sc.func.label.get(label.label, int.min);
+                    if (addr == int.min)
+                    {
+                        throw new UndefinedLabel(label.label);
+                    }
+                    code[i] = new GotoAddr(addr);
                 }
                 else
                 {
-                    code[i] = new GotoAddr(globalLabel[label.label]);
+                    int addr = globalLabel.get(label.label, int.min);
+                    if (addr == int.min)
+                    {
+                        throw new UndefinedLabel(label.label);
+                    }
+                    code[i] = new GotoAddr(addr);
                 }
             }
             if(c.type == CodeType.GosubS)

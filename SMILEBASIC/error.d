@@ -96,6 +96,18 @@ class OutOfDATA : SmileBasicError
         super("Out of DATA");
     }
 }
+class UndefinedLabel : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 14;
+        super("Undefined label");
+    }
+    this(wstring label)
+    {
+        this();
+    }
+}
 class UndefinedVariable : SmileBasicError
 {
     this()
