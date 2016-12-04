@@ -56,6 +56,22 @@ class IllegalFunctionCall : SmileBasicError
         super("Illegal function call(" ~ func ~ ")");
     }
 }
+class StackOverFlow : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 5;
+        super("Stack overflow");
+    }
+}
+class StackUnderFlow : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 6;
+        super("Stack underflow");
+    }
+}
 class TypeMismatch : SmileBasicError
 {
     this()

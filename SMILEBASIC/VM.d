@@ -176,8 +176,7 @@ class VM
     {
         if(stacki >= this.stack.length)
         {
-            writeln("Stack OF");
-            readln();
+            throw new StackOverFlow();
         }
         stack[stacki++] = value;
     }
@@ -193,8 +192,7 @@ class VM
     {
         if(stacki <= bp)
         {
-            writeln("Stack underflow");
-            readln();
+            throw new StackUnderFlow();
         }
         value = stack[--stacki];
     }
@@ -202,8 +200,7 @@ class VM
     {
         if(stacki <= bp)
         {
-            writeln("Stack underflow");
-            readln();
+            throw new StackUnderFlow();
         }
         --stacki;
     }
