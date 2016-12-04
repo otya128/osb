@@ -611,18 +611,18 @@ class PetitComputer
                             bg[i].render(400f, 240f);
                         }
                     }
-                    if(xscreenmode == 1)
+                    if(xscreenmode == 1 && BGvisibles[1])
                     {
-                        if (BGvisibles[1])
+                        chScreen(40, 0, 320, 240);
+                        for(int i = bgmax; i < bg.length; i++)
                         {
-                            chScreen(40, 0, 320, 240);
-                            for(int i = bgmax; i < bg.length; i++)
-                            {
-                                bg[i].render(320f, 240f);
-                            }
+                            bg[i].render(320f, 240f);
                         }
                         chScreen(0, 240, 400, 240);
                     }
+                    //glColor3f(1.0, 1.0, 1.0);
+                    glMatrixMode(GL_MODELVIEW);
+                    //glLoadIdentity();
                 }
                 version(test) glLoadIdentity();
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);

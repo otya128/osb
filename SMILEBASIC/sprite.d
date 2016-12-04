@@ -668,28 +668,30 @@ class Sprite
                 {
                     if(!dis && sprite.id >= spmax)
                     {
+                        dis = true;
                         if (!visibles[1])
                             continue;
                         disw = 160f;
                         disw2 = 320f;
                         petitcom.chScreen(40, 0, 320, 240);
                         aspect = disw2 / dish2;
-                        dis = true;
                     }
                     else
                     {
                         if(sprite.id < spmax && dis)
                         {
+                            dis = false;
                             if (!visibles[0])
                                 continue;
                             disw = 200f;
                             disw2 = 400f;
                             petitcom.chScreen(0, 240, 400, 240);
                             aspect = disw2 / dish2;
-                            dis = false;
                         }
                     }
                 }
+                if (!visibles[dis])
+                    continue;
                 int x, y;
                 if(sprite.parent)
                 {
