@@ -751,7 +751,17 @@ class PetitComputer
         int oldpc;
         void runSlot(int lot)
         {
-            parser = new Parser(std.algorithm.reduce!("a ~ b")(slot[lot].program.opSlice));
+            import std.algorithm.iteration, std.outbuffer;
+            auto buffer = new OutBuffer();
+            buffer.reserve(slot[lot].program.opSlice.map!"(a.length + 1) * 2".sum);
+
+            foreach(line; slot[lot].program)
+            {
+                buffer.write(line);
+            }
+            ubyte[] progbuff = buffer.toBytes;
+            wchar[] progbuff2 = (cast(wchar*)progbuff.ptr)[0..progbuff.length / 2];
+            parser = new Parser(cast(wstring)progbuff2);
             try
             {
                 vm = parser.compile();
