@@ -1457,7 +1457,11 @@ class BuiltinFunction
         wstring resname = type[0];
         wstring projectname = type[1];
         wstring filename = type[2];
-        if(projectname != "" && projectname != "SYS")
+        if (!Projects.isValidFileName(filename))
+        {
+            throw new IllegalFunctionCall("LOAD");
+        }
+        if(projectname != "" && projectname.toUpper != "SYS")
         {
             throw new IllegalFunctionCall("LOAD");
         }
@@ -1471,7 +1475,8 @@ class BuiltinFunction
             {
                 return Value(txt);
             }
-            throw new IllegalFunctionCall("LOAD");
+            //not exist
+            return Value("");
         }
         throw new IllegalFunctionCall("LOAD");
     }
@@ -1482,10 +1487,14 @@ class BuiltinFunction
         flag.setDefaultValue(0);
         auto type = Projects.splitResourceName(name);
         wstring txt;
-        wstring resname = type[0];
+        wstring resname = type[0].toUpper;
         wstring projectname = type[1];
         wstring filename = type[2];
-        if(projectname != "" && projectname != "SYS")
+        if (!Projects.isValidFileName(filename))
+        {
+            throw new IllegalFunctionCall("LOAD");
+        }
+        if(projectname != "" && projectname.toUpper != "SYS")
         {
             throw new IllegalFunctionCall("LOAD");
         }
@@ -1503,7 +1512,8 @@ class BuiltinFunction
             }
             if(!p.project.loadFile(projectname, "TXT", filename, txt))
             {
-                throw new IllegalFunctionCall("LOAD");
+                //not exist
+                return;
             }
             p.slot[lot].load(txt);
             return;

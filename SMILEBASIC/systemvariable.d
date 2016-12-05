@@ -108,3 +108,11 @@ class FreeMem : SystemVariable
             return Value(8327164);
         }
 }
+class Result : SystemVariable
+{
+    @property
+        override Value value()
+        {
+            return Value(vm.petitcomputer.project.result);
+        }
+}

@@ -8,11 +8,19 @@ import std.conv;
 import std.uni;
 import std.typecons;
 import std.range;
+enum DialogResult
+{
+    FAILURE = 0,
+    SUCCESS = 1,
+    CANCEL = -1,
+}
+
 class Projects
 {
     wstring rootPath;
     wstring projectPath;
     string projectPathU8;
+    DialogResult result = DialogResult.FAILURE;//Default value
     this(wstring root)
     {
         rootPath = root;
@@ -130,10 +138,14 @@ class Projects
     bool loadFile(wstring project, wstring type, wstring name, out wstring contents)
     {
         contents = "";
+        result = DialogResult.FAILURE;
         if(!isValidProjectName(project))
         {
             return false;
         }
+        type = type.toUpper;
+        //TODO:case-sensitive filesystem...
+        name = name.toUpper;
         if(project == "") project = "[DEFAULT]";
         if(type != "TXT" && type != "DAT")
         {
@@ -144,6 +156,14 @@ class Projects
             return false;
         }
         auto path = buildPath(projectPath, project, type, name).to!string;
+        if (!path.exists)
+        {
+            //show dialog
+            return false;
+        }
+
+        //show dialog
+        result = DialogResult.SUCCESS;
         contents = readText(path).to!wstring;
         return true;
     }
