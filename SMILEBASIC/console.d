@@ -30,6 +30,15 @@ enum ConsoleAttribute
     TREVV = 8,
 }
 
+version(Windows)
+{
+    static const uint STD_OUTPUT_HANDLE = -11;
+    static const uint STD_INPUT_HANDLE = -10;
+    extern (Windows) void* GetStdHandle(uint nStdHandle);
+    extern (Windows) static bool GetConsoleMode(void* hConsoleHandle, uint* lpdwMode);
+    extern (Windows) static bool SetConsoleMode(void* hConsoleHandle, uint dwMode);
+}
+
 class Console
 {
 
@@ -84,8 +93,20 @@ class Console
     {
         visibles[petitcom.displaynum] = value;
     }
+
     this(PetitComputer p)
     {
+        version(Windows)
+        {
+            void* outcon = GetStdHandle(STD_OUTPUT_HANDLE);
+            uint outmode;
+            GetConsoleMode(outcon, &outmode);
+            SetConsoleMode(outcon, outmode | 0x0004 | 0x0008);
+            void* incon = GetStdHandle(STD_INPUT_HANDLE);
+            uint inmode;
+            GetConsoleMode(incon, &inmode);
+            SetConsoleMode(incon, inmode | 0x0200);
+        }
         petitcom = p;
         fontWidth = 8;
         fontHeight = 8;
@@ -394,6 +415,8 @@ class Console
     int tab;
     void printString(wstring text)
     {
+        write(text);
+        stdout.flush();
         //consolem.lock();
         //scope(exit) consolem.unlock();
         //write(text);
