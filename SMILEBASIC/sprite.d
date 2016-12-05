@@ -567,7 +567,7 @@ class Sprite
     SpriteBucket* bucketsptr;
     void render()
     {
-        if (!visibles[0] && !visibles[1])
+        if ((!visibles[0] && !visibles[1]) || (petitcom.xscreenmode == 2 && !visibles[0]))
         {
             foreach(ref sprite; sprites)
             {
@@ -640,8 +640,6 @@ class Sprite
         int dis;
         if(petitcom.xscreenmode == 2)
         {
-            if (!visibles[0])
-                return;
             disw = 160f;
             disw2 = 320f;
             dish = 240f;
