@@ -42,7 +42,7 @@ class BG
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        glTranslatef(homex, homey, z);
+        glTranslatef(homex, homey, 0);
         glScalef(scalex, scaley, 1f);
         glRotatef( r, 0.0f, 0.0f, 1.0f );
         glTranslatef(-offsetx, -offsety, z);
