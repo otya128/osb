@@ -640,6 +640,8 @@ class Sprite
         int dis;
         if(petitcom.xscreenmode == 2)
         {
+            if (!visibles[0])
+                return;
             disw = 160f;
             disw2 = 320f;
             dish = 240f;
@@ -689,9 +691,9 @@ class Sprite
                             aspect = disw2 / dish2;
                         }
                     }
+                    if (!visibles[dis])
+                        continue;
                 }
-                if (!visibles[dis])
-                    continue;
                 int x, y;
                 if(sprite.parent)
                 {
