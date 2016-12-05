@@ -41,9 +41,11 @@ class BG
         glColor3f(1.0, 1.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
-        glTranslatef((-offsetx + homex), ((-offsety + homey)), z);
+
+        glTranslatef(homex, homey, z);
         glScalef(scalex, scaley, 1f);
-        glRotatef(360 - r, 0.0f, 0.0f, 1.0f );
+        glRotatef( r, 0.0f, 0.0f, 1.0f );
+        glTranslatef(-offsetx, -offsety, z);
         version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
         //viewport
         //clipx,clipy
