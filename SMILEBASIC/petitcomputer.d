@@ -322,6 +322,12 @@ class PetitComputer
     {
         import std.exception : enforce;
         enforce(number >= 0);
+        if (xscreenmode == 2)
+        {
+            enforce(number == 0);
+            currentScreenWidth = screenWidthDisplay1;
+            currentScreenHeight = screenHeightDisplay1 * 2;
+        }
         if(xscreenmode == 0)
         {
             enforce(number == 0);
@@ -331,14 +337,16 @@ class PetitComputer
         else if(xscreenmode == 1)
         {
             enforce(number == 0 || number == 1);
-            currentScreenWidth = screenWidthDisplay1;
-            currentScreenHeight = screenHeightDisplay1;
-        }
-        else
-        {
-            enforce(number == 0);
-            currentScreenWidth = screenWidthDisplay1;
-            currentScreenHeight = screenHeightDisplay1 * 2;
+            if (number == 0)
+            {
+                currentScreenWidth = screenWidth;
+                currentScreenHeight = screenHeight;
+            }
+            else
+            {
+                currentScreenWidth = screenWidthDisplay1;
+                currentScreenHeight = screenHeightDisplay1;
+            }
         }
         displaynum = number;
 
