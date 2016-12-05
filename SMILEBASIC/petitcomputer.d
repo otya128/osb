@@ -73,6 +73,10 @@ class GraphicPage
     GLenum textureFormat;
     void createTexture(SDL_Renderer* renderer)
     {
+        createTexture(renderer, GraphicPage.textureScaleMode);
+    }
+    void createTexture(SDL_Renderer* renderer, GLenum textureScaleMode)
+    {
         ubyte r,g,b,a;
         SDL_GetRGBA(*cast(uint*)surface.pixels, surface.format, &r, &g, &b, &a);
         GLenum texture_format;
@@ -526,7 +530,7 @@ class PetitComputer
                 writeln(SDL_GetError.to!string);
                 return;
             }
-            console.GRPF.createTexture(renderer);
+            console.GRPF.createTexture(renderer, textureScaleMode);
             chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
@@ -546,7 +550,7 @@ class PetitComputer
             DerelictGL3.reload();
             foreach(g; graphic.GRP)
             {
-                g.createTexture(renderer);
+                g.createTexture(renderer, textureScaleMode);
                 g.createBuffer();
             }
             //glEnable(GL_BLEND);
@@ -763,8 +767,17 @@ class PetitComputer
     Object buttonLock;
     Slot[] slot;
     bool isRunningDirectMode = false;
-    void run(bool nodirectmode = false, string inputfile = "")
+    GLenum textureScaleMode;
+    void run(bool nodirectmode = false, string inputfile = "", bool antialiasing = false)
     {
+        if (antialiasing)
+        {
+            textureScaleMode = GL_LINEAR;
+        }
+        else
+        {
+            textureScaleMode = GL_NEAREST;
+        }
         buttonLock = new Object();
         slot = new Slot[5];
         keybuffer = new Key[128];
