@@ -4,16 +4,16 @@ install:
         $dmdVersion = '2.072.0'
         Invoke-WebRequest "http://downloads.dlang.org/releases/2.x/$dmdVersion/dmd.$dmdVersion.windows.7z" -OutFile "dmd2.7z"
         7z x dmd2.7z > $null
-        Set-Item -path env:DMD -value c:\projects\dmd2\windows\bin\dmd.exe
+        $Env:Path += ";c:\projects\dmd2\windows\bin\"
         c:\projects\dmd2\windows\bin\dmd.exe --version
         $dubVersion = '1.1.1'
         Invoke-WebRequest "https://code.dlang.org/files/dub-1.1.1-windows-x86.zip" -OutFile dub.zip
         7z x dub.zip > $null
-        Set-Item env:path c:\projects\dub\dub.exe
+        c:\projects\dub\dub.exe --version
 
 build_script:
   - cd c:\projects
-  - dub build
+  - c:\projects\dub\dub.exe build
 
 test_script:
-  - dub test
+  - c:\projects\dub\dub.exe test
