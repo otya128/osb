@@ -234,7 +234,8 @@ class Graphic
     void drawCircle(int x, int y, int r, int startr, int endr, int flag)
     {
         import std.math : sin, cos, PI;
-        int count = r;
+        import std.algorithm.comparison : min;
+        int count = min(r, 1000);
         if (flag)
         {
             glBegin(GL_LINE_LOOP);
@@ -261,7 +262,8 @@ class Graphic
     void drawCircle(int x, int y, int r)
     {
         import std.math : sin, cos, PI;
-        int count = r;
+        import std.algorithm.comparison : min;
+        int count = min(r, 1000);
         glBegin(GL_LINE_STRIP);
         for (int i = 0; i <= r; i++)
         {
@@ -372,11 +374,6 @@ class Graphic
                         }
                         paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
                         //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
-                        if(SDL_GetTicks() - start >= 16 && i != len - 1)
-                        {
-                            s = i + 1;
-                            goto brk;
-                        }
                     }
                     break;
                 case DrawType.CIRCLE1:
@@ -392,6 +389,11 @@ class Graphic
                     }
                     break;
                 default:
+            }
+            if(SDL_GetTicks() - start >= 16 && i != len - 1)
+            {
+                s = i + 1;
+                goto brk;
             }
             dt = dm.type;
         }
