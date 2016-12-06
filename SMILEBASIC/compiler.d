@@ -1237,7 +1237,7 @@ class Compiler
             {
                 auto restore = cast(RestoreCodeS)c;
                 auto label = s.data.label.get(restore.label, int.min);
-                if (label != int.min)
+                if (label == int.min)
                 {
                     code[i] = new RestoreUndefinedLabelCode(restore.label);
                 }
