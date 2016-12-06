@@ -33,5 +33,5 @@ test_script:
   - c:\projects\dub\dub.exe test -- -h
 
 artifacts:
-  - path: otyasmilebasic.zip
+  - path: c:\projects\otyasmilebasic.zip
   
