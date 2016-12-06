@@ -76,6 +76,7 @@ class Console
     GraphicPage GRPF;
     PetitComputer petitcom;
     bool[2] visibles = [true, true];
+    int width;
     bool visible()
     {
         return visibles[petitcom.displaynum];
@@ -118,6 +119,8 @@ class Console
 
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = petitcom.toGLColor(consoleColor[i]);
+
+        width = 8;
     }
     void createFontTable()
     {

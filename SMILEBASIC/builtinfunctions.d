@@ -238,6 +238,18 @@ class BuiltinFunction
             throw new OutOfRange("ATTR", 1);
         p.console.attr = cast(otya.smilebasic.console.ConsoleAttribute)attr;
     }
+    static void WIDTH(PetitComputer p, int width)
+    {
+        if (width != 8 && width != 16)
+        {
+            throw new IllegalFunctionCall("WIDTH", 1);
+        }
+        p.console.width = width;
+    }
+    static int WIDTH(PetitComputer p)
+    {
+        return p.console.width;
+    }
     static void VSYNC(PetitComputer p, DefaultValue!int time)
     {
         time.setDefaultValue(1);
