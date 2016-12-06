@@ -16,8 +16,8 @@ class Lexical
     int line;
     void initReservedWordsTable()
     {
-        table = new TokenType[256];
-        for(int i = 0;i<256;i++)
+        table = new TokenType[65536];
+        for(int i = 0;i<65536;i++)
         {
             table[i] = TokenType.Unknown;
         }
@@ -125,7 +125,7 @@ class Lexical
                 for(;i < code.length;i++)
                 {
                     c = code[i];
-                    if(table[cast(char)c] == TokenType.NewLine) break;
+                    if(table[c] == TokenType.NewLine) break;
                 }
                 token = Token(TokenType.NewLine);
                 if (i >= code.length)
@@ -203,7 +203,7 @@ class Lexical
                     for(;i < code.length;i++)
                     {
                         c = code[i];
-                        if(table[cast(char)c] == TokenType.NewLine) break;
+                        if(table[c] == TokenType.NewLine) break;
                     }
                     token = Token(TokenType.NewLine);
                     if (i >= code.length)
@@ -336,11 +336,11 @@ class Lexical
                 i += 2;
                 break;
             }
-            if(table[cast(char)c] == TokenType.Unknown)
+            if(table[c] == TokenType.Unknown)
             {
                 //error
             }
-            token = Token(table[cast(char)c]);
+            token = Token(table[c]);
             i++;
             //CRLFだった
             if(token.type == TokenType.NewLine)
