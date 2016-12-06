@@ -359,12 +359,12 @@ class Sprite
         auto spdef = SpriteDef(u, v, w, h, sprites[id].homex, sprites[id].homey, attr);
         sprites[id].change(spdef);
     }
-    void spchr(int i, out int d)
+    void getSpchr(int i, out int d)
     {
         i = spid(i);
         d = sprites[i].defno;
     }
-    void spchr(int id, out int u, out int v, out int w, out int h, out SpriteAttr attr)
+    void getSpchr(int id, out int u, out int v, out int w, out int h, out SpriteAttr attr)
     {
         id = spid(id);
         u = sprites[id].u;

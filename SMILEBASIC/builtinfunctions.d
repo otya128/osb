@@ -1062,7 +1062,7 @@ class BuiltinFunction
         {
             throw new IllegalFunctionCall("SPCHR", 1);
         }
-        p.sprite.spchr(id, defno);
+        p.sprite.getSpchr(id, defno);
     }
     static void SPCHR(PetitComputer p, int id, out int u, out int v, out int w, out int h, out int attr)
     {
@@ -1071,7 +1071,7 @@ class BuiltinFunction
             throw new IllegalFunctionCall("SPCHR", 1);
         }
         SpriteAttr spriteattr;
-        p.sprite.spchr(id, u, v, w, h, spriteattr);
+        p.sprite.getSpchr(id, u, v, w, h, spriteattr);
         attr = cast(int)spriteattr;
     }
     static void SPCHR(PetitComputer p, int id, out int u, out int v)
