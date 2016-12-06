@@ -8,8 +8,11 @@ install:
         c:\projects\dmd2\windows\bin\dmd.exe --version
         $dubVersion = '1.1.1'
         Invoke-WebRequest "https://code.dlang.org/files/dub-1.1.1-windows-x86.zip" -OutFile dub.zip
+        New-Item "dub" -Type Directory > $null
+        pushd dub
         7z x dub.zip > $null
         c:\projects\dub\dub.exe --version
+        popd
 
 build_script:
   - cd c:\projects
