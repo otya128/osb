@@ -17,7 +17,15 @@ install:
 build_script:
   - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe build
+  - 7z a c:\projects\otyasmilebasic.zip c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\*
 
 test_script:
   - cd c:\projects\otyaSMILEBASIC
-  - c:\projects\dub\dub.exe test
+  - c:\projects\dub\dub.exe test -- -h
+  - ps: |
+        $SDL2Version = '2.0.5'
+        Invoke-WebRequest "https://www.libsdl.org/release/SDL2-$SDL2Version-win32-x86.zip" -OutFile
+
+artifacts:
+  - path: otyasmilebasic.zip
+  
