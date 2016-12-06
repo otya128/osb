@@ -17,14 +17,20 @@ install:
 build_script:
   - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe build
-  - 7z a c:\projects\otyasmilebasic.zip c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\*
+
+after_build:
+  - ps: |
+        $SDL2Version = '2.0.5'
+        Invoke-WebRequest "https://www.libsdl.org/release/SDL2-$SDL2Version-win32-x86.zip" -OutFile C:\projects\SDL2.zip
+        7z x -oC:\Projects\SDL2 C:\projects\SDL2.zip > $null
+        $SDL2ImageVersion = '2.0.1'
+        Invoke-WebRequest "https://www.libsdl.org/projects/SDL_image/release/SDL2_image-$SDL2ImageVersion-win32-x86.zip" -OutFile C:\projects\SDL2Image.zip
+        7z x -oC:\Projects\SDL2Image C:\projects\SDL2Image.zip > $null
+  - 7z a c:\projects\otyasmilebasic.zip c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\* C:\projects\SDL2\*.dll C:\Projects\SDL2Image\*.dll
 
 test_script:
   - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe test -- -h
-  - ps: |
-        $SDL2Version = '2.0.5'
-        Invoke-WebRequest "https://www.libsdl.org/release/SDL2-$SDL2Version-win32-x86.zip" -OutFile
 
 artifacts:
   - path: otyasmilebasic.zip
