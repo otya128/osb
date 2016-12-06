@@ -26,12 +26,12 @@ after_build:
         $SDL2ImageVersion = '2.0.1'
         Invoke-WebRequest "https://www.libsdl.org/projects/SDL_image/release/SDL2_image-$SDL2ImageVersion-win32-x86.zip" -OutFile C:\projects\SDL2Image.zip
         7z x -oC:\Projects\SDL2Image C:\projects\SDL2Image.zip > $null
-  - 7z a c:\projects\otyasmilebasic.zip c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\* C:\projects\SDL2\*.dll C:\Projects\SDL2Image\*.dll
+  - 7z a c:\projects\otyasmilebasic\otyasmilebasic.zip c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\* C:\projects\SDL2\*.dll C:\Projects\SDL2Image\*.dll
 
 test_script:
   - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe test -- -h
 
 artifacts:
-  - path: c:\projects\otyasmilebasic.zip
+  - path: otyasmilebasic.zip
   
