@@ -6,10 +6,10 @@ install:
         7z x dmd2.7z > $null
         $Env:Path += ";c:\projects\dmd2\windows\bin\"
         c:\projects\dmd2\windows\bin\dmd.exe --version
-        $dubVersion = '1.1.1'
-        Invoke-WebRequest "https://code.dlang.org/files/dub-1.1.1-windows-x86.zip" -OutFile dub.zip
         New-Item "dub" -Type Directory > $null
         pushd dub
+        $dubVersion = '1.1.1'
+        Invoke-WebRequest "https://code.dlang.org/files/dub-$dubVersion-windows-x86.zip" -OutFile dub.zip
         7z x dub.zip > $null
         c:\projects\dub\dub.exe --version
         popd
