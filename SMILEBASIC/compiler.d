@@ -1236,7 +1236,15 @@ class Compiler
             if(c.type == CodeType.RestoreCodeS)
             {
                 auto restore = cast(RestoreCodeS)c;
-                code[i] = new RestoreCode(s.data.label[restore.label], s.data);
+                auto label = s.data.label.get(restore.label, int.min);
+                if (label != int.min)
+                {
+                    code[i] = new RestoreUndefinedLabelCode(restore.label);
+                }
+                else
+                {
+                    code[i] = new RestoreCode(label, s.data);
+                }
             }
         }
         genCode(new EndVM());

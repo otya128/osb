@@ -1665,6 +1665,22 @@ class RestoreCode : Code
         return "restore " ~ label.to!string;
     }
 }
+class RestoreUndefinedLabelCode : Code
+{
+    wstring label;
+    this(wstring label)
+    {
+        this.label = label;
+    }
+    override void execute(VM vm)
+    {
+        throw new UndefinedLabel();
+    }
+    override string toString(VM vm)
+    {
+        return "restoreundeflabel " ~ label.to!string;
+    }
+}
 class RestoreExprCode : Code
 {
     DataTable datatable;
