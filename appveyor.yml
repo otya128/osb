@@ -15,8 +15,9 @@ install:
         popd
 
 build_script:
-  - cd c:\projects
+  - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe build
 
 test_script:
+  - cd c:\projects\otyaSMILEBASIC
   - c:\projects\dub\dub.exe test
