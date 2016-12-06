@@ -465,6 +465,28 @@ class PetitComputer
     protected BG[4] bg;
     bool quit;
     Condition renderCondition;
+    struct Touch
+    {
+        int tm;
+        int x;
+        int y;
+    };
+    Object touchSync = new Object();
+    Touch m_touch;
+    Touch touchPosition()
+    {
+        synchronized(touchSync)
+        {
+            return m_touch;
+        }
+    }
+    void touchPosition(Touch to)
+    {
+        synchronized(touchSync)
+        {
+            m_touch = to;
+        }
+    }
     void render()
     {
         try
@@ -680,6 +702,19 @@ class PetitComputer
                 SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
+                int mousex, mousey;
+                if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
+                {
+                    auto old = touchPosition;
+                    touchPosition = Touch(old.tm + 1, mousex, mousey);
+                }
+                else
+                {
+                    if (touchPosition.tm)
+                    {
+                        touchPosition = Touch(0, mousex, mousey);
+                    }
+                }
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)

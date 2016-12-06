@@ -305,9 +305,10 @@ class BuiltinFunction
         {
             writeln("NOTIMPL:TOUCH MPID");
         }
-        tm = 0;
-        tchx = 0;
-        tchy = 0;
+        auto pos = p.touchPosition;
+        tm = pos.tm;
+        tchx = pos.x;
+        tchy = pos.y;
     }
     static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
     {
