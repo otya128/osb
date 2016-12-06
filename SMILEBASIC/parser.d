@@ -908,12 +908,18 @@ class Parser
                     if(lex.front().type == TokenType.Out)
                     {
                         lex.popFront();
+                        token = lex.front();
                         while(true)
                         {
                             token = lex.front();
                             Expression arg = expression();
                             if(!isLValue(arg))
                             {
+                                //to support func args... OUT (no argument)
+                                if (!func.outVariable.length)
+                                {
+                                    break;
+                                }
                                 syntaxError();
                                 return null;
                             }
@@ -1060,6 +1066,10 @@ class Parser
     //左辺値か
     bool isLValue(Expression expr)
     {
+        if (!expr)
+        {
+            return false;
+        }
         if(expr.type == NodeType.Variable)
         {
             return true;
