@@ -83,6 +83,7 @@ class BuiltinFunctions
         //一応可変長は最後
         if(va) return va;
         writeln("====function overloads===");
+        writefln("func = %s argc = %d outargc = %d", func[0].name, argc, outargc);
         foreach(f; func)
         {
             writefln("name=\"%s\", argments=%s, results = %s, variadic = %s, startoptional = %d, function pointer=%s", f.name, f.argments, f.results, f.variadic, f.startskip, f.func);
@@ -1042,6 +1043,34 @@ class BuiltinFunction
             return;
         }
         p.sprite.spchr(id, defno);
+    }
+    static void SPCHR(PetitComputer p, int id, out int defno)
+    {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCHR", 1);
+        }
+        p.sprite.spchr(id, defno);
+    }
+    static void SPCHR(PetitComputer p, int id, out int u, out int v, out int w, out int h, out int attr)
+    {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCHR", 1);
+        }
+        SpriteAttr spriteattr;
+        p.sprite.spchr(id, u, v, w, h, spriteattr);
+        attr = cast(int)spriteattr;
+    }
+    static void SPCHR(PetitComputer p, int id, out int u, out int v)
+    {
+        int w, h, attr;
+        SPCHR(p, id, u, v, w, h , attr);
+    }
+    static void SPCHR(PetitComputer p, int id, out int u, out int v, out int w, out int h)
+    {
+        int attr;
+        SPCHR(p, id, u, v, w, h , attr);
     }
     static void SPHIDE(PetitComputer p, int id)
     {

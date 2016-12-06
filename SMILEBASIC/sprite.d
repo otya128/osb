@@ -343,6 +343,11 @@ class Sprite
         HY= SPDEFTable[id].hy;
         A = SPDEFTable[id].a;
     }
+    bool isSpriteDefined(int i)
+    {
+        i = spid(i);
+        return sprites[i].define;
+    }
     void spchr(int i, int d)
     {
         i = spid(i);
@@ -353,6 +358,20 @@ class Sprite
         id = spid(id);
         auto spdef = SpriteDef(u, v, w, h, sprites[id].homex, sprites[id].homey, attr);
         sprites[id].change(spdef);
+    }
+    void spchr(int i, out int d)
+    {
+        i = spid(i);
+        d = sprites[i].defno;
+    }
+    void spchr(int id, out int u, out int v, out int w, out int h, out SpriteAttr attr)
+    {
+        id = spid(id);
+        u = sprites[id].u;
+        v = sprites[id].v;
+        w = sprites[id].w;
+        h = sprites[id].h;
+        attr = sprites[id].attr;
     }
     this(PetitComputer petitcom)
     {

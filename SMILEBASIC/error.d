@@ -55,6 +55,11 @@ class IllegalFunctionCall : SmileBasicError
         this.errnum = 4;
         super("Illegal function call(" ~ func ~ ")");
     }
+    this(string func, int arg)
+    {
+        this.errnum = 4;
+        super("Illegal function call(" ~ func ~ ":" ~ arg.to!string ~ ")");
+    }
 }
 class StackOverFlow : SmileBasicError
 {
