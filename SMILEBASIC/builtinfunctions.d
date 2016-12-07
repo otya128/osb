@@ -299,6 +299,10 @@ class BuiltinFunction
         }
         return p.button;
     }
+    static void BREPEAT(PetitComputer p, int btnid, int startTime, int interval)
+    {
+        stderr.writefln("NOTIMPL:BREPEAT %d, %d, %d", btnid, startTime, interval);
+    }
     static void VISIBLE(PetitComputer p, int console, int graphic, int BG, int sprite)
     {
         import std.exception : enforce;
