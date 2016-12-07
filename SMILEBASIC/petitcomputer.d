@@ -267,7 +267,7 @@ class PetitComputer
             this.y = y;
         }
     }
-    int sppage, bgpage;
+    int bgpage;
     Projects project;
     wstring currentProject;
     void init()
@@ -453,6 +453,7 @@ class PetitComputer
     {
         return bg;
     }
+    //TODO:extract class
     bool[2] BGvisibles = [true, true];
     bool BGvisible()
     {
@@ -508,7 +509,7 @@ class PetitComputer
             {
                 graphic.GRP[i] = createEmptyPage();
             }
-            sppage = 4;
+            sprite.sppage = 4;
             graphic.GRP[4] = createGRPF(spriteFile);
             bgpage = 5;
             graphic.GRP[5] = createGRPF(BGFile);
@@ -848,7 +849,6 @@ class PetitComputer
         keybuffer = new Key[128];
         init();
         graphic = new Graphic(this);
-        consolem = new Mutex();
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
         sprite = new Sprite(this);
@@ -1232,7 +1232,10 @@ class PetitComputer
         keybufferlen--;
         return result.key.to!wstring;
     }
-    Mutex consolem;
+    public bool isValidGraphicPage(int page)
+    {
+        return page >= 0 && page < 6;
+    }
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

@@ -1339,6 +1339,18 @@ class BuiltinFunction
     {
         return p.sprite.spchk(id);
     }
+    static void SPPAGE(PetitComputer p, int page)
+    {
+        if (!p.isValidGraphicPage(page))
+        {
+            throw new OutOfRange("SPPAGE", 1);
+        }
+        p.sprite.sppage = page;
+    }
+    static int SPPAGE(PetitComputer p)
+    {
+        return p.sprite.sppage;
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");
@@ -1485,6 +1497,18 @@ class BuiltinFunction
     static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, int screendata)
     {
         p.getBG(layer).fill(x, y, x2, y2, screendata);
+    }
+    static void BGPAGE(PetitComputer p, int page)
+    {
+        if (!p.isValidGraphicPage(page))
+        {
+            throw new OutOfRange("BGPAGE", 1);
+        }
+        p.bgpage = page;
+    }
+    static int BGPAGE(PetitComputer p)
+    {
+        return p.bgpage;
     }
     static void EFCON()
     {
