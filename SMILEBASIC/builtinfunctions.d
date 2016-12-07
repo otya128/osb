@@ -343,6 +343,10 @@ class BuiltinFunction
     {
         p.display(display);
     }
+    static int DISPLAY(PetitComputer p)
+    {
+        return p.displaynum;
+    }
     static void GCLS(PetitComputer p, DefaultValue!(int, false) color)
     {
         color.setDefaultValue(0);
