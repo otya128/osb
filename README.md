@@ -4,6 +4,9 @@ SmileBASIC 3.x Compatible BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
+## Download
+[Windows-x86 master build](https://ci.appveyor.com/api/projects/otya128/otyasmilebasic/artifacts/otyasmilebasic.zip)
+
 ## LICENSE
 MIT
 
