@@ -457,7 +457,12 @@ class BuiltinFunction
     static int RND(int max)
     {
         import std.random;
-        return uniform(0, max - 1 + 1);
+        return uniform(0, max);
+    }
+    static double RNDF()
+    {
+        import std.random;
+        return uniform(0.0, 1.0);
     }
     static void DTREAD(DefaultValue!(wstring, false) date, out int Y, out int M, out int D/*W*/)
     {
