@@ -3,6 +3,9 @@ SMILEBASIC 3.x互換BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
+## ダウンロード
+[Windows-x86 master build](https://ci.appveyor.com/api/projects/otya128/otyasmilebasic/artifacts/otyasmilebasic.zip)
+
 ## ライセンス
 MIT
 
