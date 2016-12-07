@@ -76,20 +76,14 @@ class Console
     GraphicPage GRPF;
     PetitComputer petitcom;
     bool[2] visibles = [true, true];
-    int width;
-    bool visible()
+
+    int width()
     {
-        return visibles[petitcom.displaynum];
+        return fontWidth;
     }
-    void visible(bool value)
+    void width(int w)
     {
-        visibles[petitcom.displaynum] = value;
-    }
-    this(PetitComputer p)
-    {
-        petitcom = p;
-        fontWidth = 8;
-        fontHeight = 8;
+        fontWidth = fontHeight = w;
         consoleWidth = petitcom.screenWidth / fontWidth;
         consoleHeight = petitcom.screenHeight / fontHeight;
         consoleWidthDisplay1 = petitcom.screenWidthDisplay1 / fontWidth;
@@ -115,12 +109,27 @@ class Console
             console4[i] = new ConsoleCharacter[consoleWidth4];
             console4[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
-
+        CSRX = 0;
+        CSRY = 0;
+        CSRZ = 0;
+        display(petitcom.displaynum);
+    }
+    bool visible()
+    {
+        return visibles[petitcom.displaynum];
+    }
+    void visible(bool value)
+    {
+        visibles[petitcom.displaynum] = value;
+    }
+    this(PetitComputer p)
+    {
+        petitcom = p;
+        width = 8;
 
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = petitcom.toGLColor(consoleColor[i]);
 
-        width = 8;
     }
     void createFontTable()
     {
@@ -263,8 +272,19 @@ class Console
             glVertex3i(x2, y2, z);
         }
     }
+    void adjustScreen()
+    {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glScalef(fontWidth / 8f, fontHeight / 8f, 1);
+    }
     void render()
     {
+        adjustScreen();
+        scope (exit)
+        {
+            glLoadIdentity();
+        }
         if(petitcom.xscreenmode == 2 && (visibles[0] || showCursor)/*XSCREEN4*/)
         {
             glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
@@ -348,6 +368,7 @@ class Console
         {
             //下画面
             petitcom.chScreen(40, 0, 400, 240);
+            adjustScreen();
             glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
             glDisable(GL_TEXTURE_2D);
             glBegin(GL_QUADS);
