@@ -185,7 +185,7 @@ struct SpriteData
     int z;/*!*/
     int u, v, w, h;//個々で保持してるみたい,SPSETをして後でSPDEFをしても変化しない
     uint color;
-    double[8] var;
+    double[8] var = 0;
     SpriteAttr attr;
     bool define;//定義されてればtrue
     double scalex;
