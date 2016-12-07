@@ -1465,18 +1465,13 @@ class BuiltinFunction
         z.setDefaultValue(p.getBG(layer).offsetz);
         p.getBG(layer).ofs(x, y, cast(int)z);
     }
-    static void BGCLIP(PetitComputer p, int layer, DefaultValue!(int, false) x, DefaultValue!(int, false) y,
-                       DefaultValue!(int, false) x2, DefaultValue!(int, false) y2)
+    static void BGCLIP(PetitComputer p, int layer)
     {
-        if(x.isDefault && y.isDefault && x2.isDefault && y2.isDefault)
-        {
-            p.getBG(layer).clip();
-        }
-        if(x.isDefault || y.isDefault || x2.isDefault || y2.isDefault)
-        {
-            throw new IllegalFunctionCall("BGCLIP");
-        }
-        p.getBG(layer).clip(cast(int)x, cast(int)y, cast(int)x2, cast(int)y2);
+        p.getBG(layer).clip();
+    }
+    static void BGCLIP(PetitComputer p, int layer, int x, int y, int x2, int y2)
+    {
+        p.getBG(layer).clip(x, y, x2, y2);
     }
     static void BGPUT(PetitComputer p, int layer, int x, int y, int screendata)
     {
