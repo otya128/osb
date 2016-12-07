@@ -203,6 +203,24 @@ class BuiltinFunction
     {
         return tanh(arg1);
     }
+    enum Classify
+    {
+        NORMAL = 0,
+        INFINITY = 1,
+        NAN = 2,
+    }
+    static pure nothrow int CLASSIFY(double arg)
+    {
+        if (arg.isNaN)
+        {
+            return Classify.NAN;
+        }
+        if (arg.isInfinity)
+        {
+            return Classify.INFINITY;
+        }
+        return Classify.NORMAL;
+    }
     static pure nothrow double RAD(double arg1)
     {
         return arg1 * std.math.PI / 180;
