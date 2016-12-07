@@ -210,6 +210,7 @@ class Console
         }
         CSRX = 0;
         CSRY = 0;
+        CSRZ = 0;
     }
     void display(int number)
     {
