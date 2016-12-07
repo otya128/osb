@@ -315,6 +315,14 @@ class BuiltinFunction
         p.BGvisible = cast(bool)BG;
         p.sprite.visible = cast(bool)sprite;
     }
+    static void BACKCOLOR(PetitComputer p, int color)
+    {
+        p.backcolor = color;
+    }
+    static int BACKCOLOR(PetitComputer p)
+    {
+        return p.backcolor;
+    }
     static void XON(PetitComputer p, Value mode/*!?!???!?*/)
     {
     }

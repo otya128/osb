@@ -487,6 +487,15 @@ class PetitComputer
             m_touch = to;
         }
     }
+    int petitcomBackcolor;
+    void backcolor(int color)
+    {
+        petitcomBackcolor = color;
+    }
+    int backcolor()
+    {
+        return petitcomBackcolor;
+    }
     void render()
     {
         try
@@ -620,6 +629,11 @@ class PetitComputer
                 if(xscreenmode == 2)
                 {
                     chScreen(0, 0, 320, 480);
+                }
+                {
+                    ubyte r, g, b, a;
+                    RGBRead(petitcomBackcolor, r, g, b, a);
+                    glClearColor(r / 255f, g / 255f, b / 255f, 1);
                 }
                 //描画の順位
                 //sprite>GRP>console>BG
