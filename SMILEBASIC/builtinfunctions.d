@@ -1535,14 +1535,12 @@ class BuiltinFunction
         {
             //DATAから
             VM vm = p.vm;
-            vm.pushDataIndex();
             vm.restoreData(args[1].castString);
             for(int i = 0; i < len; i++)
             {
                 Value data = vm.readData();
                 dst[dstoffset++] = data;
             }
-            vm.popDataIndex();
             return;
         }
         throw new IllegalFunctionCall("COPY (Not implemented error)");
