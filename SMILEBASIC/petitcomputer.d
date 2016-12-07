@@ -705,6 +705,14 @@ class PetitComputer
                 int mousex, mousey;
                 if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
                 {
+                    if (mousey >= screenHeight)
+                    {
+                        mousey -= screenHeight;
+                        mousex -= (screenWidth - screenWidthDisplay1) / 2;
+                    }
+                    import std.algorithm.comparison : clamp;
+                    mousex = mousex.clamp(5, 314);
+                    mousey = mousey.clamp(5, 234);
                     auto old = touchPosition;
                     touchPosition = Touch(old.tm + 1, mousex, mousey);
                 }
