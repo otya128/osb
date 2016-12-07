@@ -66,9 +66,33 @@ class Console
     ConsoleCharacter[][] console;
     ConsoleCharacter[][] consoleDisplay1;
     ConsoleCharacter[][] console4;
-    int CSRX;
-    int CSRY;
-    int CSRZ;
+    int[2] CSRXs;
+    int[2] CSRYs;
+    int[2] CSRZs;
+    @property ref CSRX()
+    {
+        return CSRXs[petitcom.displaynum];
+    }
+    @property void CSRX(int value)
+    {
+        CSRXs[petitcom.displaynum] = value;
+    }
+    @property ref CSRY()
+    {
+        return CSRYs[petitcom.displaynum];
+    }
+    @property void CSRY(int value)
+    {
+        CSRYs[petitcom.displaynum] = value;
+    }
+    @property ref CSRZ()
+    {
+        return CSRZs[petitcom.displaynum];
+    }
+    @property void CSRZ(int value)
+    {
+        CSRZs[petitcom.displaynum] = value;
+    }
     int consoleForeColor, consoleBackColor;
     bool showCursor;
     bool animationCursor;
@@ -109,9 +133,9 @@ class Console
             console4[i] = new ConsoleCharacter[consoleWidth4];
             console4[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
         }
-        CSRX = 0;
-        CSRY = 0;
-        CSRZ = 0;
+        CSRXs[] = 0;
+        CSRYs[] = 0;
+        CSRZs[] = 0;
         display(petitcom.displaynum);
     }
     bool visible()
