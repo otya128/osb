@@ -1,18 +1,23 @@
 install:
   - cd c:\projects
   - ps: |
-        $dmdVersion = '2.072.0'
-        Invoke-WebRequest "http://downloads.dlang.org/releases/2.x/$dmdVersion/dmd.$dmdVersion.windows.7z" -OutFile "dmd2.7z"
-        7z x dmd2.7z > $null
-        $Env:Path += ";c:\projects\dmd2\windows\bin\"
-        c:\projects\dmd2\windows\bin\dmd.exe --version
-        New-Item "dub" -Type Directory > $null
-        pushd dub
-        $dubVersion = '1.1.1'
-        Invoke-WebRequest "https://code.dlang.org/files/dub-$dubVersion-windows-x86.zip" -OutFile dub.zip
-        7z x dub.zip > $null
-        c:\projects\dub\dub.exe --version
-        popd
+        $wc = New-Object System.Net.WebClient
+        try
+        {
+         $dmdVersion = $wc.DownloadString("http://downloads.dlang.org/releases/LATEST").Replace("`r","").Replace("`n","")
+         Invoke-WebRequest "http://downloads.dlang.org/releases/2.x/$dmdVersion/dmd.$dmdVersion.windows.7z" -OutFile "dmd2.7z"
+         7z x dmd2.7z > $null
+         $Env:Path += ";c:\projects\dmd2\windows\bin\"
+         c:\projects\dmd2\windows\bin\dmd.exe --version
+         $dubVersion = $wc.DownloadString("http://code.dlang.org/download/LATEST").Replace("`r","").Replace("`n","")
+         Invoke-WebRequest "https://code.dlang.org/files/dub-$dubVersion-windows-x86.zip" -OutFile dub.zip
+         7z x -odub dub.zip > $null
+         c:\projects\dub\dub.exe --version
+        }
+        finally
+        {
+         $wc.Dispose()
+        }
 
 build_script:
   - cd c:\projects\otyaSMILEBASIC
