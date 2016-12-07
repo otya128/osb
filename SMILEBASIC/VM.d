@@ -897,6 +897,11 @@ class GosubExpr : Code
         if(label.isString)
         {
             vm.pushpc;//vm.push(Value(vm.pc));
+            if (sc && sc.func)
+            {
+                vm.pc = sc.func.label[label.castString] - 1;
+                return;
+            }
             vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
         }
         else
