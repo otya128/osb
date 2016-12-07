@@ -837,12 +837,20 @@ class GotoExpr : Code
         vm.pop(label);
         if(label.isString)
         {
+            int pc;
             if (sc && sc.func)
             {
-                vm.pc = sc.func.label[label.castString] - 1;
-                return;
+                pc = sc.func.label.get(label.castString, int.min);
             }
-            vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
+            else
+            {
+                pc = vm.currentSlot.globalLabel.get(label.castString, int.min);
+            }
+            if (pc == int.min)
+            {
+                throw new UndefinedLabel();
+            }
+            vm.pc = pc - 1;
         }
         else
         {
@@ -896,13 +904,21 @@ class GosubExpr : Code
         vm.pop(label);
         if(label.isString)
         {
-            vm.pushpc;//vm.push(Value(vm.pc));
+            vm.pushpc;
+            int pc;
             if (sc && sc.func)
             {
-                vm.pc = sc.func.label[label.castString] - 1;
-                return;
+                pc = sc.func.label.get(label.castString, int.min);
             }
-            vm.pc = vm.currentSlot.globalLabel[label.castString] - 1;
+            else
+            {
+                pc = vm.currentSlot.globalLabel.get(label.castString, int.min);
+            }
+            if (pc == int.min)
+            {
+                throw new UndefinedLabel();
+            }
+            vm.pc = pc - 1;
         }
         else
         {
