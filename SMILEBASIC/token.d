@@ -73,6 +73,7 @@ enum TokenType
     Repeat,
     Until,
     Swap,
+    Dim,
 }
 
 struct Token

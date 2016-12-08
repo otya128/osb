@@ -59,7 +59,7 @@ class Lexical
         reserved["BREAK"] = TokenType.Break;
         reserved["CONTINUE"] = TokenType.Continue;
         reserved["VAR"] = TokenType.Var;
-        reserved["DIM"] = TokenType.Var;
+        reserved["DIM"] = TokenType.Dim;
         reserved["DEF"] = TokenType.Def;
         reserved["OUT"] = TokenType.Out;
         reserved["out"] = TokenType.Out;//ekkitou
@@ -993,6 +993,7 @@ class Parser
             case TokenType.Continue:
                 node = new Continue(lex.location);
                 break;
+            case TokenType.Dim:
             case TokenType.Var:
                 lex.popFront();
                 node = var();
@@ -1744,6 +1745,7 @@ class Parser
                 version(none)stdout.flush();
                 node = new Constant(token.value, lex.location);
                 break;
+            case TokenType.Var:
             case TokenType.Call:
             case TokenType.Iden:
                 if(!lex.empty())
