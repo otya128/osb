@@ -1176,27 +1176,16 @@ class Parser
         while(true)
         {
             bool minusflag;
-            //TODO:constexpression()関数作る
-            if(token.type == TokenType.Minus)
+            auto expr = cast(Constant)expression();
+            if (expr)
             {
-                lex.popFront();
-                token = lex.front();
-                minusflag = true;
+                data.addData(expr.value);
             }
-            if(token.type != TokenType.String && token.type != TokenType.Integer)
+            else
             {
                 syntaxError();
                 return null;
             }
-            if(minusflag)
-            {
-                data.addData(Value(-token.value.castDouble));
-            }
-            else
-            {
-                data.addData(token.value);
-            }
-            lex.popFront();
             token = lex.front();
             if(token.type == TokenType.Comma)
             {
@@ -1801,9 +1790,21 @@ class Parser
             case TokenType.Minus:
                 //TODO:UnaryOperatorの実装
                 //とりあえず0-exprを作成
-                lex.popFront();
-                node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, term(2/*array*/, null), lex.location);
-                return node;
+                {
+                    lex.popFront();
+                    auto a = term(2/*array*/, null);
+                    double result;
+                    if (a.type == NodeType.Constant && constcalc(Value(0), (cast(Constant)a).value, TokenType.Minus, result))
+                    {
+                        node = new Constant(Value(result), lex.location);
+                        return node;
+                    }
+                    else
+                    {
+                        node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, a, lex.location);
+                        return node;
+                    }
+                }
             case TokenType.LogicalNot:
             case TokenType.Not:
                 lex.popFront();
