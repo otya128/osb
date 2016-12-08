@@ -577,6 +577,10 @@ class Operate : Code
                             //mul = (x, y, z) => z > 0 ? x ~ mul(x , y, z - 1) : "";
                             //vm.push(Value(mul(ls, ls, cast(int)rd)));
                             import std.array : replicate;
+                            if (rd < 0)
+                            {
+                                throw new OutOfRange();
+                            }
                             vm.push(Value(replicate(ls, cast(int)rd)));
                         }
                         return;
