@@ -17,31 +17,45 @@ enum DrawType
     TRI,
     PAINT,
     CLIPWRITE,
+    PUTCHR,
 }
 struct Circle
 {
     short r, startr, endr;
     short flag;
-} 
+}
+struct Character
+{
+    int scalex;
+    int scaley;
+    wstring text;
+}
 struct DrawMessage
 {
     DrawType type;
     byte page;
     byte display;
+    uint color;
     short x;
     short y;
     union
     {
-        short x2;
-        short w;
+        struct
+        {
+            union
+            {
+                short x2;
+                short w;
+            }
+            union
+            {
+                short y2;
+                short h;
+            }
+            Circle circle;
+        }
+        Character character;
     }
-    union
-    {
-        short y2;
-        short h;
-    }
-    uint color;
-    Circle circle;
     //
 }
 class Graphic
@@ -273,6 +287,31 @@ class Graphic
         }
         glEnd();
     }
+    void drawText(wstring text)
+    {
+        int x;
+        foreach (c; text)
+        {
+            drawCharacter(x, 0, c);
+            x += 8;
+        }
+    }
+    void drawCharacter(int x, int y, wchar character)
+    {
+        auto rect = petitcom.console.fontTable[character];
+        float tx1 = (rect.x) / 512f - 1;
+        float ty1 = (rect.y + 8) / 512f - 1;
+        float tx2 = (rect.x + 8) / 512f - 1;
+        float ty2 = (rect.y) / 512f - 1;
+        glTexCoord2f(tx1 , ty1);
+        glVertex3i(x, y + 8, 0);
+        glTexCoord2f(tx1, ty2);
+        glVertex3i(x, y, 0);
+        glTexCoord2f(tx2, ty2);
+        glVertex3i(x + 8, y, 0);
+        glTexCoord2f(tx2, ty1);
+        glVertex3i(x + 8, y + 8, 0);
+    }
     void draw()
     {
         if(!drawMessageLength) return;
@@ -388,6 +427,23 @@ class Graphic
                         drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
                     }
                     break;
+                case DrawType.PUTCHR:
+                    {
+                        glColor4ubv(cast(ubyte*)&dm.color);
+                        glEnable(GL_TEXTURE_2D);
+                        glEnable(GL_ALPHA_TEST);
+                        glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
+                        glMatrixMode(GL_MODELVIEW);
+                        glPushMatrix();
+                        glTranslatef(dm.x, dm.y, 0);
+                        glScalef(dm.character.scalex, dm.character.scaley, 1);
+                        glBegin(GL_QUADS);
+                        drawText(dm.character.text);
+                        glEnd();
+                        glPopMatrix();
+                        glDisable(GL_ALPHA_TEST);
+                        glDisable(GL_TEXTURE_2D);
+                    }
                 default:
             }
             if(SDL_GetTicks() - start >= 16 && i != len - 1)
@@ -505,6 +561,25 @@ class Graphic
         dm.circle.flag = cast(short)flag;
         dm.color = color;
         dm.type = DrawType.CIRCLE2;
+        dm.display = cast(byte)petitcom.displaynum;
+        sendDrawMessage(dm);
+    }
+    void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
+    {
+        import std.conv : to;
+        gputchr(page, x, y, (cast(wchar)text).to!wstring, scalex, scaley, color);
+    }
+    void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
+    {
+        DrawMessage dm;
+        dm.page = cast(byte)page;
+        dm.x = cast(short)x;
+        dm.y = cast(short)y;
+        dm.character.scalex = scalex;
+        dm.character.scaley = scaley;
+        dm.character.text = text;
+        dm.color = color;
+        dm.type = DrawType.PUTCHR;
         dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }

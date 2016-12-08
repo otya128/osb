@@ -443,6 +443,30 @@ class BuiltinFunction
         color.setDefaultValue(p.graphic.gcolor);
         p.graphic.gpaint(p.graphic.useGRP, x, y, cast(int)color);
     }
+    static void GPUTCHR(PetitComputer p, int x, int y, int str)
+    {
+        GPUTCHR(p, x, y, str, 1, 1, p.graphic.gcolor);
+    }
+    static void GPUTCHR(PetitComputer p, int x, int y, int str, int scalex, int scaley)
+    {
+        GPUTCHR(p, x, y, str, scalex, scaley, p.graphic.gcolor);
+    }
+    static void GPUTCHR(PetitComputer p, int x, int y, int str, int scalex, int scaley, int color)
+    {
+        p.graphic.gputchr(p.graphic.useGRP, x, y, str, scalex, scaley, color);
+    }
+    static void GPUTCHR(PetitComputer p, int x, int y, wstring str)
+    {
+        GPUTCHR(p, x, y, str, 1, 1, p.graphic.gcolor);
+    }
+    static void GPUTCHR(PetitComputer p, int x, int y, wstring str, int scalex, int scaley)
+    {
+        GPUTCHR(p, x, y, str, scalex, scaley, p.graphic.gcolor);
+    }
+    static void GPUTCHR(PetitComputer p, int x, int y, wstring str, int scalex, int scaley, int color)
+    {
+        p.graphic.gputchr(p.graphic.useGRP, x, y, str, scalex, scaley, color);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
