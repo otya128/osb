@@ -7,6 +7,10 @@ import derelict.opengl3.gl;
 struct BGChip
 {
     int i;
+    int screenData()
+    {
+        return i;
+    }
 }
 //912枚まで描画されるみたい
 //->899枚まで描画してその後は一番下のみ描画の様子
@@ -23,6 +27,8 @@ class BG
     int rendermax = 899;
     PetitComputer petitcom;
     bool show;
+    int chipWidth = 16;
+    int chipHeight = 16;
     this(PetitComputer pc)
     {
         chip[] = BGChip(0);
@@ -150,5 +156,16 @@ class BG
             {
                 chip[i + y * width].i = id;
             }*/
+    }
+    int get(int x, int y, int flag)
+    {
+        if (flag)
+        {
+            return chip[x / chipWidth + y / chipHeight * width].screenData;
+        }
+        else
+        {
+            return chip[x + y * width].screenData;
+        }
     }
 }

@@ -1615,6 +1615,14 @@ class BuiltinFunction
     {
         p.getBG(layer).show = false;
     }
+    static int BGGET(PetitComputer p, int layer, int x, int y)
+    {
+        return BGGET(p, layer, x, y, 0);
+    }
+    static int BGGET(PetitComputer p, int layer, int x, int y, int flag)
+    {
+        return p.getBG(layer).get(x, y, flag);
+    }
     static void EFCON()
     {
     }
