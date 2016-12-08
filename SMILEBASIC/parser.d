@@ -90,6 +90,21 @@ class Lexical
         this.code = input;
         line = 1;
     }
+    this(Lexical lex)
+    {
+        this.code = lex.code;
+        this.reserved = lex.reserved;
+        this.table = lex.table;
+        this.pos = lex.pos;
+        this.token = lex.token;
+        this.isEmpty = lex.isEmpty;
+        this.index = lex.index;
+        this.line = lex.line;
+    }
+    Lexical save()
+    {
+        return new Lexical(this);
+    }
     bool empty()
     {
         return index >= code.length;
@@ -867,15 +882,24 @@ class Parser
                     }
                     if (token.type != TokenType.Call)
                     {
+                        auto old = lex.save;
                         auto expr = expression;
-                        if (expr.type == NodeType.Variable)
+                        token = lex.front;
+                        if (token.type == TokenType.Assign)
                         {
-                            auto variable = cast(Variable)expr;
-                            node = assign(variable.name);
+                            if (expr.type == NodeType.Variable)
+                            {
+                                auto variable = cast(Variable)expr;
+                                node = assign(variable.name);
+                                return node;
+                            }
+                            node = assign(expr);
                             return node;
                         }
-                        node = assign(expr);
-                        return node;
+                        else
+                        {
+                            lex = old;
+                        }
                     }
                     lex.popFront();
                     //命令呼び出し
