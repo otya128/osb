@@ -22,6 +22,7 @@ class BG
     int width, height;
     int rendermax = 899;
     PetitComputer petitcom;
+    bool show;
     this(PetitComputer pc)
     {
         chip[] = BGChip(0);
@@ -31,9 +32,12 @@ class BG
         scalex = 1;
         scaley = 1;
         r = 0;
+        show = true;
     }
     void render(float disw, float dish)
     {
+        if (!show)
+            return;
         float aspect = disw / dish;
         disw /= 2;
         dish /= 2;

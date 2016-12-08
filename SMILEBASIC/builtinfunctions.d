@@ -1607,6 +1607,14 @@ class BuiltinFunction
     {
         return p.bgpage;
     }
+    static void BGSHOW(PetitComputer p, int layer)
+    {
+        p.getBG(layer).show = true;
+    }
+    static void BGHIDE(PetitComputer p, int layer)
+    {
+        p.getBG(layer).show = false;
+    }
     static void EFCON()
     {
     }
