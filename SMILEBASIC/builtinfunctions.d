@@ -443,29 +443,32 @@ class BuiltinFunction
         color.setDefaultValue(p.graphic.gcolor);
         p.graphic.gpaint(p.graphic.useGRP, x, y, cast(int)color);
     }
-    static void GPUTCHR(PetitComputer p, int x, int y, int str)
+    static void GPUTCHR(PetitComputer p, int x, int y, Value str)
     {
         GPUTCHR(p, x, y, str, 1, 1, p.graphic.gcolor);
     }
-    static void GPUTCHR(PetitComputer p, int x, int y, int str, int scalex, int scaley)
-    {
-        GPUTCHR(p, x, y, str, scalex, scaley, p.graphic.gcolor);
-    }
-    static void GPUTCHR(PetitComputer p, int x, int y, int str, int scalex, int scaley, int color)
-    {
-        p.graphic.gputchr(p.graphic.useGRP, x, y, str, scalex, scaley, color);
-    }
-    static void GPUTCHR(PetitComputer p, int x, int y, wstring str)
+    static void GPUTCHR(PetitComputer p, int x, int y, Value str, int color)
     {
         GPUTCHR(p, x, y, str, 1, 1, p.graphic.gcolor);
     }
-    static void GPUTCHR(PetitComputer p, int x, int y, wstring str, int scalex, int scaley)
+    static void GPUTCHR(PetitComputer p, int x, int y, Value str, int scalex, int scaley)
     {
         GPUTCHR(p, x, y, str, scalex, scaley, p.graphic.gcolor);
     }
-    static void GPUTCHR(PetitComputer p, int x, int y, wstring str, int scalex, int scaley, int color)
+    static void GPUTCHR(PetitComputer p, int x, int y, Value str, int scalex, int scaley, int color)
     {
-        p.graphic.gputchr(p.graphic.useGRP, x, y, str, scalex, scaley, color);
+        if (str.isNumber)
+        {
+            p.graphic.gputchr(p.graphic.useGRP, x, y, str.castInteger, scalex, scaley, color);
+        }
+        else if (str.isString)
+        {
+            p.graphic.gputchr(p.graphic.useGRP, x, y, str.castString, scalex, scaley, color);
+        }
+        else
+        {
+            throw new TypeMismatch("GPUTCHR", 3);
+        }
     }
     static void BGMPLAY(PetitComputer p, int music)
     {

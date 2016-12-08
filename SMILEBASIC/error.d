@@ -84,6 +84,16 @@ class TypeMismatch : SmileBasicError
         this.errnum = 8;
         super("Type mismatch");
     }
+    this(string func)
+    {
+        this.errnum = 8;
+        super("Type mismatch(" ~ func ~ ")");
+    }
+    this(string func, int arg)
+    {
+        this.errnum = 8;
+        super("Type mismatch(" ~ func ~ ":" ~ arg.to!string ~ ")");
+    }
 }
 class OutOfRange : SmileBasicError
 {
