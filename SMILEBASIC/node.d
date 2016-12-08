@@ -628,6 +628,6 @@ class VarRef : Expression
     {
         super.location = loc;
         this.type = NodeType.VarRef;
-        this.expression = expression;
+        this.expression = expr;
     }
 }

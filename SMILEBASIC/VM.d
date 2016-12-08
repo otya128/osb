@@ -1943,3 +1943,67 @@ class SwapCode : Code
             *dp1 = num2;
     }
 }
+
+class PushVarRefExpression : Code
+{
+    Scope sc;
+    this(Scope sc)
+    {
+        this.sc = sc;
+    }
+    override void execute(VM vm)
+    {
+        Value valv;
+        vm.pop(valv);
+        auto name = valv.castString;
+
+        VMVariable vmv = VMVariable(int.min);
+        if (sc.func)
+        {
+            vmv = sc.func.variable.get(name, vmv);
+            if (vmv.index != int.min)
+            {
+                vm.push(Value(&vm.stack[vm.bp + vmv.index]));
+                return;
+            }
+        }
+        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        if (vmv.index == int.min)
+        {
+            throw new UndefinedVariable();
+        }
+        vm.push(Value(&vm.currentSlot.global[vmv.index]));
+    }
+}
+
+class PushVarExpression : Code
+{
+    Scope sc;
+    this(Scope sc)
+    {
+        this.sc = sc;
+    }
+    override void execute(VM vm)
+    {
+        Value valv;
+        vm.pop(valv);
+        auto name = valv.castString;
+
+        VMVariable vmv = VMVariable(int.min);
+        if (sc.func)
+        {
+            vmv = sc.func.variable.get(name, vmv);
+            if (vmv.index != int.min)
+            {
+                vm.push(vm.stack[vm.bp + vmv.index]);
+                return;
+            }
+        }
+        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        if (vmv.index == int.min)
+        {
+            throw new UndefinedVariable();
+        }
+        vm.push(vm.currentSlot.global[vmv.index]);
+    }
+}

@@ -578,6 +578,13 @@ class Compiler
                     }
                 }
                 break;
+            case NodeType.VarRef:
+                {
+                    auto varref = cast(VarRef)exp;
+                    compileExpression(varref.expression, sc);
+                    genCode(new PushVarExpression(sc));
+                }
+                break;
             default:
                 stderr.writeln("Compile:NotImpl ", exp.type);
                 break;
@@ -626,6 +633,13 @@ class Compiler
                         count++;
                         if(count >= 4) break;//念のため
                     }
+                }
+                break;
+            case NodeType.VarRef:
+                {
+                    auto varref = cast(VarRef)exp;
+                    compileExpression(varref.expression, sc);
+                    genCode(new PushVarRefExpression(sc));
                 }
                 break;
             default:
