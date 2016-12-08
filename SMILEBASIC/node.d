@@ -45,6 +45,7 @@ enum NodeType
     Option,
     Swap,
     AssignRef,
+    VarRef,
 }
 abstract class Node
 {
@@ -618,5 +619,15 @@ class Swap : Statement
         this.type = NodeType.Swap;
         this.item1 = item1;
         this.item2 = item2;
+    }
+}
+class VarRef : Expression
+{
+    Expression expression;
+    this(Expression expr, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.VarRef;
+        this.expression = expression;
     }
 }

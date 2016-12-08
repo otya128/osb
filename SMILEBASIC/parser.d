@@ -1015,8 +1015,21 @@ class Parser
             case TokenType.Continue:
                 node = new Continue(lex.location);
                 break;
-            case TokenType.Dim:
             case TokenType.Var:
+                {
+                    auto old = lex.save;
+                    lex.popFront();
+                    token = lex.front;
+                    if (token.type == TokenType.LParen)
+                    {
+                        lex = old;
+                        token = lex.front;
+                        goto case TokenType.Iden;
+                    }
+                    node = var();
+                    return node;
+                }
+            case TokenType.Dim:
                 lex.popFront();
                 node = var();
                 return node;
@@ -1094,6 +1107,10 @@ class Parser
             return false;
         }
         if(expr.type == NodeType.Variable)
+        {
+            return true;
+        }
+        if(expr.type == NodeType.VarRef)
         {
             return true;
         }
@@ -1782,6 +1799,22 @@ class Parser
                 node = new Constant(token.value, lex.location);
                 break;
             case TokenType.Var:
+                if(!lex.empty())
+                    lex.popFront();
+                if(lex.front().type == TokenType.LParen)
+                {
+                    lex.popFront();
+                    auto expr = expression;
+                    node = new VarRef(expr, lex.location);
+                    if(lex.front().type != TokenType.RParen)
+                        syntaxError();
+                }
+                else
+                {
+                    syntaxError();
+                    return null;
+                }
+                break;
             case TokenType.Call:
             case TokenType.Iden:
                 if(!lex.empty())
