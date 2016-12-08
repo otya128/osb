@@ -1448,6 +1448,7 @@ class BuiltinFunction
                     }
                 }
                 int d1, d2 = 6;
+                bool d2f;
                 wstring a1 = format[i..$];
                 if (a1[0] >= '0' && a1[0] <= '9')
                 {
@@ -1459,6 +1460,7 @@ class BuiltinFunction
                     if (a1[0] >= '0' && a1[0] <= '9')
                     {
                         d2 = parse!(int, wstring)(a1);
+                        d2f = true;
                     }
                 }
                 wstring buf;
@@ -1488,7 +1490,8 @@ class BuiltinFunction
                         {
                             auto val = args[j].castInteger;
                             spec.width = d1;
-                            spec.precision = d2;
+                            if (d2f)
+                                spec.precision = d2;
                             spec.flDash = left;
                             spec.flZero = zero;
                             spec.flPlus = sign;
