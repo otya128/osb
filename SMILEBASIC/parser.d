@@ -849,21 +849,6 @@ class Parser
             case TokenType.Iden:
                 {
                     wstring name = token.value.stringValue;
-                    lex.popFront();
-                    if (token.type != TokenType.Call)
-                    {
-                        token = lex.front();
-                        if(token.type == TokenType.Assign)
-                        {
-                            node = assign(name);
-                            return node;
-                        }
-                        if(token.type == TokenType.LBracket)//配列代入
-                        {
-                            node = arrayAssign(name);
-                            return node;
-                        }
-                    }
                     if (name == "OPTION")
                     {
                         if (token.type != TokenType.Iden)
@@ -880,6 +865,19 @@ class Parser
                         lex.popFront();
                         return new Option(arg, lex.location);
                     }
+                    if (token.type != TokenType.Call)
+                    {
+                        auto expr = expression;
+                        if (expr.type == NodeType.Variable)
+                        {
+                            auto variable = cast(Variable)expr;
+                            node = assign(variable.name);
+                            return node;
+                        }
+                        node = assign(expr);
+                        return node;
+                    }
+                    lex.popFront();
                     //命令呼び出し
                     auto func = new CallFunctionStatement(name, lex.location);
                     node = func;
@@ -1559,6 +1557,20 @@ class Parser
         Expression expr = expression();
         if(expr is null) return null;
         auto a = new Assign(name, expr, lex.location);
+        return a;
+    }
+    AssignRef assign(Expression left)
+    {
+        lex.popFront();
+        auto token = lex.front();//=の次
+        Expression expr = expression();
+        if(expr is null) return null;
+        if (!isLValue(left))
+        {
+            syntaxError();
+            return null;
+        }
+        auto a = new AssignRef(left, expr, lex.location);
         return a;
     }
     Print print()

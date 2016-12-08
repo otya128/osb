@@ -928,6 +928,15 @@ class Compiler
                     genCodePopVar(assign.name, s);
                 }
                 break;
+            case NodeType.AssignRef:
+                {
+                    auto assign = cast(AssignRef)i;
+                    //right->left
+                    compileExpression(assign.expression, s);
+                    compilePushReference(assign.left, s);
+                    genCode(new PopRererence());
+                }
+                break;
             case NodeType.Label:
                 {
                     if (this.isDirectMode)

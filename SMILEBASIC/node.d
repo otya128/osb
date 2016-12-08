@@ -44,6 +44,7 @@ enum NodeType
     RepeatUntil,
     Option,
     Swap,
+    AssignRef,
 }
 abstract class Node
 {
@@ -218,6 +219,18 @@ class Assign : Statement
         super.location = loc;
         this.type = NodeType.Assign;
         this.name = name;
+        this.expression = expr;
+    }
+}
+class AssignRef : Statement
+{
+    Expression left;
+    Expression expression;
+    this(Expression left, Expression expr, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.AssignRef;
+        this.left = left;
         this.expression = expr;
     }
 }
