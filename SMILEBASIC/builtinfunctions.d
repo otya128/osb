@@ -1364,6 +1364,19 @@ class BuiltinFunction
     {
         return cast(int)(p.console.console[y][x].character);
     }
+    struct FixedBuffer(T, size_t S)
+    {
+        T[S] buffer = void;
+        size_t length;
+        void put(T v)
+        {
+            if (buffer.length <= length)
+            {
+                throw new StringTooLong("FORMAT$", 2);
+            }
+            buffer[length++] = v;
+        }
+    }
     static wstring FORMAT(PetitComputer p, Value[] va_args)
     {
         alias retro!(Value[]) VaArgs;
@@ -1371,58 +1384,120 @@ class BuiltinFunction
         auto format = args[0].castString;
         import std.array : appender;
         import std.format;
-        auto w = appender!wstring();
+        FixedBuffer!(wchar, 1024) buffer;//String too long
         int j = 1;
         for(int i = 0; i < format.length; i++)
         {
             auto f = format[i];
             if(f == '%')
             {
-                int d = cast(int)indexOf(format, 'D', CaseSensitive.yes);
-                if(d != -1)
+                i = i + 1;
+                bool sign = false;//+
+                bool left = false;//-
+                bool space = false;//' '
+                bool zero = false;
+                for(; i < format.length; i++)
                 {
-                    auto spec = singleSpec(format[i .. d + 1]);
-                    spec.spec = 'd';
-                    formatValue(w, args[j].castInteger, spec);
-                    j++;
-                    i = d;
-                    continue;
+                    auto c = format[i];
+                    if (c == '+')
+                    {
+                        sign = true;
+                    }
+                    else if (c == ' ')
+                    {
+                        space = true;
+                    }
+                    else if (c == '-')
+                    {
+                        left = true;
+                    }
+                    else if (c == '0')
+                    {
+                        zero = true;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                d = cast(int)indexOf(format, 'X', CaseSensitive.yes);
-                if(d != -1)
+                int d1, d2 = 6;
+                wstring a1 = format[i..$];
+                if (a1[0] >= '0' && a1[0] <= '9')
                 {
-                    auto spec = singleSpec(format[i .. d + 1]);
-                    spec.spec = cast(char)format[d];
-                    formatValue(w, args[j].castInteger, spec);
-                    j++;
-                    i = d;
-                    continue;
+                    d1 = parse!(int, wstring)(a1);
                 }
-                d = cast(int)indexOf(format, 'S', CaseSensitive.yes);
-                if(d != -1)
+                if (a1[0] == '.')
                 {
-                    auto spec = singleSpec(format[i .. d + 1]);
-                    spec.spec = 's';
-                    formatValue(w, args[j].castString, spec);
-                    j++;
-                    i = d;
-                    continue;
+                    a1 = a1[1..$];
+                    if (a1[0] >= '0' && a1[0] <= '9')
+                    {
+                        d2 = parse!(int, wstring)(a1);
+                    }
                 }
-                d = cast(int)indexOf(format, 'F', CaseSensitive.yes);
-                if(d != -1)
+                wstring buf;
+                FormatSpec!wchar spec;
+                switch (a1[0])
                 {
-                    auto spec = singleSpec(format[i .. d + 1]);
-                    spec.spec = 'f';
-                    formatValue(w, args[j].castDouble, spec);
-                    j++;
-                    i = d;
-                    continue;
+                    case 'S', 's':
+                        {
+                            auto val = args[j].castString;
+                            spec.width = d1;
+                            spec.flDash = left;
+                            spec.flZero = zero;
+                            spec.flPlus = sign;
+                            spec.flSpace = space;
+                            formatValue(&buffer, val, spec);
+                            break;
+                        }
+                    case 'X', 'x':
+                        spec.spec = 'X';
+                        goto caseInteger;
+                    case 'B', 'b':
+                        spec.spec = 'b';
+                        goto caseInteger;
+                    case 'D', 'd':
+                        spec.spec = 'd';
+                        caseInteger:
+                        {
+                            auto val = args[j].castInteger;
+                            spec.width = d1;
+                            spec.precision = d2;
+                            spec.flDash = left;
+                            spec.flZero = zero;
+                            spec.flPlus = sign;
+                            spec.flSpace = space;
+                            formatValue(&buffer, val, spec);
+                            break;
+                        }
+                    case 'F', 'f':
+                        {
+                            spec.spec = 'f';
+                            auto val = args[j].castDouble;
+                            spec.width = d1;
+                            if (d2 < 1022)
+                            {
+                                spec.precision = d2;
+                                spec.flDash = left;
+                                spec.flZero = zero;
+                                spec.flPlus = sign;
+                                spec.flSpace = space;
+                                formatValue(&buffer, val, spec);
+                            }
+                            break;
+                        }
+                    default:
+                        throw new IllegalFunctionCall("FORMAT$");
                 }
+                j++;
+                i = 0;
+                format = a1;
+                continue;
             }
-            w ~= f;
+            buffer.put(f);
         }
-        //プチコン互換FOMA
-        return cast(immutable)w.data();
+        wchar[] data = new wchar[buffer.length];
+        data[] = buffer.buffer[0..buffer.length];
+        return cast(immutable)data;
     }
     static wstring CHR(int code)
     {

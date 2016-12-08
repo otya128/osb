@@ -155,6 +155,24 @@ class SubscriptOutOfRange : SmileBasicError
         super("Subscript out of range");
     }
 }
+class StringTooLong : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 41;
+        super("String too long");
+    }
+    this(string func)
+    {
+        this.errnum = 41;
+        super("String too long(" ~ func ~ ")");
+    }
+    this(string func, int arg)
+    {
+        this.errnum = 41;
+        super("String too long(" ~ func ~ ":" ~ arg.to!string ~ ")");
+    }
+}
 class CantUseFromDirectMode : SmileBasicError
 {
     this()
