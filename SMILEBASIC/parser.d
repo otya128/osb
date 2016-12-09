@@ -893,7 +893,7 @@ class Parser
                             return null;
                         }
                         auto arg = std.uni.toUpper(token.value.stringValue);
-                        if (arg != "MOTION" && arg != "EXPAD" && arg != "MIC" && arg != "WIIU")
+                        if (arg != "MOTION" && arg != "EXPAD" && arg != "MIC" && (uname == "XOFF" || (arg != "WIIU" && arg != "3DS" && arg != "COMPAT")))
                         {
                             syntaxError();
                             return null;

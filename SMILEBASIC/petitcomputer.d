@@ -1236,35 +1236,68 @@ class PetitComputer
     {
         return page >= 0 && page < 6;
     }
+    enum XMode
+    {
+        _3DS,
+        COMPAT,
+        WIIU,
+    }
     struct X
     {
         bool motion;
         bool expad;
         bool mic;
-        bool wiiU;
+        XMode mode;
     }
     X x;
-    public void setX(wstring func, bool value)
+    public void xoff(wstring func)
     {
-        if (func == "WIIU")
+        if (func == "MIC")
         {
-            x.wiiU = value;
-        }
-        else if (func == "MIC")
-        {
-            x.mic = value;
+            x.mic = false;
         }
         else if (func == "EXPAD")
         {
-            x.expad = value;
+            x.expad = false;
         }
         else if (func == "MOTION")
         {
-            x.motion = value;
+            x.motion = false;
         }
         else
         {
-            std.stdio.stderr.writefln("Unknown %s %s", value ? "XON" : "XOFF", func);
+            std.stdio.stderr.writefln("Unknown XOFF %s", func);
+        }
+    }
+    public void xon(wstring func)
+    {
+        if (func == "WIIU")
+        {
+            x.mode = XMode.WIIU;
+        }
+        else if (func == "3DS")
+        {
+            x.mode = XMode._3DS;
+        }
+        else if (func == "COMPAT")
+        {
+            x.mode = XMode.COMPAT;
+        }
+        else if (func == "MIC")
+        {
+            x.mic = true;
+        }
+        else if (func == "EXPAD")
+        {
+            x.expad = true;
+        }
+        else if (func == "MOTION")
+        {
+            x.motion = true;
+        }
+        else
+        {
+            std.stdio.stderr.writefln("Unknown XON %s", func);
         }
     }
     //プチコン内部表現はRGB5_A1

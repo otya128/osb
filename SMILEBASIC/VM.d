@@ -2023,6 +2023,9 @@ class SetX : Code
     }
     override void execute(VM vm)
     {
-        vm.petitcomputer.setX(func, value);
+        if (value)
+            vm.petitcomputer.xon(func);
+        else
+            vm.petitcomputer.xoff(func);
     }
 }
