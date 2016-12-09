@@ -864,8 +864,11 @@ class Parser
             case TokenType.Iden:
                 {
                     wstring name = token.value.stringValue;
-                    if (name == "OPTION")
+                    auto uname = std.uni.toUpper(name);
+                    if (uname == "OPTION")
                     {
+                        lex.popFront;
+                        token = lex.front;
                         if (token.type != TokenType.Iden)
                         {
                             syntaxError();
@@ -879,6 +882,24 @@ class Parser
                         }
                         lex.popFront();
                         return new Option(arg, lex.location);
+                    }
+                    if (uname == "XON" || uname == "XOFF")
+                    {
+                        lex.popFront;
+                        token = lex.front;
+                        if (token.type != TokenType.Iden)
+                        {
+                            syntaxError();
+                            return null;
+                        }
+                        auto arg = std.uni.toUpper(token.value.stringValue);
+                        if (arg != "MOTION" && arg != "EXPAD" && arg != "MIC" && arg != "WIIU")
+                        {
+                            syntaxError();
+                            return null;
+                        }
+                        lex.popFront();
+                        return uname == "XON" ? new XOn(arg, lex.location) : new XOff(arg, lex.location);
                     }
                     if (token.type != TokenType.Call)
                     {

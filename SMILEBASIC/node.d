@@ -46,6 +46,8 @@ enum NodeType
     Swap,
     AssignRef,
     VarRef,
+    XOn,
+    XOff,
 }
 abstract class Node
 {
@@ -631,3 +633,24 @@ class VarRef : Expression
         this.expression = expr;
     }
 }
+class XOn : Statement
+{
+    wstring func;
+    this(wstring func, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.XOn;
+        this.func = func;
+    }
+}
+class XOff : Statement
+{
+    wstring func;
+    this(wstring func, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.XOff;
+        this.func = func;
+    }
+}
+
