@@ -2011,3 +2011,18 @@ class PushVarExpression : Code
         vm.push(vm.currentSlot.global[vmv.index]);
     }
 }
+
+class SetX : Code
+{
+    wstring func;
+    bool value;
+    this(wstring f, bool value)
+    {
+        this.func = f;
+        this.value = value;
+    }
+    override void execute(VM vm)
+    {
+        vm.petitcomputer.setX(func, value);
+    }
+}

@@ -1236,6 +1236,37 @@ class PetitComputer
     {
         return page >= 0 && page < 6;
     }
+    struct X
+    {
+        bool motion;
+        bool expad;
+        bool mic;
+        bool wiiU;
+    }
+    X x;
+    public void setX(wstring func, bool value)
+    {
+        if (func == "WIIU")
+        {
+            x.wiiU = value;
+        }
+        else if (func == "MIC")
+        {
+            x.mic = value;
+        }
+        else if (func == "EXPAD")
+        {
+            x.expad = value;
+        }
+        else if (func == "MOTION")
+        {
+            x.motion = value;
+        }
+        else
+        {
+            std.stdio.stderr.writefln("Unknown %s %s", value ? "XON" : "XOFF", func);
+        }
+    }
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

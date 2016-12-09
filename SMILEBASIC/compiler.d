@@ -908,6 +908,14 @@ class Compiler
         compilePushReference(swap.item1, sc);
         genCode(new SwapCode());
     }
+    void compileXOn(XOn x, Scope sc)
+    {
+        genCode(new SetX(x.func, true));
+    }
+    void compileXOff(XOff x, Scope sc)
+    {
+        genCode(new SetX(x.func, false));
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -1169,6 +1177,12 @@ class Compiler
                 break;
             case NodeType.Swap:
                 compileSwap(cast(Swap)i, s);
+                break;
+            case NodeType.XOn:
+                compileXOn(cast(XOn)i, s);
+                break;
+            case NodeType.XOff:
+                compileXOff(cast(XOff)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
