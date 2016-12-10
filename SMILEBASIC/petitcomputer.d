@@ -156,9 +156,14 @@ struct Slot
         }
     }
 }
+struct Size
+{
+    int width, height;
+}
 struct Display
 {
     SDL_Rect[] rect;
+    Size windowSize;
 }
 class PetitComputer
 {
@@ -306,6 +311,7 @@ class PetitComputer
         screenHeight = 240;
         screenWidthDisplay1 = 320;
         screenHeightDisplay1 = 240;
+        currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
         console = new Console(this);
         if(!exists(fontTableFile))
         {
@@ -317,7 +323,6 @@ class PetitComputer
         {
             console.loadFontTable();
         }
-        currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
         display(0);
         writeln("OK");
     }
@@ -391,12 +396,15 @@ class PetitComputer
         glLoadIdentity();
         glOrtho(0, w, h, 0, 1024, -2048);
     }
+    void chScreen2(int x, int y, int w, int h)
+    {
+        glViewport(x, currentDisplay.windowSize.height - h - y, w, h);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, w, h, 0, 1024, -2048);
+    }
     Button[] buttonTable;
     Sprite sprite;
-    struct Size
-    {
-        int width, height;
-    }
     Size[7] resolutionTable = [Size(256, 192), Size(320, 200), Size(320, 240), Size(400, 240), Size(640, 400), Size(640, 480), Size(854, 480)];
     int xscreenmode = 0;
     int bgmax;
@@ -411,56 +419,59 @@ class PetitComputer
     Display currentDisplay;
     void xscreen(int mode, int tv, int gamepad, int sprite, int bg)
     {
-        this.sprite.spclr();
-        this.sprite.spmax = sprite;
-        this.bgmax = bg;
-        //BG
         int mode2 = mode / 2;
-        xscreenmode = mode2;
-        if(mode2 == 0)
+        synchronized(renderSync)
         {
-            SDL_SetWindowSize(window, 400, 240);
-            currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
-        }
-        if(mode2 == 1)
-        {
-            currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight), SDL_Rect((screenWidth - screenWidthDisplay1) / 2, screenHeight, screenWidthDisplay1, screenHeightDisplay1)]);
-            SDL_SetWindowSize(window, 400, 480);
-            display(1);
-            graphic.clip(false);
-            graphic.clip(true);
-        }
-        if(mode == 4)
-        {
-            SDL_SetWindowSize(window, 320, 240 * 2);
-            currentDisplay = Display([SDL_Rect(0, 0, screenWidthDisplay1, screenHeight + screenHeightDisplay1)]);
-        }
-        if (mode == 5)
-        {
-            SDL_SetWindowSize(window, resolutionTable[tv].width, resolutionTable[tv].height);
-            currentDisplay = Display([SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height)]);
-            xscreenmode = 3;
-        }
-        if (mode == 6)
-        {
-            auto display0 = SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height);
-            auto display1 = SDL_Rect(0, resolutionTable[tv].height, resolutionTable[gamepad].width, resolutionTable[gamepad].height);
-            if (resolutionTable[tv].width > resolutionTable[gamepad].width)
+            this.sprite.spclr();
+            this.sprite.spmax = sprite;
+            this.bgmax = bg;
+            //BG
+            xscreenmode = mode2;
+            if(mode2 == 0)
             {
-                display1.x = (resolutionTable[tv].width - resolutionTable[gamepad].width) / 2;
+                currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)], Size(400, 240));
             }
-            else
+            if(mode2 == 1)
             {
-                display0.x = (resolutionTable[gamepad].width - resolutionTable[tv].width) / 2;
+                currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight), SDL_Rect((screenWidth - screenWidthDisplay1) / 2, screenHeight, screenWidthDisplay1, screenHeightDisplay1)], Size(400, 480));
             }
-            currentDisplay = Display([display0, display1]);
-            SDL_SetWindowSize(window, std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), std.algorithm.max(resolutionTable[gamepad].height, resolutionTable[tv].height));
-            xscreenmode = 4;
+            if(mode == 4)
+            {
+                currentDisplay = Display([SDL_Rect(0, 0, screenWidthDisplay1, screenHeight + screenHeightDisplay1)], Size(320, 480));
+            }
+            if (mode == 5)
+            {
+                currentDisplay = Display([SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height)], Size(resolutionTable[tv].width, resolutionTable[tv].height));
+                xscreenmode = 3;
+            }
+            if (mode == 6)
+            {
+                auto display0 = SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height);
+                auto display1 = SDL_Rect(0, resolutionTable[tv].height, resolutionTable[gamepad].width, resolutionTable[gamepad].height);
+                if (resolutionTable[tv].width > resolutionTable[gamepad].width)
+                {
+                    display1.x = (resolutionTable[tv].width - resolutionTable[gamepad].width) / 2;
+                }
+                else
+                {
+                    display0.x = (resolutionTable[gamepad].width - resolutionTable[tv].width) / 2;
+                }
+                currentDisplay = Display([display0, display1], Size(std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), std.algorithm.max(resolutionTable[gamepad].height, resolutionTable[tv].height)));
+                xscreenmode = 4;
+            }
+            displaynum = 0;
+            console.changeDisplay(currentDisplay);
+            for (int i = currentDisplay.rect.length - 1; i >= 0; i--)
+            {
+                display(i);
+                graphic.clip(false);
+                graphic.clip(true);
+            }
         }
-        display(0);
-        graphic.clip(false);
-        graphic.clip(true);
+
+        SDL_SetWindowSize(window, currentDisplay.windowSize.width, currentDisplay.windowSize.height);
     }
+
     BG getBG(int layer)
     {
         if(displaynum)
@@ -517,6 +528,7 @@ class PetitComputer
     {
         return petitcomBackcolor;
     }
+    Object renderSync = new Object();
     void render()
     {
         try
@@ -640,101 +652,104 @@ class PetitComputer
                         loopcnt = 0;
                     }
                 }
-                glLoadIdentity();
-                graphic.draw();
-                chScreen(0, 0, 400, 240);
-                if(xscreenmode == 1)
+                synchronized(renderSync)
                 {
-                    chScreen(0, 240, 400, 240);
-                }
-                if(xscreenmode == 2)
-                {
-                    chScreen(0, 0, 320, 480);
-                }
-                {
-                    ubyte r, g, b, a;
-                    RGBRead(petitcomBackcolor, r, g, b, a);
-                    glClearColor(r / 255f, g / 255f, b / 255f, 1);
-                }
-                //描画の順位
-                //sprite>GRP>console>BG
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                version(test) glLoadIdentity();
-                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-                console.render();
-
-                if(xscreenmode == 1)
-                {
-                    chScreen(0, 240, 400, 240);
-                }
-                if(xscreenmode == 2)
-                {
-                    graphic.render(0, 320, 480);
-                }
-                else
-                {
-                    graphic.render(0, 400, 240);
-                }
-                if(xscreenmode == 1)
-                {
-                    chScreen(40, 0, 320, 240);
-                    graphic.render(1, 320, 240);
-                    chScreen(0, 240, 400, 240);
-                }
-                if(xscreenmode == 2)
-                {
-                    chScreen(0, 0, 320, 480);
-                }
-                if(xscreenmode == 1)
-                {
-                    chScreen(0, 240, 400, 240);
-                }
-                version(test) glLoadIdentity();
-                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-                glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage].glTexture);
-                if(xscreenmode == 2 && BGvisibles[0])
-                {
-                    for(int i = 0; i < bgmax; i++)
+                    glLoadIdentity();
+                    graphic.draw();
+                    chScreen(0, 0, 400, 240);
+                    if(xscreenmode == 1)
                     {
-                        bg[i].render(320f, 480f);
+                        chScreen(0, 240, 400, 240);
                     }
-                }
-                else
-                {
-                    if (BGvisibles[0])
+                    if(xscreenmode == 2)
+                    {
+                        chScreen(0, 0, 320, 480);
+                    }
+                    {
+                        ubyte r, g, b, a;
+                        RGBRead(petitcomBackcolor, r, g, b, a);
+                        glClearColor(r / 255f, g / 255f, b / 255f, 1);
+                    }
+                    //描画の順位
+                    //sprite>GRP>console>BG
+                    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    version(test) glLoadIdentity();
+                    version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
+                    console.render();
+
+                    if(xscreenmode == 1)
+                    {
+                        chScreen(0, 240, 400, 240);
+                    }
+                    if(xscreenmode == 2)
+                    {
+                        graphic.render(0, 320, 480);
+                    }
+                    else
+                    {
+                        graphic.render(0, 400, 240);
+                    }
+                    if(xscreenmode == 1)
+                    {
+                        chScreen(40, 0, 320, 240);
+                        graphic.render(1, 320, 240);
+                        chScreen(0, 240, 400, 240);
+                    }
+                    if(xscreenmode == 2)
+                    {
+                        chScreen(0, 0, 320, 480);
+                    }
+                    if(xscreenmode == 1)
+                    {
+                        chScreen(0, 240, 400, 240);
+                    }
+                    version(test) glLoadIdentity();
+                    version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
+                    glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage].glTexture);
+                    if(xscreenmode == 2 && BGvisibles[0])
                     {
                         for(int i = 0; i < bgmax; i++)
                         {
-                            bg[i].render(400f, 240f);
+                            bg[i].render(320f, 480f);
                         }
                     }
-                    if(xscreenmode == 1 && BGvisibles[1])
+                    else
                     {
-                        chScreen(40, 0, 320, 240);
-                        for(int i = bgmax; i < bg.length; i++)
+                        if (BGvisibles[0])
                         {
-                            bg[i].render(320f, 240f);
+                            for(int i = 0; i < bgmax; i++)
+                            {
+                                bg[i].render(400f, 240f);
+                            }
                         }
+                        if(xscreenmode == 1 && BGvisibles[1])
+                        {
+                            chScreen(40, 0, 320, 240);
+                            for(int i = bgmax; i < bg.length; i++)
+                            {
+                                bg[i].render(320f, 240f);
+                            }
+                            chScreen(0, 240, 400, 240);
+                        }
+                        glMatrixMode(GL_MODELVIEW);
+                    }
+                    version(test) glLoadIdentity();
+                    version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
+
+                    if(xscreenmode == 1)
+                    {
                         chScreen(0, 240, 400, 240);
                     }
-                    glMatrixMode(GL_MODELVIEW);
+                    //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
+                    //とりあえず一番楽な方法
+                    //これだと同一Zでスプライトが一番下に来てしまうのでZ値を補正する必要がある->やった
+                    glEnable(GL_BLEND);
+                    glDepthMask(GL_FALSE);//スプライト同士でのZバッファは半透明だと邪魔なので無効
+                    sprite.render();//Zソートすべき->やった->プチコンの挙動的に安定ソートか非安定ソートか
+                    glDepthMask(GL_TRUE);
+                    glDisable(GL_BLEND);
+                    SDL_GL_SwapWindow(window);
                 }
-                version(test) glLoadIdentity();
-                version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-
-                if(xscreenmode == 1)
-                {
-                    chScreen(0, 240, 400, 240);
-                }
-                //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
-                //とりあえず一番楽な方法
-                //これだと同一Zでスプライトが一番下に来てしまうのでZ値を補正する必要がある->やった
-                glEnable(GL_BLEND);
-                glDepthMask(GL_FALSE);//スプライト同士でのZバッファは半透明だと邪魔なので無効
-                sprite.render();//Zソートすべき->やった->プチコンの挙動的に安定ソートか非安定ソートか
-                glDepthMask(GL_TRUE);
-                glDisable(GL_BLEND);
-                SDL_GL_SwapWindow(window);
                 auto renderticks = (SDL_GetTicks() - profile);
                 if(renderprofile) writeln(renderticks);
                 int mousex, mousey;

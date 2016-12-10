@@ -1418,7 +1418,7 @@ class BuiltinFunction
     }
     static int CHKCHR(PetitComputer p, int x, int y)
     {
-        return cast(int)(p.console.console[y][x].character);
+        return cast(int)(p.console.console[p.displaynum][y][x].character);
     }
     struct FixedBuffer(T, size_t S)
     {
