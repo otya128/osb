@@ -648,7 +648,7 @@ class Graphic
     }
     void gcls(int page, uint color)
     {
-        sendDrawMessage(DrawType.FILL, cast(byte)page, 0, 0, cast(short)width, cast(short)height, color);
+        sendDrawMessage(DrawType.FILL, cast(byte)page, 0, 0, cast(short)(width - 1), cast(short)(height - 1), color);
     }
     void gpaint(int page, int x, int y, uint color)
     {
