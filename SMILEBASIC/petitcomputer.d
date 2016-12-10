@@ -415,6 +415,16 @@ class PetitComputer
             }
             displaynum = 0;
             console.changeDisplay(currentDisplay);
+            for(int i = 0; i < bgmax; i++)
+            {
+                this.bg[i].display = 0;
+                this.bg[i].clip;
+            }
+            for(int i = bgmax; i < this.bg.length; i++)
+            {
+                this.bg[i].display = 1;
+                this.bg[i].clip;
+            }
             for (int i = cast(int)currentDisplay.rect.length - 1; i >= 0; i--)
             {
                 display(i);
@@ -647,7 +657,7 @@ class PetitComputer
                         chRenderingDisplay(0);
                         for(int i = 0; i < bgmax; i++)
                         {
-                            bg[i].render(currentDisplay.rect[0].w, currentDisplay.rect[0].h);
+                            bg[i].render(0, currentDisplay.rect[0].w, currentDisplay.rect[0].h);
                         }
                     }
                     if(currentDisplay.rect.length > 1 && BGvisibles[1])
@@ -655,7 +665,7 @@ class PetitComputer
                         chRenderingDisplay(1);
                         for(int i = bgmax; i < bg.length; i++)
                         {
-                            bg[i].render(currentDisplay.rect[1].w, currentDisplay.rect[1].h);
+                            bg[i].render(1, currentDisplay.rect[1].w, currentDisplay.rect[1].h);
                         }
                     }
                     glMatrixMode(GL_MODELVIEW);

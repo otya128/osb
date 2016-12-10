@@ -29,6 +29,7 @@ class BG
     bool show;
     int chipWidth = 16;
     int chipHeight = 16;
+    int display;
     this(PetitComputer pc)
     {
         chip[] = BGChip(0);
@@ -40,7 +41,7 @@ class BG
         r = 0;
         show = true;
     }
-    void render(float disw, float dish)
+    void render(int display, float disw, float dish)
     {
         if (!show)
             return;
@@ -49,6 +50,7 @@ class BG
         dish /= 2;
         float z = offsetz;
         glColor3f(1.0, 1.0, 1.0);
+        petitcom.chRenderingDisplay(display, clipx, clipx, clipx2 - clipx + 1, clipy2 - clipy + 1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
@@ -118,6 +120,15 @@ class BG
     }
     void clip(int x, int y, int x2, int y2)
     {
+        import std.algorithm : swap;
+        if (x > x2)
+        {
+            swap(x, x2);
+        }
+        if (y > y2)
+        {
+            swap(y, y2);
+        }
         this.clipx = x;
         this.clipy = y;
         this.clipx2 = x2;
@@ -127,8 +138,8 @@ class BG
     {
         this.clipx = 0;
         this.clipy = 0;
-        this.clipx2 = 400;
-        this.clipy2 = 240;
+        this.clipx2 = petitcom.currentDisplay.rect[display].w - 1;
+        this.clipy2 = petitcom.currentDisplay.rect[display].h - 1;
     }
     void home(int x, int y)
     {
