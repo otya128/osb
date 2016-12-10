@@ -63,8 +63,8 @@ struct DrawMessage
 class Graphic
 {
     PetitComputer petitcom;
-    protected int width;
-    protected int height;
+    int width;
+    int height;
     this(PetitComputer p)
     {
         petitcom = p;
@@ -90,7 +90,6 @@ class Graphic
     }
     void initGraphicPages()
     {
-        petitcom.console.GRPF = createGRPF(petitcom.fontFile);
         GRP = new GraphicPage[6];
         for(int i = 0; i < 4; i++)
         {
@@ -106,7 +105,6 @@ class Graphic
             g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
             g.createBuffer();
         }
-        petitcom.console.GRPF.createTexture(petitcom.renderer, petitcom.textureScaleMode);
     }
     GraphicPage createGRPF(string file)
     {
@@ -405,13 +403,14 @@ class Graphic
             x += 8;
         }
     }
+    int GRPFWidth, GRPFHeight;
     void drawCharacter(int x, int y, wchar character)
     {
         auto rect = petitcom.console.fontTable[character];
-        float tx1 = (rect.x) / (cast(float)width) - 1;
-        float ty1 = (rect.y + 8) / (cast(float)height) - 1;
-        float tx2 = (rect.x + 8) / (cast(float)width) - 1;
-        float ty2 = (rect.y) / (cast(float)height) - 1;
+        float tx1 = (rect.x) / (cast(float)GRPFWidth) - 1;
+        float ty1 = (rect.y + 8) / (cast(float)GRPFHeight) - 1;
+        float tx2 = (rect.x + 8) / (cast(float)GRPFWidth) - 1;
+        float ty2 = (rect.y) / (cast(float)GRPFHeight) - 1;
         glTexCoord2f(tx1 , ty1);
         glVertex3i(x, y + 8, 0);
         glTexCoord2f(tx1, ty2);

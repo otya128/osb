@@ -224,10 +224,10 @@ class Console
         ConsoleAttribute rot = ch.attr & ConsoleAttribute.TROT270;
         int z = ch.z;
         glColor4ubv(cast(ubyte*)&fore);
-        float tx1 = (rect.x) / 512f - 1;
-        float ty1 = (rect.y + 8) / 512f - 1;
-        float tx2 = (rect.x + 8) / 512f - 1;
-        float ty2 = (rect.y) / 512f - 1;
+        float tx1 = (rect.x) / (cast(float)petitcom.graphic.GRPFWidth) - 1;
+        float ty1 = (rect.y + 8) / (cast(float)petitcom.graphic.GRPFHeight) - 1;
+        float tx2 = (rect.x + 8) / (cast(float)petitcom.graphic.GRPFWidth) - 1;
+        float ty2 = (rect.y) / (cast(float)petitcom.graphic.GRPFHeight) - 1;
         int x1 = x * 8;
         int x2 = x * 8 + 8;
         int y1 = y * 8;

@@ -550,6 +550,10 @@ class PetitComputer
                 writeln(SDL_GetError.to!string);
                 return;
             }
+            console.GRPF = graphic.createGRPF(fontFile);
+            graphic.GRPFWidth = console.GRPF.surface.w;
+            graphic.GRPFHeight = console.GRPF.surface.h;
+            console.GRPF.createTexture(renderer, textureScaleMode);
             chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
