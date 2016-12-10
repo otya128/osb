@@ -4,6 +4,7 @@ import derelict.sdl2.image;
 import derelict.opengl3.gl;
 import derelict.opengl3.gl3;
 import otya.smilebasic.petitcomputer;
+import std.string;
 
 enum DrawType
 {
@@ -75,6 +76,74 @@ class Graphic
         height = h;
         //nnnue
         paint.buffer = new uint[width * height];
+    }
+    GraphicPage createGRPF(string file)
+    {
+        SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
+        auto src = IMG_Load_RW(stream, 0);
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);//0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
+        SDL_Rect rect;
+        rect.x = 0;
+        rect.y = 0;
+        rect.w = src.w;
+        rect.h = src.h;
+        //        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
+        //        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
+
+        ubyte sr, sg, sb, sa;
+        SDL_GetRGBA((cast(uint*)src.pixels)[0], src.format, &sr, &sg, &sb, &sa);
+        auto color = SDL_MapRGBA(surface.format, sr, sg, sb, sa);
+        SDL_SetColorKey(src, SDL_TRUE, (cast(uint*)src.pixels)[0]);
+        //SDL_SetColorKey(surface, SDL_TRUE, color);
+        int i = SDL_BlitSurface(src, &rect, surface, &rect);
+        auto srcpixels = (cast(uint*)src.pixels);
+        auto pixels = (cast(uint*)surface.pixels);
+        auto aaa = surface.format.Amask;
+        //surface.format.Amask = 0xFF;
+        for(int x = 0; x < src.w; x++)
+        {
+            for(int y = 0; y < src.h; y++)
+            {
+                ubyte r, g, b, a;
+                SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
+                if(r == sr && g == sg && b == sb)
+                {
+                    r = 0;
+                    g = 0;
+                    b = 0;
+                    a = 0;
+                    *pixels = 0;
+                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
+                }
+                pixels++;
+            }
+        }
+        SDL_RWclose(stream);
+        SDL_FreeSurface(src);
+        return new GraphicPage(surface);
+    }
+    GraphicPage createEmptyPage()
+    {
+        auto surface = SDL_CreateRGBSurface(0, width, height, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);
+        auto pixels = (cast(uint*)surface.pixels);
+        for(int x = 0; x < surface.w; x++)
+        {
+            for(int y = 0; y < surface.h; y++)
+            {
+                ubyte r, g, b, a;
+                SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
+                {
+                    r = 0;
+                    g = 0;
+                    b = 0;
+                    a = 0;
+                    *pixels = 0;
+                    *pixels = SDL_MapRGBA(surface.format, r, g, b, a);
+                }
+                pixels++;
+            }
+        }
+        return new GraphicPage(surface);
     }
 
     bool[2] visibles = [true, true];
