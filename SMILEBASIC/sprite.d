@@ -656,7 +656,13 @@ class Sprite
                 }
             }
         }
-        float disw = 200f, dish = 120f, disw2 = 400f, dish2 = 240f;
+        float disw, dish, disw2, dish2;
+        disw = petitcom.currentDisplay.rect[0].w / 2;
+        disw2 = petitcom.currentDisplay.rect[0].w;
+        dish = petitcom.currentDisplay.rect[0].h / 2;
+        dish2 = petitcom.currentDisplay.rect[0].h;
+        petitcom.chRenderingDisplay(0, clipRect[0].x, clipRect[0].y, clipRect[0].w, clipRect[0].h);
+        glMatrixMode(GL_MODELVIEW);
         int dis;
         if(petitcom.xscreenmode == 2)
         {
@@ -691,9 +697,10 @@ class Sprite
                         dis = true;
                         if (!visibles[1])
                             continue;
-                        disw = 160f;
-                        disw2 = 320f;
-                        petitcom.chScreen(40, 0, 320, 240);
+                        //display:1
+                        disw = petitcom.currentDisplay.rect[1].w / 2;
+                        disw2 = petitcom.currentDisplay.rect[1].w;
+                        petitcom.chRenderingDisplay(1, clipRect[1].x, clipRect[1].y, clipRect[1].w, clipRect[1].h);
                         aspect = disw2 / dish2;
                     }
                     else
@@ -703,9 +710,9 @@ class Sprite
                             dis = false;
                             if (!visibles[0])
                                 continue;
-                            disw = 200f;
-                            disw2 = 400f;
-                            petitcom.chScreen(0, 240, 400, 240);
+                            disw = petitcom.currentDisplay.rect[0].w / 2;
+                            disw2 = petitcom.currentDisplay.rect[0].w;
+                            petitcom.chRenderingDisplay(0, clipRect[0].x, clipRect[0].y, clipRect[0].w, clipRect[0].h);
                             aspect = disw2 / dish2;
                         }
                     }
@@ -1126,5 +1133,23 @@ class Sprite
     {
         id = spid(id);
         return sprites[id].var[var];
+    }
+    SDL_Rect[2] clipRect;
+    void spclip()
+    {
+        spclip(0, 0, petitcom.currentScreenWidth, petitcom.currentScreenHeight);
+    }
+    void spclip(int x1, int y1, int x2, int y2)
+    {
+        import std.algorithm : swap;
+        if (x1 > x2)
+        {
+            swap(x1, x2);
+        }
+        if (y1 > y2)
+        {
+            swap(y1, y2);
+        }
+        clipRect[petitcom.displaynum] = SDL_Rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
     }
 }

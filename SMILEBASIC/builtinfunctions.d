@@ -1414,6 +1414,14 @@ class BuiltinFunction
     {
         return p.sprite.sppage;
     }
+    static void SPCLIP(PetitComputer p)
+    {
+        p.sprite.spclip;
+    }
+    static void SPCLIP(PetitComputer p, int x1, int y1, int x2, int y2)
+    {
+        p.sprite.spclip(x1, y1, x2, y2);
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");

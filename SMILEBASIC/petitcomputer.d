@@ -401,7 +401,15 @@ class PetitComputer
         glViewport(x, currentDisplay.windowSize.height - h - y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(0, w, h, 0, 1024, -2048);
+        glOrtho(x, x + w, y + h, y, 1024, -2048);
+    }
+    void chRenderingDisplay(int i)
+    {
+        chScreen2(currentDisplay.rect[i].x, currentDisplay.rect[i].y, currentDisplay.rect[i].w, currentDisplay.rect[i].h);
+    }
+    void chRenderingDisplay(int i, int x, int y, int w, int h)
+    {
+        chScreen2(currentDisplay.rect[i].x + x, currentDisplay.rect[i].y + y, w, h);
     }
     Button[] buttonTable;
     Sprite sprite;
@@ -466,6 +474,7 @@ class PetitComputer
                 display(i);
                 graphic.clip(false);
                 graphic.clip(true);
+                this.sprite.spclip;
             }
         }
 
