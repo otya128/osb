@@ -401,7 +401,7 @@ class PetitComputer
         glViewport(x, currentDisplay.windowSize.height - h - y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(x, x + w, y + h, y, 1024, -2048);
+        glOrtho(0, w, h, 0, 1024, -2048);
     }
     void chRenderingDisplay(int i)
     {
@@ -409,7 +409,10 @@ class PetitComputer
     }
     void chRenderingDisplay(int i, int x, int y, int w, int h)
     {
-        chScreen2(currentDisplay.rect[i].x + x, currentDisplay.rect[i].y + y, w, h);
+        glViewport(x + currentDisplay.rect[i].x, currentDisplay.windowSize.height - h - y - currentDisplay.rect[i].y, w, h);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(x, x + w, y + h, y, 1024, -2048);
     }
     Button[] buttonTable;
     Sprite sprite;
@@ -464,7 +467,7 @@ class PetitComputer
                 {
                     display0.x = (resolutionTable[gamepad].width - resolutionTable[tv].width) / 2;
                 }
-                currentDisplay = Display([display0, display1], Size(std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), std.algorithm.max(resolutionTable[gamepad].height, resolutionTable[tv].height)));
+                currentDisplay = Display([display0, display1], Size(std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), resolutionTable[gamepad].height + resolutionTable[tv].height));
                 xscreenmode = 4;
             }
             displaynum = 0;

@@ -302,7 +302,7 @@ class Console
             {
                 if (!visibles[i] && !showCursor)
                     continue;
-                petitcom.chScreen2(petitcom.currentDisplay.rect[i].x, petitcom.currentDisplay.rect[i].y, petitcom.currentDisplay.rect[i].w, petitcom.currentDisplay.rect[i].h);
+                petitcom.chRenderingDisplay(i);
                 int consoleWidth = petitcom.currentDisplay.rect[i].w / fontWidth;
                 int consoleHeight = petitcom.currentDisplay.rect[i].h / fontHeight;
                 glDisable(GL_TEXTURE_2D);
