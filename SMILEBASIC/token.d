@@ -74,6 +74,7 @@ enum TokenType
     Until,
     Swap,
     Dim,
+    Constant,
 }
 
 struct Token

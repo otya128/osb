@@ -248,11 +248,12 @@ class Lexical
                 token = Token(TokenType.String, Value(str));
                 break;
             }
-            if(c == '@')
+            if(c == '@' || c == '#')
             {
                 //ラベル(もしくは文字列)
                 wstring iden;
-                iden ~= c;
+                if (c == '@')
+                    iden ~= c;
                 i++;
                 for(;i < code.length;i++)
                 {
@@ -263,7 +264,14 @@ class Lexical
                     }
                     iden ~= c;
                 }
-                token = Token(TokenType.Label, Value(iden));
+                if (c == '@')
+                {
+                    token = Token(TokenType.Label, Value(iden));
+                }
+                else
+                {
+                    token = Token(TokenType.Constant, Value(std.uni.toUpper(iden)));
+                }
                 break;
             }
             if(c == '=' && i + 1 < code.length && code[i + 1] == '=')
@@ -439,6 +447,7 @@ class Parser
     {
         this.code = input;
         lex = new Lexical(input);
+        initConstant();
     }
     const static int opMax = 11;
     int getOPRank(TokenType type)
@@ -1902,12 +1911,138 @@ class Parser
                 lex.popFront();
                 node = new UnaryOperator(token.type, term(2/*array*/, null), lex.location);
                 return node;
+            case TokenType.Constant:
+                {
+                    if (token.value.castString in constant)
+                    {
+                        node = new Constant(Value(constant[token.value.castString]), lex.location);
+                    }
+                    else
+                    {
+                        syntaxError();
+                    }
+                }
+                break;
             default:
                 return node;
         }
         if(!lex.empty())
             lex.popFront();
         return node;
+    }
+    int[wstring] constant;
+    void initConstant()
+    {
+        constant = [
+            "ON" : 1,
+            "OFF" : 0,
+            "YES" : 1,
+            "NO" : 0,
+            "TRUE" : 1,
+            "FALSE" : 0,
+
+            "AQUA" : 0xFF00F8F8,
+            "BLACK" : 0xFF000000,
+            "BLUE" : 0xFF0000FF,
+            "CYAN" : 0xFF0000F8,
+            "FUCHSIA" : 0xFFF800F8,
+            "GRAY" : 0xFF808080,
+            "GREEN" : 0xFF008000,
+            "LIME" : 0xFF00F800,
+            "MAGENTA" : 0xFFF800F8,
+            "MAROON" : 0xFF800000,
+            "NAVY" : 0xFF000080,
+            "OLIVE" : 0xFF808000,
+            "PURPLE" : 0xFF800080,
+            "RED" : 0xFFF80000,
+            "SILVER" : 0xFFC0C0C0,
+            "TEAL" : 0xFF008080,
+            "WHITE" : 0xFFF8F8F8,
+            "YELLOW" : 0xFFF8F800,
+
+            "TBLACK" : 1,
+            "TMAROON" : 2,
+            "TRED" : 3,
+            "TGREEN" : 4,
+            "TLIME" : 5,
+            "TOLIVE" : 6,
+            "TYELLOW" : 7,
+            "TNAVY" : 8,
+            "TBLUE" : 9,
+            "TPURPLE" : 10,
+            "TMAGENTA" : 11,
+            "TTEAL" : 12,
+            "TCYAN" : 13,
+            "TGRAY" : 14,
+            "TWHITE" : 15,
+
+            "UP" : 0x0001,
+            "DOWN" : 0x0002,
+            "LEFT" : 0x0004,
+            "RIGHT" : 0x0008,
+            "A" : 0x0010,
+            "B" : 0x0020,
+            "X" : 0x0040,
+            "Y" : 0x0080,
+            "L" : 0x0100,
+            "R" : 0x0200,
+            "ZL" : 0x0800,
+            "ZR" : 0x1000,
+
+            "TROT0" : 0x00,
+            "TROT90" : 0x01,
+            "TROT180" : 0x02,
+            "TROT270" : 0x03,
+            "TREVH" : 0x04,
+            "TREVV" : 0x08,
+
+            "SPSHOW" : 0x01,
+            "SPROT0" : 0x00,
+            "SPROT90" : 0x02,
+            "SPROT180" : 0x04,
+            "SPROT270" : 0x06,
+            "SPREVH" : 0x08,
+            "SPREVV" : 0x10,
+            "SPADD" : 0x20,
+
+            "BGROT0" : 0x0000,
+            "BGROT90" : 0x1000,
+            "BGROT180" : 0x2000,
+            "BGROT270" : 0x3000,
+            "BGREVH" : 0x4000,
+            "BGREVV" : 0x8000,
+
+            "CHKXY" : 0x01,
+            "CHKZ" : 0x02,
+            "CHKUV" : 0x04,
+            "CHKI" : 0x08,
+            "CHKR" : 0x10,
+            "CHKS" : 0x20,
+            "CHKC" : 0x40,
+            "CHKV" : 0x80,
+
+            "BQAPF" : 0,
+            "BQLPF" : 1,
+            "BQHPF" : 2,
+            "BQBPF" : 3,
+            "BQBSF" : 4,
+            "BQLSF" : 5,
+            "BQHSF" : 6,
+            "BQPEQ" : 7,
+
+            "WFRECT" : 0,
+            "WFHAMM" : 1,
+            "WFHANN" : 2,
+            "WFBLKM" : 3,
+
+            "AOPADD" : 0,
+            "AOPSUB" : 1,
+            "AOPMUL" : 2,
+            "AOPDIV" : 3,
+            "AOPMAD" : 4,
+            "AOPLIP" : 5,
+            "AOPCLP" : 6,
+        ];
     }
 }
 private void test(wstring exp, int result)
