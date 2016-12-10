@@ -636,33 +636,32 @@ class PetitComputer
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                     glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage].glTexture);
-                    if(xscreenmode == 2 && BGvisibles[0])
+
+                    if (BGvisibles[0])
                     {
                         for(int i = 0; i < bgmax; i++)
                         {
-                            bg[i].render(320f, 480f);
+                            bg[i].render(400f, 240f);
                         }
                     }
-                    else
+
+                    if (BGvisibles[0])
                     {
-                        if (BGvisibles[0])
+                        chRenderingDisplay(0);
+                        for(int i = 0; i < bgmax; i++)
                         {
-                            for(int i = 0; i < bgmax; i++)
-                            {
-                                bg[i].render(400f, 240f);
-                            }
+                            bg[i].render(currentDisplay.rect[0].w, currentDisplay.rect[0].h);
                         }
-                        if(xscreenmode == 1 && BGvisibles[1])
-                        {
-                            chScreen(40, 0, 320, 240);
-                            for(int i = bgmax; i < bg.length; i++)
-                            {
-                                bg[i].render(320f, 240f);
-                            }
-                            chScreen(0, 240, 400, 240);
-                        }
-                        glMatrixMode(GL_MODELVIEW);
                     }
+                    if(currentDisplay.rect.length > 1 && BGvisibles[1])
+                    {
+                        chRenderingDisplay(1);
+                        for(int i = bgmax; i < bg.length; i++)
+                        {
+                            bg[i].render(currentDisplay.rect[1].w, currentDisplay.rect[1].h);
+                        }
+                    }
+                    glMatrixMode(GL_MODELVIEW);
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
