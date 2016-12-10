@@ -336,16 +336,36 @@ class BuiltinFunction
     static void XOFF(PetitComputer p, Value mode/*!?!???!?*/)
     {
     }
-    static void TOUCH(PetitComputer p, DefaultValue!(int, false) id, out int tm, out int tchx, out int tchy)
+    static void TOUCH(PetitComputer p, out int tm, out int tchx, out int tchy)
     {
-        if(!id.isDefault)
-        {
-            writeln("NOTIMPL:TOUCH MPID");
-        }
         auto pos = p.touchPosition;
         tm = pos.tm;
         tchx = pos.x;
         tchy = pos.y;
+    }
+    static void TOUCH(PetitComputer p, int id, out int tm, out int tchx, out int tchy)
+    {
+        //BIG
+        if (p.x.mode == PetitComputer.XMode.WIIU)
+        {
+            auto pos = p.touchPosition;
+            tm = pos.tm;
+            if (id == 0)
+            {
+                tchx = pos.display1X;
+                tchy = pos.display1Y;
+            }
+            else
+            {
+                tchx = pos.gamepadX;
+                tchy = pos.gamepadY;
+            }
+        }
+        else
+        {
+            writeln("NOTIMPL:TOUCH MPID");
+            tm = tchx = tchy = 0;
+        }
     }
     static void XSCREEN(PetitComputer p, int mode, int tv, int gamepad, int sp, int bg)
     {
