@@ -472,7 +472,7 @@ class PetitComputer
             }
             displaynum = 0;
             console.changeDisplay(currentDisplay);
-            for (int i = currentDisplay.rect.length - 1; i >= 0; i--)
+            for (int i = cast(int)currentDisplay.rect.length - 1; i >= 0; i--)
             {
                 display(i);
                 graphic.clip(false);
