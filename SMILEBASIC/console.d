@@ -293,6 +293,7 @@ class Console
         scope (exit)
         {
             glLoadIdentity();
+            petitcom.chScreen(0, 0, 400, 240);
         }
         synchronized(this)
         {

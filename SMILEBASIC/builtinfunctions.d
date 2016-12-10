@@ -268,10 +268,17 @@ class BuiltinFunction
     {
         return p.console.width;
     }
-    static void VSYNC(PetitComputer p, DefaultValue!int time)
+    static void VSYNC(PetitComputer p)
     {
-        time.setDefaultValue(1);
-        p.vsync(cast(int)time);
+        VSYNC(p, 1);
+    }
+    static void VSYNC(PetitComputer p, int time)
+    {
+        if (time == 0)
+        {
+            return;
+        }
+        p.vsync(time);
     }
     static void WAIT(PetitComputer p, DefaultValue!int time)
     {
