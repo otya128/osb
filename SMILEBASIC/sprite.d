@@ -775,14 +775,14 @@ class Sprite
                 glColor4ubv(cast(ubyte*)&sprite.color);
                 if((sprite.attr& 0b111) == SpriteAttr.show)
                 {
-                    glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                     auto kbc= (-((sprite.w / 2f) - homex2));
                     glVertex3f(-((sprite.w / 2f) - homex2) , -((sprite.h / 2f) - homey2), z);//1
-                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);
                     glVertex3f(-((sprite.w / 2f) - homex2), ((sprite.h / 2f) + homey2), z);//2
-                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);
                     glVertex3f((sprite.w / 2f) + homex2, ((sprite.h / 2f) + homey2), z);//3//y+--+x--++
-                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                     glVertex3f((sprite.w / 2f) + homex2, -((sprite.h / 2f) - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
@@ -790,13 +790,13 @@ class Sprite
                 }
                 if((sprite.attr & SpriteAttr.rotate270) == SpriteAttr.rotate270)
                 {
-                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//3
                     glVertex3f(-((sprite.w) / 2 - homex2), -((sprite.h) / 2 - homey2), z);//1
-                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//1
                     glVertex3f(-((sprite.w) / 2 - homex2), ((sprite.h) / 2 + homey2), z);//2
-                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);//2
                     glVertex3f((sprite.w) / 2 + homex2, ((sprite.h) / 2 + homey2), z);//3
-                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);//4
                     glVertex3f((sprite.w) / 2 + homex2, -((sprite.h) / 2 - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
@@ -804,13 +804,13 @@ class Sprite
                 }
                 if((sprite.attr & SpriteAttr.rotate90) == SpriteAttr.rotate90)
                 {
-                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);//2
                     glVertex3f(-((sprite.w) / 2 - homex2), -((sprite.h) / 2 - homey2), z);//1
-                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//3
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);//3
                     glVertex3f(-((sprite.w) / 2 - homex2), ((sprite.h) / 2 + homey2), z);//2
-                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//4
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//4
                     glVertex3f((sprite.w) / 2 + homex2, ((sprite.h) / 2 + homey2), z);//3
-                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//1
                     glVertex3f((sprite.w) / 2 + homex2, -((sprite.h) / 2 - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
@@ -818,25 +818,25 @@ class Sprite
                 }
                 if((sprite.attr & SpriteAttr.rotate180) == SpriteAttr.rotate180)
                 {
-                    glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);//4
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);//4
                     glVertex3f(-((sprite.w) / 2 - homex2), -((sprite.h) / 2 - homey2), z);//1
-                    glTexCoord2f(u2 / 512f - 1, v / 512f - 1);//3
+                    glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//3
                     glVertex3f(-((sprite.w) / 2 - homex2), ((sprite.h) / 2 + homey2), z);//2
-                    glTexCoord2f(u / 512f - 1, v / 512f - 1);//1
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);//1
                     glVertex3f((sprite.w) / 2 + homex2, ((sprite.h) / 2 + homey2), z);//3
-                    glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);//2
+                    glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);//2
                     glVertex3f((sprite.w) / 2 + homex2, -((sprite.h) / 2 - homey2), z);//4
                     glEnd();
                     glLoadIdentity();
                     continue;
                 }
-                glTexCoord2f(u / 512f - 1, v / 512f - 1);
+                glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f(-((sprite.w) / 2 - homex2), -((sprite.h) / 2 - homey2), z);//1
-                glTexCoord2f(u / 512f - 1 , v2 / 512f - 1);
+                glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f(-((sprite.w) / 2 - homex2), ((sprite.h) / 2 + homey2), z);//2
-                glTexCoord2f(u2 / 512f - 1, v2 / 512f - 1);
+                glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((sprite.w) / 2 + homex2, ((sprite.h) / 2 + homey2), z);//3
-                glTexCoord2f(u2 / 512f - 1, v / 512f - 1);
+                glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((sprite.w) / 2 + homex2, -((sprite.h) / 2 - homey2), z);//4
                 glEnd();
                 glLoadIdentity();
