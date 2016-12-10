@@ -479,16 +479,9 @@ class PetitComputer
         {
             DerelictSDL2.load();
             DerelictSDL2Image.load();
-            console.GRPF = graphic.createGRPF(fontFile);
-            graphic.GRP = new GraphicPage[6];
-            for(int i = 0; i < 4; i++)
-            {
-                graphic.GRP[i] = graphic.createEmptyPage();
-            }
+            graphic.initGraphicPages();
             sprite.sppage = 4;
-            graphic.GRP[4] = graphic.createGRPF(spriteFile);
             bgpage = 5;
-            graphic.GRP[5] = graphic.createGRPF(BGFile);
             SDL_Init(SDL_INIT_VIDEO);
 
             DerelictGL.load();

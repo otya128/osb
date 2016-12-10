@@ -77,6 +77,17 @@ class Graphic
         //nnnue
         paint.buffer = new uint[width * height];
     }
+    void initGraphicPages()
+    {
+        petitcom.console.GRPF = createGRPF(petitcom.fontFile);
+        GRP = new GraphicPage[6];
+        for(int i = 0; i < 4; i++)
+        {
+            GRP[i] = createEmptyPage();
+        }
+        GRP[4] = createGRPF(petitcom.spriteFile);
+        GRP[5] = createGRPF(petitcom.BGFile);
+    }
     GraphicPage createGRPF(string file)
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
