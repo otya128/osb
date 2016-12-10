@@ -402,6 +402,17 @@ class PetitComputer
                 currentDisplay = Display([display0, display1], Size(std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), resolutionTable[gamepad].height + resolutionTable[tv].height));
                 xscreenmode = 4;
             }
+            int grpw, grph;
+            graphic.getSize(grpw, grph);
+            //1024*1024?
+            if ((mode == 5 || mode == 6) && (grpw != 1024 || grph != 1024))
+            {
+                graphic.setSize(1024, 1024);
+            }
+            else if (grpw != 512 || grph != 512)
+            {
+                graphic.setSize(512, 512);
+            }
             displaynum = 0;
             console.changeDisplay(currentDisplay);
             for (int i = cast(int)currentDisplay.rect.length - 1; i >= 0; i--)
@@ -539,7 +550,6 @@ class PetitComputer
                 writeln(SDL_GetError.to!string);
                 return;
             }
-            console.GRPF.createTexture(renderer, textureScaleMode);
             chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
@@ -557,11 +567,7 @@ class PetitComputer
             }
             int loopcnt;
             DerelictGL3.reload();
-            foreach(g; graphic.GRP)
-            {
-                g.createTexture(renderer, textureScaleMode);
-                g.createBuffer();
-            }
+            //3graphic.initGLGraphicPages();
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             //glAlphaFunc(GL_GEQUAL, 0.5);

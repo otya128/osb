@@ -19,6 +19,7 @@ enum DrawType
     PAINT,
     CLIPWRITE,
     PUTCHR,
+    INIT,
 }
 struct Circle
 {
@@ -68,14 +69,24 @@ class Graphic
     {
         petitcom = p;
         paint = new Paint();
-        setSize(512, 512);
+        width = 512;
+        height = 512;
+        //nnnue
+        paint.buffer = new uint[width * height];
     }
     void setSize(int w, int h)
     {
         width = w;
         height = h;
-        //nnnue
-        paint.buffer = new uint[width * height];
+        initGraphicPages();/*
+        DrawMessage dm;
+        dm.type = DrawType.INIT;
+        sendDrawMessage(dm);*/
+    }
+    void getSize(out int w, out int h)
+    {
+        w = width;
+        h = height;
     }
     void initGraphicPages()
     {
@@ -88,11 +99,20 @@ class Graphic
         GRP[4] = createGRPF(petitcom.spriteFile);
         GRP[5] = createGRPF(petitcom.BGFile);
     }
+    void initGLGraphicPages()
+    {
+        foreach(g; GRP)
+        {
+            g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+            g.createBuffer();
+        }
+        petitcom.console.GRPF.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+    }
     GraphicPage createGRPF(string file)
     {
         SDL_RWops* stream = SDL_RWFromFile(toStringz(file), toStringz("rb"));
         auto src = IMG_Load_RW(stream, 0);
-        SDL_Surface* surface = SDL_CreateRGBSurface(0, src.w, src.h, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);//0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
+        SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000);//0xff000000, 0x00ff0000, 0x0000ff00,  0xFF);
         SDL_Rect rect;
         rect.x = 0;
         rect.y = 0;
@@ -403,6 +423,10 @@ class Graphic
     }
     void draw()
     {
+        if (!GRP[0].glTexture)
+        {
+            initGLGraphicPages();
+        }
         if(!drawMessageLength) return;
         drawflag = true;
         //betuni kouzoutai demo sonnnani sokudo kawaranasasou
@@ -533,6 +557,7 @@ class Graphic
                         glDisable(GL_ALPHA_TEST);
                         glDisable(GL_TEXTURE_2D);
                     }
+                    break;
                 default:
             }
             if(SDL_GetTicks() - start >= 16 && i != len - 1)
