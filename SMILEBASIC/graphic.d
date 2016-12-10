@@ -61,11 +61,20 @@ struct DrawMessage
 class Graphic
 {
     PetitComputer petitcom;
+    protected int width;
+    protected int height;
     this(PetitComputer p)
     {
         petitcom = p;
+        paint = new Paint();
+        setSize(512, 512);
+    }
+    void setSize(int w, int h)
+    {
+        width = w;
+        height = h;
         //nnnue
-        paint.buffer = new uint[512 * 512];
+        paint.buffer = new uint[width * height];
     }
 
     bool[2] visibles = [true, true];
@@ -97,7 +106,7 @@ class Graphic
     }
     uint gcolor = -1;
     GraphicPage[] GRP;
-    struct Paint
+    class Paint
     {
         uint[] buffer;
         static const MAXSIZE = 1024; /* バッファサイズ */
@@ -118,11 +127,11 @@ class Graphic
         BufStr* sIdx, eIdx;  /* buffの先頭・末尾ポインタ */
         uint point(int x, int y)
         {
-            return buffer.ptr[x + y * 512];
+            return buffer.ptr[x + y * width];
         }
         void pset(int x, int y, uint col)
         {
-            buffer.ptr[x + y * 512] = col;
+            buffer.ptr[x + y * width] = col;
         }
         /*
         scanLine : 線分からシードを探索してバッファに登録する
@@ -238,7 +247,7 @@ class Graphic
             paint(x, y, color, dx, dy, dx2, dy2);
             if(dx == int.max) return;
             int h = dy2 - dy;
-            glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, 512, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * 512));
+            glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, width, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * width));
             //        glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
         }
     }
@@ -299,10 +308,10 @@ class Graphic
     void drawCharacter(int x, int y, wchar character)
     {
         auto rect = petitcom.console.fontTable[character];
-        float tx1 = (rect.x) / 512f - 1;
-        float ty1 = (rect.y + 8) / 512f - 1;
-        float tx2 = (rect.x + 8) / 512f - 1;
-        float ty2 = (rect.y) / 512f - 1;
+        float tx1 = (rect.x) / (cast(float)width) - 1;
+        float ty1 = (rect.y + 8) / (cast(float)height) - 1;
+        float tx2 = (rect.x + 8) / (cast(float)width) - 1;
+        float ty2 = (rect.y) / (cast(float)height) - 1;
         glTexCoord2f(tx1 , ty1);
         glVertex3i(x, y + 8, 0);
         glTexCoord2f(tx1, ty2);
@@ -409,7 +418,7 @@ class Graphic
                         {
                             glFinish();
                             //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
-                            glReadPixels(0, 0, 512, 512, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
+                            glReadPixels(0, 0, width, height, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
                         }
                         paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
                         //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
@@ -605,13 +614,13 @@ class Graphic
         int y1 = displayArea[display].y;
         int x2 = x1 + displayArea[display].w;
         int y2 = y1 + displayArea[display].h;
-        glTexCoord2f(x1 / 512f - 1 , y2 / 512f - 1);
+        glTexCoord2f(x1 / (cast(float)width) - 1 , y2 / (cast(float)height) - 1);
         glVertex3f(x1, y2, z);
-        glTexCoord2f(x1 / 512f - 1, y1 / 512f - 1);
+        glTexCoord2f(x1 / (cast(float)width) - 1, y1 / (cast(float)height) - 1);
         glVertex3f(x1, y1, z);
-        glTexCoord2f(x2 / 512f - 1, y1 / 512f - 1);
+        glTexCoord2f(x2 / (cast(float)width) - 1, y1 / (cast(float)height) - 1);
         glVertex3f(x2, y1, z);
-        glTexCoord2f(x2 / 512f - 1, y2 / 512f - 1);
+        glTexCoord2f(x2 / (cast(float)width) - 1, y2 / (cast(float)height) - 1);
         glVertex3f(x2, y2, z);
         glEnd();
         //glFlush();
@@ -622,7 +631,7 @@ class Graphic
     {
         if (clipmode)
         {
-            clip(clipmode, 0, 0, 512, 512);
+            clip(clipmode, 0, 0, width, height);
         }
         else
         {
