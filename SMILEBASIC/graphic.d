@@ -114,8 +114,8 @@ class Graphic
         SDL_Rect rect;
         rect.x = 0;
         rect.y = 0;
-        rect.w = src.w;
-        rect.h = src.h;
+        rect.w = surface.w;
+        rect.h = surface.h;
         //        SDL_SetSurfaceBlendMode(surface, SDL_BLENDMODE_BLEND);
         //        SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_BLEND);
 
@@ -129,9 +129,9 @@ class Graphic
         auto pixels = (cast(uint*)surface.pixels);
         auto aaa = surface.format.Amask;
         //surface.format.Amask = 0xFF;
-        for(int x = 0; x < src.w; x++)
+        for(int x = 0; x < surface.w; x++)
         {
-            for(int y = 0; y < src.h; y++)
+            for(int y = 0; y < surface.h; y++)
             {
                 ubyte r, g, b, a;
                 SDL_GetRGBA(*pixels, surface.format, &r, &g, &b, &a);
