@@ -156,6 +156,10 @@ struct Slot
         }
     }
 }
+struct Display
+{
+    SDL_Rect[] rect;
+}
 class PetitComputer
 {
     this()
@@ -313,6 +317,7 @@ class PetitComputer
         {
             console.loadFontTable();
         }
+        currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
         display(0);
         writeln("OK");
     }
@@ -322,32 +327,8 @@ class PetitComputer
     {
         import std.exception : enforce;
         enforce(number >= 0);
-        if (xscreenmode == 2)
-        {
-            enforce(number == 0);
-            currentScreenWidth = screenWidthDisplay1;
-            currentScreenHeight = screenHeightDisplay1 * 2;
-        }
-        if(xscreenmode == 0)
-        {
-            enforce(number == 0);
-            currentScreenWidth = screenWidth;
-            currentScreenHeight = screenHeight;
-        }
-        else if(xscreenmode == 1)
-        {
-            enforce(number == 0 || number == 1);
-            if (number == 0)
-            {
-                currentScreenWidth = screenWidth;
-                currentScreenHeight = screenHeight;
-            }
-            else
-            {
-                currentScreenWidth = screenWidthDisplay1;
-                currentScreenHeight = screenHeightDisplay1;
-            }
-        }
+        currentScreenHeight = currentDisplay.rect[number].h;
+        currentScreenWidth = currentDisplay.rect[number].w;
         displaynum = number;
 
         console.display(number);
@@ -412,9 +393,23 @@ class PetitComputer
     }
     Button[] buttonTable;
     Sprite sprite;
+    struct Size
+    {
+        int width, height;
+    }
+    Size[7] resolutionTable = [Size(256, 192), Size(320, 200), Size(320, 240), Size(400, 240), Size(640, 400), Size(640, 480), Size(854, 480)];
     int xscreenmode = 0;
     int bgmax;
+    void xscreen(int mode, int tv, int sprite, int bg)
+    {
+        xscreen(mode, tv, -1, sprite, bg);
+    }
     void xscreen(int mode, int sprite, int bg)
+    {
+        xscreen(mode, -1, -1, sprite, bg);
+    }
+    Display currentDisplay;
+    void xscreen(int mode, int tv, int gamepad, int sprite, int bg)
     {
         this.sprite.spclr();
         this.sprite.spmax = sprite;
@@ -425,9 +420,11 @@ class PetitComputer
         if(mode2 == 0)
         {
             SDL_SetWindowSize(window, 400, 240);
+            currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
         }
         if(mode2 == 1)
         {
+            currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight), SDL_Rect((screenWidth - screenWidthDisplay1) / 2, screenHeight, screenWidthDisplay1, screenHeightDisplay1)]);
             SDL_SetWindowSize(window, 400, 480);
             display(1);
             graphic.clip(false);
@@ -436,6 +433,29 @@ class PetitComputer
         if(mode == 4)
         {
             SDL_SetWindowSize(window, 320, 240 * 2);
+            currentDisplay = Display([SDL_Rect(0, 0, screenWidthDisplay1, screenHeight + screenHeightDisplay1)]);
+        }
+        if (mode == 5)
+        {
+            SDL_SetWindowSize(window, resolutionTable[tv].width, resolutionTable[tv].height);
+            currentDisplay = Display([SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height)]);
+            xscreenmode = 3;
+        }
+        if (mode == 6)
+        {
+            auto display0 = SDL_Rect(0, 0, resolutionTable[tv].width, resolutionTable[tv].height);
+            auto display1 = SDL_Rect(0, resolutionTable[tv].height, resolutionTable[gamepad].width, resolutionTable[gamepad].height);
+            if (resolutionTable[tv].width > resolutionTable[gamepad].width)
+            {
+                display1.x = (resolutionTable[tv].width - resolutionTable[gamepad].width) / 2;
+            }
+            else
+            {
+                display0.x = (resolutionTable[gamepad].width - resolutionTable[tv].width) / 2;
+            }
+            currentDisplay = Display([display0, display1]);
+            SDL_SetWindowSize(window, std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), std.algorithm.max(resolutionTable[gamepad].height, resolutionTable[tv].height));
+            xscreenmode = 4;
         }
         display(0);
         graphic.clip(false);

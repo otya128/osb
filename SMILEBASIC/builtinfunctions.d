@@ -340,16 +340,45 @@ class BuiltinFunction
         tchx = pos.x;
         tchy = pos.y;
     }
-    static void XSCREEN(PetitComputer p, int mode, DefaultValue!(int, false) a, DefaultValue!(int, false) b)
+    static void XSCREEN(PetitComputer p, int mode, int tv, int gamepad, int sp, int bg)
     {
-        a.setDefaultValue(512);
-        b.setDefaultValue(4);
+        if (p.x.mode != PetitComputer.XMode.WIIU || mode != 6)
+        {
+            throw new IllegalFunctionCall("XSCREEN");
+        }
+        p.xscreen(mode, tv, gamepad, sp, bg);
+    }
+    static void XSCREEN(PetitComputer p, int mode, int tv, int sp, int bg)
+    {
+        if (p.x.mode != PetitComputer.XMode.WIIU || mode != 5)
+        {
+            throw new IllegalFunctionCall("XSCREEN");
+        }
+        p.xscreen(mode, tv, sp, bg);
+    }
+    static void XSCREEN(PetitComputer p, int mode, int tv)
+    {
+        XSCREEN(p, mode, tv, 4096, 4);
+    }
+    static void XSCREEN(PetitComputer p, int mode)
+    {
         if(mode == 2 || mode == 3)
         {
-            a.setDefaultValue(256);
-            b.setDefaultValue(2);
+            p.xscreen(mode, 256, 2);
         }
-        p.xscreen(mode, cast(int)a, cast(int)b);
+        else
+        {
+            p.xscreen(mode, 512, 4);
+        }
+    }
+    static void XSCREEN(PetitComputer p, int mode, int sp, int bg)
+    {
+        if (mode == 6)
+        {
+            XSCREEN(p, mode, sp, bg, 2048, 2);
+            return;
+        }
+        p.xscreen(mode, sp, bg);
     }
     static void DISPLAY(PetitComputer p, int display)
     {
