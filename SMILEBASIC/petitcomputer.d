@@ -689,24 +689,7 @@ class PetitComputer
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
                     console.render();
 
-                    if(xscreenmode == 1)
-                    {
-                        chScreen(0, 240, 400, 240);
-                    }
-                    if(xscreenmode == 2)
-                    {
-                        graphic.render(0, 320, 480);
-                    }
-                    else
-                    {
-                        graphic.render(0, 400, 240);
-                    }
-                    if(xscreenmode == 1)
-                    {
-                        chScreen(40, 0, 320, 240);
-                        graphic.render(1, 320, 240);
-                        chScreen(0, 240, 400, 240);
-                    }
+                    graphic.render();
                     if(xscreenmode == 2)
                     {
                         chScreen(0, 0, 320, 480);

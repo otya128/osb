@@ -584,6 +584,13 @@ class Graphic
         sendDrawMessage(dm);
     }
     int gprio;
+    void render()
+    {
+        for (int i = 0; i < petitcom.currentDisplay.rect.length; i++)
+        {
+            render(i, petitcom.currentDisplay.rect[i].w, petitcom.currentDisplay.rect[i].h);
+        }
+    }
     void render(int display, int w, int h)
     {
         if (!visibles[display])
