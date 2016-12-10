@@ -588,6 +588,7 @@ class Graphic
     {
         if (!visibles[display])
             return;
+        petitcom.chRenderingDisplay(display);
         float z = gprio;
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);
