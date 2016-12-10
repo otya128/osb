@@ -252,7 +252,8 @@ class Lexical
             {
                 //ラベル(もしくは文字列)
                 wstring iden;
-                if (c == '@')
+                bool isLabel = c == '@';
+                if (isLabel)
                     iden ~= c;
                 i++;
                 for(;i < code.length;i++)
@@ -264,7 +265,7 @@ class Lexical
                     }
                     iden ~= c;
                 }
-                if (c == '@')
+                if (isLabel)
                 {
                     token = Token(TokenType.Label, Value(iden));
                 }
