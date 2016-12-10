@@ -77,13 +77,13 @@ class BG
                 int v2 = v + 16;
                 int w = 16;
                 int h = 16;
-                glTexCoord2f((u) / 512f - 1 , (v2) / 512f - 1);
+                glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w), (y * h + h), 0);
-                glTexCoord2f((u) / 512f - 1, (v) / 512f - 1);
+                glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w), (y * h), 0);
-                glTexCoord2f((u2) / 512f - 1, (v) / 512f - 1);
+                glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w + w), (y * h), 0);
-                glTexCoord2f((u2) / 512f - 1, (v2) / 512f - 1);
+                glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w + w), (y * h + h), 0);
                 rendercount++;
                 if(rendercount >= 899)
