@@ -359,6 +359,11 @@ class Console
         //write(text);
         foreach(wchar c; text)
         {
+            if(CSRX == consoleWidthC)
+            {
+                CSRX = 0;
+                CSRY++;
+            }
             if(CSRY >= consoleHeightC)
             {
                 CSRY = consoleHeightC - 1;
@@ -388,7 +393,7 @@ class Console
                 tab = tab ? 2 : 0;
             }
             CSRX++;
-            if(CSRX >= consoleWidthC || c == '\n')
+            if(CSRX > consoleWidthC || c == '\n')
             {
                 CSRX = 0;
                 CSRY++;
