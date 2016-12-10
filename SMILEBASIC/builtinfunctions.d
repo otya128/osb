@@ -398,7 +398,7 @@ class BuiltinFunction
     static void GCLS(PetitComputer p, DefaultValue!(int, false) color)
     {
         color.setDefaultValue(0);
-        p.graphic.gfill(p.graphic.useGRP, 0, 0, 511, 511, cast(int)color);
+        p.graphic.gcls(p.graphic.useGRP, cast(int)color);
     }
     static void GPSET(PetitComputer p, int x, int y, DefaultValue!(int, false) color)
     {
