@@ -86,10 +86,10 @@ class BG
                 glTexCoord2f(u2 / (cast(float)petitcom.graphic.width) - 1, v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w + w), (y * h + h), 0);
                 rendercount++;
-                if(rendercount >= 899)
+                /*if(rendercount >= 899)
                 {
                     break;
-                }
+                }*/
             }
         }
         glEnd();

@@ -644,14 +644,6 @@ class PetitComputer
 
                     if (BGvisibles[0])
                     {
-                        for(int i = 0; i < bgmax; i++)
-                        {
-                            bg[i].render(400f, 240f);
-                        }
-                    }
-
-                    if (BGvisibles[0])
-                    {
                         chRenderingDisplay(0);
                         for(int i = 0; i < bgmax; i++)
                         {
