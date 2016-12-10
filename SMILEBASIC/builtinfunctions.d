@@ -1428,11 +1428,11 @@ class BuiltinFunction
         {
             throw new OutOfRange("SPPAGE", 1);
         }
-        p.sprite.sppage = page;
+        p.sprite.sppage[p.displaynum] = page;
     }
     static int SPPAGE(PetitComputer p)
     {
-        return p.sprite.sppage;
+        return p.sprite.sppage[p.displaynum];
     }
     static void SPCLIP(PetitComputer p)
     {
@@ -1668,11 +1668,11 @@ class BuiltinFunction
         {
             throw new OutOfRange("BGPAGE", 1);
         }
-        p.bgpage = page;
+        p.bgpage[p.displaynum] = page;
     }
     static int BGPAGE(PetitComputer p)
     {
-        return p.bgpage;
+        return p.bgpage[p.displaynum];
     }
     static void BGSHOW(PetitComputer p, int layer)
     {

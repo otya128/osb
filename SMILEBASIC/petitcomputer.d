@@ -208,7 +208,7 @@ class PetitComputer
             this.y = y;
         }
     }
-    int bgpage;
+    int[2] bgpage;
     Projects project;
     wstring currentProject;
     void init()
@@ -506,8 +506,8 @@ class PetitComputer
             DerelictSDL2.load();
             DerelictSDL2Image.load();
             graphic.initGraphicPages();
-            sprite.sppage = 4;
-            bgpage = 5;
+            sprite.sppage[] = 4;
+            bgpage[] = 5;
             SDL_Init(SDL_INIT_VIDEO);
 
             DerelictGL.load();
@@ -650,11 +650,11 @@ class PetitComputer
                     }
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-                    glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage].glTexture);
 
                     if (BGvisibles[0])
                     {
                         chRenderingDisplay(0);
+                        glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage[0]].glTexture);
                         for(int i = 0; i < bgmax; i++)
                         {
                             bg[i].render(0, currentDisplay.rect[0].w, currentDisplay.rect[0].h);
@@ -663,6 +663,7 @@ class PetitComputer
                     if(currentDisplay.rect.length > 1 && BGvisibles[1])
                     {
                         chRenderingDisplay(1);
+                        glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage[0]].glTexture);
                         for(int i = bgmax; i < bg.length; i++)
                         {
                             bg[i].render(1, currentDisplay.rect[1].w, currentDisplay.rect[1].h);

@@ -584,7 +584,7 @@ class Sprite
     SpriteBucket[] buckets;
     SpriteBucket* listptr;
     SpriteBucket* bucketsptr;
-    int sppage;
+    int[2] sppage;
     void render()
     {
         if ((!visibles[0] && !visibles[1]) || (petitcom.xscreenmode == 2 && !visibles[0]))
@@ -672,7 +672,7 @@ class Sprite
             dish2 = 480f;
             dis = -1;
         }
-        auto texture = petitcom.graphic.GRP[sppage].glTexture;
+        auto texture = petitcom.graphic.GRP[sppage[0]].glTexture;
         float aspect = disw2 / dish2;
         float z = -0.01f;
         int spmax = petitcom.xscreenmode == 1 ? this.spmax : 512;//XSCREENが2,3じゃないと下画面は描画しない
@@ -702,6 +702,8 @@ class Sprite
                         disw2 = petitcom.currentDisplay.rect[1].w;
                         petitcom.chRenderingDisplay(1, clipRect[1].x, clipRect[1].y, clipRect[1].w, clipRect[1].h);
                         aspect = disw2 / dish2;
+                        texture = petitcom.graphic.GRP[sppage[1]].glTexture;
+                        glBindTexture(GL_TEXTURE_2D, texture);
                     }
                     else
                     {
@@ -714,6 +716,8 @@ class Sprite
                             disw2 = petitcom.currentDisplay.rect[0].w;
                             petitcom.chRenderingDisplay(0, clipRect[0].x, clipRect[0].y, clipRect[0].w, clipRect[0].h);
                             aspect = disw2 / dish2;
+                            texture = petitcom.graphic.GRP[sppage[0]].glTexture;
+                            glBindTexture(GL_TEXTURE_2D, texture);
                         }
                     }
                     if (!visibles[dis])
