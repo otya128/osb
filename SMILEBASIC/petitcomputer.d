@@ -1119,12 +1119,23 @@ class PetitComputer
         void left()
         {
             pos--;
+            if (console.CSRX == 0)
+            {
+                console.CSRY--;
+                console.CSRX = console.consoleWidthC - 1;
+                return;
+            }
             console.CSRX--;
         }
         void right()
         {
             pos++;
             console.CSRX++;
+            if (console.CSRX == console.consoleWidthC)
+            {
+                console.CSRY++;
+                console.CSRX = 0;
+            }
         }
         while(!quit)
         {
