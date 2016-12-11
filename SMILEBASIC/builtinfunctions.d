@@ -2355,6 +2355,39 @@ class BuiltinFunction
         }
         return std.math.log(a) / std.math.log(b);
     }
+    static void PUSH(Value ary, Value exp)
+    {
+        if (!ary.isArray)
+        {
+            throw new TypeMismatch("PUSH", 1);
+        }
+        if (!exp.canCast(ary.elementType))
+        {
+            throw new TypeMismatch("PUSH");
+        }
+        switch (ary.type)
+        {
+            case ValueType.String:
+                throw new IllegalFunctionCall("NOTIMPL:PUSH string");
+            case ValueType.IntegerArray:
+                if (ary.integerArray.dimCount != 1)
+                    throw new TypeMismatch("PUSH", 1);
+                ary.integerArray.push(exp.castInteger);
+                break;
+            case ValueType.DoubleArray:
+                if (ary.doubleArray.dimCount != 1)
+                    throw new TypeMismatch("PUSH", 1);
+                ary.doubleArray.push(exp.castDouble);
+                break;
+            case ValueType.StringArray:
+                if (ary.stringArray.dimCount != 1)
+                    throw new TypeMismatch("PUSH", 1);
+                ary.stringArray.push(exp.castString);
+                break;
+            default:
+                throw new TypeMismatch();
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

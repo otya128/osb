@@ -235,6 +235,26 @@ struct Value
                 throw new TypeMismatch();
         }
     }
+    ValueType elementType()
+    {
+        switch(this.type)
+        {
+            case ValueType.String:
+                return ValueType.String;
+            case ValueType.IntegerArray:
+                return ValueType.Integer;
+            case ValueType.DoubleArray:
+                return ValueType.Double;
+            case ValueType.StringArray:
+                return ValueType.String;
+            default:
+                throw new TypeMismatch();
+        }
+    }
+    bool canCast(ValueType t)
+    {
+        return t == this.type || ((t == ValueType.Integer || t == ValueType.Double) && isNumber);
+    }
 }
 //import std.experimental.ndslice;
 //ndsliceがこれに相当?
@@ -358,6 +378,15 @@ class Array(T)
         if(dimCount != 4) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();
         return array[i1] = v;//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3] = v;
+    }
+    void push(T v)
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array ~= v;
+        dim[0]++;
     }
 
 }
