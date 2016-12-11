@@ -165,6 +165,45 @@ struct Display
     SDL_Rect[] rect;
     Size windowSize;
 }
+class RingBuffer(T)
+{
+    T[] buffer;
+    this(size_t size)
+    {
+        start = -1;
+        end = -1;
+        buffer = new T[size];
+    }
+    sizediff_t end;
+    sizediff_t start;
+    void put(T val)
+    {
+        if (end < start)
+        {
+            start++;
+            if (start == buffer.length)
+            {
+                start = 0;
+            }
+        }
+        end++;
+        if (end == buffer.length)
+        {
+            end = 0;
+            start = 1;
+        }
+        buffer[end] = val;
+        return;
+    }
+    size_t length()
+    {
+        return start == -1 ? end - start : buffer.length;
+    }
+    T opIndex(size_t index)
+    {
+        return buffer[(start != -1 ? start + index : index) % buffer.length];
+    }
+}
 class PetitComputer
 {
     this()
@@ -935,6 +974,7 @@ class PetitComputer
                     printPrompt();
                 }
                 auto prg = input("", true);
+                inputHistory.put(prg);
                 auto lex = new Lexical(prg);
                 lex.popFront();
                 auto token = lex.front();
@@ -1105,6 +1145,7 @@ class PetitComputer
         keybufferpos = 0;
         keybufferlen = 0;
     }
+    RingBuffer!wstring inputHistory = new RingBuffer!wstring(32/*ダイレクトモードでの履歴の数は32*/);
     wstring input(wstring prompt, bool useClipBoard)
     {
         auto olddisplay = displaynum;
@@ -1116,6 +1157,21 @@ class PetitComputer
         int oldCSRX = this.console.CSRX;
         int oldCSRY = this.console.CSRY;
         int pos;
+        int historyIndex = inputHistory.length;
+        void setText(wstring text)
+        {
+            console.CSRX = oldCSRX;
+            console.CSRY = oldCSRY;
+            for (int i = 0; i < buffer.length; i++)
+            {
+                console.print(" ");
+            }
+            buffer = text;
+            pos = text.length;
+            console.CSRX = oldCSRX;
+            console.CSRY = oldCSRY;
+            console.print(text);
+        }
         void left()
         {
             pos--;
@@ -1154,6 +1210,27 @@ class PetitComputer
                     button = this.button;
                 }
                 button = button ^ old & button;
+                if (button & Button.UP)
+                {
+                    if (historyIndex - 1 >= 0)
+                    {
+                        historyIndex--;
+                        setText(inputHistory[historyIndex]);
+                    }
+                }
+                if (button & Button.DOWN)
+                {
+                    if (historyIndex + 1 < inputHistory.length)
+                    {
+                        historyIndex++;
+                        setText(inputHistory[historyIndex]);
+                    }
+                    else
+                    {
+                        historyIndex++;
+                        setText("");
+                    }
+                }
                 if (button & Button.LEFT)
                 {
                     left();
