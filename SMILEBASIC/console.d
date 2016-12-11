@@ -292,6 +292,7 @@ class Console
         adjustScreen();
         scope (exit)
         {
+            glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
             petitcom.chScreen(0, 0, 400, 240);
         }
