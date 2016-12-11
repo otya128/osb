@@ -363,6 +363,11 @@ class Console
             {
                 CSRX = 0;
                 CSRY++;
+                if(CSRY >= consoleHeightC)
+                {
+                    scrollY1;
+                    CSRY = consoleHeightC - 1;
+                }
             }
             if(CSRY >= consoleHeightC)
             {
@@ -400,15 +405,19 @@ class Console
             }
             if(CSRY >= consoleHeightC)
             {
-                auto tmp = consoleC[0];
-                for(int i = 0; i < consoleHeightC - 1; i++)
-                {
-                    consoleC[i] = consoleC[i + 1];
-                }
-                consoleC[consoleHeightC - 1] = tmp;
-                tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
+                scrollY1;
                 CSRY = consoleHeightC - 1;
             }
         }
+    }
+    void scrollY1()
+    {
+        auto tmp = consoleC[0];
+        for(int i = 0; i < consoleHeightC - 1; i++)
+        {
+            consoleC[i] = consoleC[i + 1];
+        }
+        consoleC[consoleHeightC - 1] = tmp;
+        tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
     }
 }
