@@ -1123,6 +1123,7 @@ class PetitComputer
         }
         void right()
         {
+            pos++;
             console.CSRX++;
         }
         while(!quit)
