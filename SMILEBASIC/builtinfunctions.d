@@ -340,8 +340,16 @@ class BuiltinFunction
     {
         auto pos = p.touchPosition;
         tm = pos.tm;
-        tchx = pos.x;
-        tchy = pos.y;
+        if (p.x.mode == PetitComputer.XMode.WIIU)
+        {
+            tchx = pos.display1X;
+            tchy = pos.display1Y;
+        }
+        else
+        {
+            tchx = pos.x;
+            tchy = pos.y;
+        }
     }
     static void TOUCH(PetitComputer p, int id, out int tm, out int tchx, out int tchy)
     {

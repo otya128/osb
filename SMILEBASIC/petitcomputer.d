@@ -754,14 +754,14 @@ class PetitComputer
                         {
                             auto w = currentDisplay.rect[0].w;
                             auto h = currentDisplay.rect[0].h;
-                            auto x3DS = cast(int)(mousex * (cast(float)w / screenWidthDisplay1));
-                            auto y3DS = cast(int)(mousey * (cast(float)h / screenHeightDisplay1));
-                            auto gamepadx = cast(int)(mousex * (cast(float)w / 854));
-                            auto gamepady = cast(int)(mousey * (cast(float)h / 480));
+                            auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
+                            auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
+                            auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
+                            auto gamepady = cast(int)(mousey * (480 / cast(float)h));
                             touchPosition = Touch(old.tm + 1,
                                                   x3DS.clamp(5, 314), y3DS.clamp(5, 234),
-                                                  gamepadx.clamp(8, 854 - 8), gamepady.clamp(8, 480 - 8),
-                                                  mousex, mousey);
+                                                  gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
+                                                  mousex.clamp(8, w - 9), mousey.clamp(8, h - 9));
                         }
                         else
                         {
@@ -777,8 +777,8 @@ class PetitComputer
                                 auto gamepady = cast(int)(mousey * (480 / cast(float)h));
                                 touchPosition = Touch(old.tm + 1,
                                                       x3DS.clamp(5, 314), y3DS.clamp(5, 234),
-                                                      gamepadx.clamp(8, 854 - 8), gamepady.clamp(8, 480 - 8),
-                                                      mousex, mousey);
+                                                      gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
+                                                      mousex.clamp(8, w - 9), mousey.clamp(8, h - 9));
                             }
                         }
                     }
