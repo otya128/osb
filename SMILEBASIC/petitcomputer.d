@@ -1174,6 +1174,10 @@ class PetitComputer
         }
         void left()
         {
+            if (pos == 0)
+            {
+                return;
+            }
             pos--;
             if (console.CSRX == 0)
             {
@@ -1185,6 +1189,10 @@ class PetitComputer
         }
         void right()
         {
+            if (pos >= buffer.length)
+            {
+                return;
+            }
             pos++;
             console.CSRX++;
             if (console.CSRX == console.consoleWidthC)
