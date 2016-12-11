@@ -444,9 +444,12 @@ class PetitComputer
             int grpw, grph;
             graphic.getSize(grpw, grph);
             //1024*1024?
-            if ((mode == 5 || mode == 6) && (grpw != 1024 || grph != 1024))
+            if (mode == 5 || mode == 6)
             {
-                graphic.setSize(1024, 1024);
+                if (grpw != 1024 || grph != 1024)
+                {
+                    graphic.setSize(1024, 1024);
+                }
             }
             else if (grpw != 512 || grph != 512)
             {
