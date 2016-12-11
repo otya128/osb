@@ -1157,7 +1157,7 @@ class PetitComputer
         int oldCSRX = this.console.CSRX;
         int oldCSRY = this.console.CSRY;
         int pos;
-        int historyIndex = inputHistory.length;
+        int historyIndex = cast(int)inputHistory.length;
         void setText(wstring text)
         {
             console.CSRX = oldCSRX;
@@ -1167,7 +1167,7 @@ class PetitComputer
                 console.print(" ");
             }
             buffer = text;
-            pos = text.length;
+            pos = cast(int)text.length;
             console.CSRX = oldCSRX;
             console.CSRY = oldCSRY;
             console.print(text);
