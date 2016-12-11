@@ -360,16 +360,23 @@ class PetitComputer
     Mutex grpmutex;
     int displaynum;
     int renderstartpos;
+    //フォントの都合で縮小するとまともに見られないので非推奨
+    float scaleX = 1;
+    float scaleY = 1;
+    void glViewport2(int x, int y, int w, int h)
+    {
+        glViewport(cast(int)(x * scaleX), cast(int)(y * scaleY), cast(int)(w * scaleX), cast(int)(h * scaleY));
+    }
     void chScreen(int x, int y, int w, int h)
     {
-        glViewport(x, y, w, h);
+        glViewport2(x, y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, w, h, 0, 1024, -2048);
     }
     void chScreen2(int x, int y, int w, int h)
     {
-        glViewport(x, currentDisplay.windowSize.height - h - y, w, h);
+        glViewport2(x, currentDisplay.windowSize.height - h - y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, w, h, 0, 1024, -2048);
@@ -380,7 +387,7 @@ class PetitComputer
     }
     void chRenderingDisplay(int i, int x, int y, int w, int h)
     {
-        glViewport(x + currentDisplay.rect[i].x, currentDisplay.windowSize.height - h - y - currentDisplay.rect[i].y, w, h);
+        glViewport2(x + currentDisplay.rect[i].x, currentDisplay.windowSize.height - h - y - currentDisplay.rect[i].y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(x, x + w, y + h, y, 1024, -2048);
@@ -476,7 +483,7 @@ class PetitComputer
             }
         }
 
-        SDL_SetWindowSize(window, currentDisplay.windowSize.width, currentDisplay.windowSize.height);
+        SDL_SetWindowSize(window, cast(int)(currentDisplay.windowSize.width * scaleX), cast(int)(currentDisplay.windowSize.height * scaleY));
     }
 
     BG getBG(int layer)
@@ -734,6 +741,8 @@ class PetitComputer
                 int mousex, mousey;
                 if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
                 {
+                    mousex = cast(int)(mousex / scaleX);
+                    mousey = cast(int)(mousey / scaleY);
                     import std.algorithm.comparison : clamp;
                     auto old = touchPosition;
                     if (x.mode != XMode.WIIU)
@@ -778,7 +787,7 @@ class PetitComputer
                                 touchPosition = Touch(old.tm + 1,
                                                       x3DS.clamp(5, 314), y3DS.clamp(5, 234),
                                                       gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                      mousex.clamp(8, w - 9), mousey.clamp(8, h - 9));
+                                                      mousex.clamp(12, w - 13), mousey.clamp(8, h - 9));
                             }
                         }
                     }
