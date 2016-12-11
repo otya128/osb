@@ -771,11 +771,14 @@ class PetitComputer
                             mousey -= currentDisplay.rect[1].y;
                             if (mousex >= 0 && mousey >= 0)
                             {
-                                auto x3DS = cast(int)(mousex * (cast(float)w / screenWidthDisplay1));
-                                auto y3DS = cast(int)(mousey * (cast(float)h / screenHeightDisplay1));
-                                auto gamepadx = cast(int)(mousex * (cast(float)w / 854));
-                                auto gamepady = cast(int)(mousey * (cast(float)h / 480));
-                                touchPosition = Touch(old.tm + 1, x3DS, y3DS, gamepadx, gamepady, mousex, mousey);
+                                auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
+                                auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
+                                auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
+                                auto gamepady = cast(int)(mousey * (480 / cast(float)h));
+                                touchPosition = Touch(old.tm + 1,
+                                                      x3DS.clamp(5, 314), y3DS.clamp(5, 234),
+                                                      gamepadx.clamp(8, 854 - 8), gamepady.clamp(8, 480 - 8),
+                                                      mousex, mousey);
                             }
                         }
                     }
