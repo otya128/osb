@@ -770,7 +770,7 @@ class PetitComputer
                             touchPosition = Touch(old.tm + 1,
                                                   x3DS.clamp(5, 314), y3DS.clamp(5, 234),
                                                   gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                  mousex.clamp(8, w - 9), mousey.clamp(8, h - 9));
+                                                  mousex.clamp(8, w - 13), mousey.clamp(8, h - 9));
                         }
                         else
                         {
