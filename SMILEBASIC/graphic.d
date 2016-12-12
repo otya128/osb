@@ -429,8 +429,10 @@ class Graphic
     {
         SDL_GL_MakeCurrent(petitcom.window, petitcom.contextVM);
         glAlphaFunc(GL_GEQUAL, 0.1f);
-        glEnable(GL_ALPHA_TEST);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_DEPTH_TEST);
     }
     void draw2()
     {
@@ -451,9 +453,6 @@ class Graphic
         GLint old;
         int oldpage = drawMessageQueue[0].page;
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_DEPTH_TEST);
 
         //glAlphaFunc(GL_GEQUAL, 0.0);
         void chScreen(int x, int y, int w, int h)
@@ -559,6 +558,9 @@ class Graphic
                 break;
             default:
         }
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_DEPTH_TEST);
     }
     DrawMessage[] drawMessageQueue = new DrawMessage[1];
     int drawMessageLength;
@@ -674,6 +676,15 @@ class Graphic
         dm.type = DrawType.PUTCHR;
         dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
+    }
+    int gspoit(int page, int x, int y)
+    {
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
+        int ui;
+        //flush
+        updateVM();
+        glReadPixels(x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &ui);
+        return ui;
     }
     int gprio;
     void render()

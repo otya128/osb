@@ -534,6 +534,10 @@ class BuiltinFunction
             throw new TypeMismatch("GPUTCHR", 3);
         }
     }
+    static int GSPOIT(PetitComputer p, int x, int y)
+    {
+        return p.graphic.gspoit(p.graphic.useGRP, x, y);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
