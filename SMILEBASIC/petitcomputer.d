@@ -132,6 +132,13 @@ class GraphicPage
         }
         glBindFramebufferEXT(GL_FRAMEBUFFER, old);
     }
+    void deleteGL()
+    {
+        glDeleteFramebuffersEXT(1, &buffer);
+        glDeleteRenderbuffersEXT(1, &render);
+        glDeleteTextures(1, &glTexture);
+        buffer = render = glTexture = 0;
+    }
 }
 
 version(Windows)

@@ -90,6 +90,10 @@ class Graphic
     }
     void initGraphicPages()
     {
+        if (GRP.length != 0 && GRP[0].glTexture/*TODO:gl texture 0?*/)
+        {
+            oldGRP = GRP;
+        }
         GRP = new GraphicPage[6];
         for(int i = 0; i < 4; i++)
         {
@@ -204,6 +208,7 @@ class Graphic
     }
     uint gcolor = -1;
     GraphicPage[] GRP;
+    GraphicPage[] oldGRP;
     class Paint
     {
         uint[] buffer;
@@ -424,6 +429,13 @@ class Graphic
     {
         if (!GRP[0].glTexture)
         {
+            if (oldGRP.length)
+            {
+                foreach (i; oldGRP)
+                {
+                    i.deleteGL;
+                }
+            }
             initGLGraphicPages();
         }
         if(!drawMessageLength) return;
