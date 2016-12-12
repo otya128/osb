@@ -121,11 +121,11 @@ class GraphicPage
         glBindTexture(GL_TEXTURE_2D, glTexture);
         glGenRenderbuffersEXT(1, &render);
         glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, render);
-        glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, surface.w, surface.h);
+        //glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, surface.w, surface.h);
         glGenFramebuffersEXT(1, &buffer);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, buffer);
         glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, glTexture, 0);
-        glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, render);
+        //glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, render);
         glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
@@ -576,7 +576,7 @@ class PetitComputer
         {
             writeln(t);
         }
-        bool renderprofile;// = true;
+        bool renderprofile = true;
         try
         {
             version(Windows)
@@ -870,6 +870,7 @@ class PetitComputer
                 long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                 if(delay > 0)
                     SDL_Delay(cast(uint)delay);
+                maincnt++;
             }
         }
         catch(Throwable t)
@@ -1156,7 +1157,7 @@ class PetitComputer
                     SDL_Delay(cast(uint)(vsyncFrame * frame));
                     vsyncFrame = 0;
                 }
-                maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
+                //maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
                 graphic.updateVM();
                 if(quit)
                 {
