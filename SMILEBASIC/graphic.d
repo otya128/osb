@@ -435,6 +435,7 @@ class Graphic
                 {
                     i.deleteGL;
                 }
+                oldGRP = null;
             }
             initGLGraphicPages();
         }
