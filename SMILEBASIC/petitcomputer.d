@@ -477,10 +477,13 @@ class PetitComputer
                 this.bg[i].display = 0;
                 this.bg[i].clip;
             }
-            for(int i = bgmax; i < this.bg.length; i++)
+            if (currentDisplay.rect.length > 1)
             {
-                this.bg[i].display = 1;
-                this.bg[i].clip;
+                for(int i = bgmax; i < this.bg.length; i++)
+                {
+                    this.bg[i].display = 1;
+                    this.bg[i].clip;
+                }
             }
             for (int i = cast(int)currentDisplay.rect.length - 1; i >= 0; i--)
             {
