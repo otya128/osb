@@ -555,6 +555,8 @@ class PetitComputer
     {
         return petitcomBackcolor;
     }
+    SDL_GLContext context;
+    SDL_GLContext contextVM;
     Object renderSync = new Object();
     void render()
     {
@@ -614,14 +616,16 @@ class PetitComputer
                 return;
             }
             SDL_Event event;
-            SDL_GLContext context;
+            SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+            contextVM = SDL_GL_CreateContext(window);
             context = SDL_GL_CreateContext(window);
-            if(!context)
+            if(!context || !contextVM)
             {
                 write("can't create OpenGL context: ");
                 writeln(SDL_GetError.to!string);
                 return;
             }
+            SDL_GL_MakeCurrent(window, context);
             console.GRPF = graphic.createGRPF(fontFile);
             graphic.GRPFWidth = console.GRPF.surface.w;
             graphic.GRPFHeight = console.GRPF.surface.h;
@@ -651,7 +655,6 @@ class PetitComputer
             glAlphaFunc(GL_GEQUAL, 0.1f);
             glEnable(GL_ALPHA_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            xscreen(0, 512, 4);
             {
                 renderCondition.mutex.lock;
                 scope (exit)
@@ -674,7 +677,7 @@ class PetitComputer
                 synchronized(renderSync)
                 {
                     glLoadIdentity();
-                    graphic.draw();
+                    //graphic.draw();
                     chScreen(0, 0, 400, 240);
                     if(xscreenmode == 1)
                     {
@@ -932,6 +935,8 @@ class PetitComputer
                 renderCondition.mutex.unlock;
             renderCondition.wait();
         }
+        graphic.initVM();
+        xscreen(0, 512, 4);
         auto startTicks = SDL_GetTicks();
         Parser parser;
         otya.smilebasic.vm.VM vm;
@@ -1152,6 +1157,7 @@ class PetitComputer
                     vsyncFrame = 0;
                 }
                 maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
+                graphic.updateVM();
                 if(quit)
                 {
                     quit = false;

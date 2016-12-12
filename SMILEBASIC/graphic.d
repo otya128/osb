@@ -425,7 +425,14 @@ class Graphic
         glTexCoord2f(tx2, ty1);
         glVertex3i(x + 8, y + 8, 0);
     }
-    void draw()
+    void initVM()
+    {
+        SDL_GL_MakeCurrent(petitcom.window, petitcom.contextVM);
+        glAlphaFunc(GL_GEQUAL, 0.1f);
+        glEnable(GL_ALPHA_TEST);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    void draw2()
     {
         if (!GRP[0].glTexture)
         {
@@ -439,14 +446,9 @@ class Graphic
             }
             initGLGraphicPages();
         }
-        if(!drawMessageLength) return;
-        drawflag = true;
         //betuni kouzoutai demo sonnnani sokudo kawaranasasou
         auto len = drawMessageLength;
-        int s = petitcom.renderstartpos;
         GLint old;
-        auto a = &glBindFramebuffer;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &old);
         int oldpage = drawMessageQueue[0].page;
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
         glDisable(GL_TEXTURE_2D);
@@ -461,162 +463,122 @@ class Graphic
             glLoadIdentity();
             glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
         }
-        chScreen(0, 0, 511, 511);
         DrawType dt;
-        auto start = SDL_GetTicks();
-        int i = s;
         static const size = 255.5f;
-        int display = -1;
-        for(; i < len; i++)
+        DrawMessage dm = drawMessageQueue[0];
+        int display = dm.display;
+        chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+        switch(dm.type)
         {
-            DrawMessage dm = drawMessageQueue[i];
-            if(oldpage != dm.page)
-            {
-                oldpage = dm.page;
-                glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
-            }
-            if (display != dm.display)
-            {
-                display = dm.display;
-                chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
-            }
-            switch(dm.type)
-            {
-                case DrawType.CLIPWRITE:
-                    writeArea[display].x = dm.x;
-                    writeArea[display].y = dm.y;
-                    writeArea[display].w = dm.w;
-                    writeArea[display].h = dm.h;
-                    chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
-                    break;
-                case DrawType.PSET:
-                    glBegin(GL_POINTS);
+            case DrawType.CLIPWRITE:
+                writeArea[display].x = dm.x;
+                writeArea[display].y = dm.y;
+                writeArea[display].w = dm.w;
+                writeArea[display].h = dm.h;
+                break;
+            case DrawType.PSET:
+                glBegin(GL_POINTS);
+                glColor4ubv(cast(ubyte*)&dm.color);
+                glVertex2f(dm.x, dm.y);
+                glEnd();
+                break;
+            case DrawType.LINE:
+                {
+                    glBegin(GL_LINES);
                     glColor4ubv(cast(ubyte*)&dm.color);
                     glVertex2f(dm.x, dm.y);
+                    glVertex2f(dm.x2, dm.y2);
+                    //glFlush();
                     glEnd();
-                    break;
-                case DrawType.LINE:
+                }
+                break;
+            case DrawType.FILL:
+                {
+                    glBegin(GL_QUADS);
+                    glColor4ubv(cast(ubyte*)&dm.color);
+                    glVertex2f(dm.x, dm.y);
+                    glVertex2f(dm.x, dm.y2);
+                    glVertex2f(dm.x2, dm.y2);
+                    glVertex2f(dm.x2, dm.y);
+                    glEnd();
+                }
+                break;
+            case DrawType.BOX:
+                {
+                    glBegin(GL_LINE_LOOP);
+                    glColor4ubv(cast(ubyte*)&dm.color);
+                    glVertex2f(dm.x, dm.y);
+                    glVertex2f(dm.x, dm.y2);
+                    glVertex2f(dm.x2, dm.y2);
+                    glVertex2f(dm.x2, dm.y);
+                    glEnd();
+                }
+                break;
+            case DrawType.PAINT:
+                {
+                    glBindTexture(GL_TEXTURE_2D, GRP[oldpage].glTexture);
+                    if(dt != DrawType.PAINT)
                     {
-                        glBegin(GL_LINES);
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f(dm.x, dm.y);
-                        glVertex2f(dm.x2, dm.y2);
-                        //glFlush();
-                        glEnd();
+                        glFinish();
+                        //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
+                        glReadPixels(0, 0, width, height, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
                     }
-                    break;
-                case DrawType.FILL:
-                    {
-                        glBegin(GL_QUADS);
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f(dm.x, dm.y);
-                        glVertex2f(dm.x, dm.y2);
-                        glVertex2f(dm.x2, dm.y2);
-                        glVertex2f(dm.x2, dm.y);
-                        glEnd();
-                    }
-                    break;
-                case DrawType.BOX:
-                    {
-                        glBegin(GL_LINE_LOOP);
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        glVertex2f(dm.x, dm.y);
-                        glVertex2f(dm.x, dm.y2);
-                        glVertex2f(dm.x2, dm.y2);
-                        glVertex2f(dm.x2, dm.y);
-                        glEnd();
-                    }
-                    break;
-                case DrawType.PAINT:
-                    {
-                        glBindTexture(GL_TEXTURE_2D, GRP[oldpage].glTexture);
-                        if(dt != DrawType.PAINT)
-                        {
-                            glFinish();
-                            //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
-                            glReadPixels(0, 0, width, height, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
-                        }
-                        paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
-                        //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
-                    }
-                    break;
-                case DrawType.CIRCLE1:
-                    {
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        drawCircle(dm.x, dm.y, dm.circle.r);
-                    }
-                    break;
-                case DrawType.CIRCLE2:
-                    {
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
-                    }
-                    break;
-                case DrawType.PUTCHR:
-                    {
-                        glColor4ubv(cast(ubyte*)&dm.color);
-                        glEnable(GL_TEXTURE_2D);
-                        glEnable(GL_ALPHA_TEST);
-                        glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
-                        glMatrixMode(GL_MODELVIEW);
-                        glPushMatrix();
-                        glTranslatef(dm.x, dm.y, 0);
-                        glScalef(dm.character.scalex, dm.character.scaley, 1);
-                        glBegin(GL_QUADS);
-                        drawText(dm.character.text);
-                        glEnd();
-                        glPopMatrix();
-                        glDisable(GL_ALPHA_TEST);
-                        glDisable(GL_TEXTURE_2D);
-                    }
-                    break;
-                default:
-            }
-            if(SDL_GetTicks() - start >= 16 && i != len - 1)
-            {
-                s = i + 1;
-                goto brk;
-            }
-            dt = dm.type;
+                    paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
+                    //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
+                }
+                break;
+            case DrawType.CIRCLE1:
+                {
+                    glColor4ubv(cast(ubyte*)&dm.color);
+                    drawCircle(dm.x, dm.y, dm.circle.r);
+                }
+                break;
+            case DrawType.CIRCLE2:
+                {
+                    glColor4ubv(cast(ubyte*)&dm.color);
+                    drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
+                }
+                break;
+            case DrawType.PUTCHR:
+                {
+                    glColor4ubv(cast(ubyte*)&dm.color);
+                    glEnable(GL_TEXTURE_2D);
+                    glEnable(GL_ALPHA_TEST);
+                    glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
+                    glMatrixMode(GL_MODELVIEW);
+                    glPushMatrix();
+                    glTranslatef(dm.x, dm.y, 0);
+                    glScalef(dm.character.scalex, dm.character.scaley, 1);
+                    glBegin(GL_QUADS);
+                    drawText(dm.character.text);
+                    glEnd();
+                    glPopMatrix();
+                    glDisable(GL_ALPHA_TEST);
+                    glDisable(GL_TEXTURE_2D);
+                }
+                break;
+            default:
         }
-    brk:
-        if(i == len)
-        {
-            petitcom.renderstartpos = 0;
-            drawMessageLength = 0;
-        }
-        else
-        {
-            petitcom.renderstartpos = s;
-        }
-        glBindFramebufferEXT(GL_FRAMEBUFFER, old);
-        glEnable(GL_DEPTH_TEST);
-        drawflag = false;
-        glEnable(GL_ALPHA_TEST);
     }
-    static const int dmqqueuelen = 8192;
-    DrawMessage[] drawMessageQueue = new DrawMessage[dmqqueuelen];
+    DrawMessage[] drawMessageQueue = new DrawMessage[1];
     int drawMessageLength;
     bool drawflag;
+    bool flushRequired;
+    void updateVM()
+    {
+        if (flushRequired)
+            glFlush();
+        flushRequired = false;
+    }
     void sendDrawMessage(DrawMessage dm)
     {
-        //grpmutex.lock();
-        //scope(exit)
-        //    grpmutex.unlock();
-        if(drawMessageLength >= dmqqueuelen)
-        {
-            while(drawMessageLength)
-            {
-                SDL_Delay(1);
-            }
-        }
-        while(drawflag){}
         if (dm.type != DrawType.CLIPWRITE)
         {
             dm.color = petitcom.toGLColor(this.GRP[0].textureFormat, dm.color & 0xFFF8F8F8);
         }
-        drawMessageQueue[drawMessageLength] = dm;
-        drawMessageLength++;
+        drawMessageQueue[0] = dm;
+        draw2();
+        flushRequired = true;
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
     {
