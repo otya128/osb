@@ -446,6 +446,7 @@ class Graphic
             glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
         }
         chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[usePage[display]].buffer);
     }
     void draw2()
     {
