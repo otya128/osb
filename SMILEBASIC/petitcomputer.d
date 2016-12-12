@@ -8,6 +8,7 @@ import std.file;
 import std.stdio;
 import std.conv;
 import std.string;
+import std.range;
 import core.stdc.stdio;
 import core.sync.mutex;
 import core.sync.condition;
@@ -996,7 +997,10 @@ class PetitComputer
                     printPrompt();
                 }
                 auto prg = input("", true);
-                inputHistory.put(prg);
+                if (!prg.empty && (inputHistory.length == 0 || inputHistory[inputHistory.length - 1] != prg))
+                {
+                    inputHistory.put(prg);
+                }
                 auto lex = new Lexical(prg);
                 lex.popFront();
                 auto token = lex.front();
