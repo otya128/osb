@@ -200,6 +200,7 @@ class Graphic
     }
     @property void useGRP(int page)
     {
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
         usePage[petitcom.displaynum] = page;
     }
     @property void showGRP(int page)
@@ -434,6 +435,18 @@ class Graphic
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
     }
+    int drc = 0;
+    void display(int display)
+    {
+        void chScreen(int x, int y, int w, int h)
+        {
+            glViewport(x, y, w, h);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
+        }
+        chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+    }
     void draw2()
     {
         if (!GRP[0].glTexture)
@@ -561,6 +574,7 @@ class Graphic
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_ALPHA_TEST);
         glDisable(GL_DEPTH_TEST);
+        drc++;
     }
     DrawMessage[] drawMessageQueue = new DrawMessage[1];
     int drawMessageLength;
@@ -568,9 +582,9 @@ class Graphic
     bool flushRequired;
     void updateVM()
     {
-        if (flushRequired)
+        if (drc)
             glFlush();
-        flushRequired = false;
+        drc = 0;
     }
     void sendDrawMessage(DrawMessage dm)
     {
@@ -580,7 +594,6 @@ class Graphic
         }
         drawMessageQueue[0] = dm;
         draw2();
-        flushRequired = true;
     }
     void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
     {
@@ -606,26 +619,57 @@ class Graphic
         dm.display = cast(byte)petitcom.displaynum;
         sendDrawMessage(dm);
     }
+    uint convertColor(uint color)
+    {
+        return petitcom.toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
+    }
     //TODO:範囲チェック
     void gpset(int page, int x, int y, uint color)
     {
-        sendDrawMessage(DrawType.PSET, cast(byte)page, cast(short)x, cast(short)y, color);
+        color = convertColor(color);
+        glBegin(GL_POINTS);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glEnd();
+        drc++;
     }
     void gline(int page, int x, int y, int x2, int y2, uint color)
     {
-        sendDrawMessage(DrawType.LINE, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+        color = convertColor(color);
+        glBegin(GL_LINES);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x2, y2);
+        glEnd();
+        drc++;
     }
     void gbox(int page, int x, int y, int x2, int y2, uint color)
     {
-        sendDrawMessage(DrawType.BOX, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+        color = convertColor(color);
+        glBegin(GL_LINE_LOOP);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x, y2);
+        glVertex2f(x2, y2);
+        glVertex2f(x2, y);
+        glEnd();
+        drc++;
     }
     void gfill(int page, int x, int y, int x2, int y2, uint color)
     {
-        sendDrawMessage(DrawType.FILL, cast(byte)page, cast(short)x, cast(short)y, cast(short)x2, cast(short)y2, color);
+        color = convertColor(color);
+        glBegin(GL_QUADS);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x, y2);
+        glVertex2f(x2, y2);
+        glVertex2f(x2, y);
+        glEnd();
+        drc++;
     }
     void gcls(int page, uint color)
     {
-        sendDrawMessage(DrawType.FILL, cast(byte)page, 0, 0, cast(short)(width - 1), cast(short)(height - 1), color);
+        gfill(page, 0, 0, width - 1, height - 1, color);
     }
     void gpaint(int page, int x, int y, uint color)
     {

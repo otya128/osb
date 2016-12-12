@@ -302,7 +302,6 @@ class PetitComputer
         {
             console.loadFontTable();
         }
-        display(0);
         writeln("OK");
     }
     int currentScreenWidth;
@@ -316,6 +315,7 @@ class PetitComputer
         displaynum = number;
 
         console.display(number);
+        graphic.display(number);
     }
     SDL_Renderer* renderer;
     int vsyncFrame;
@@ -703,14 +703,6 @@ class PetitComputer
                     console.render();
 
                     graphic.render();
-                    if(xscreenmode == 2)
-                    {
-                        chScreen(0, 0, 320, 480);
-                    }
-                    if(xscreenmode == 1)
-                    {
-                        chScreen(0, 240, 400, 240);
-                    }
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
@@ -940,6 +932,7 @@ class PetitComputer
             renderCondition.wait();
         }
         graphic.initVM();
+        display(0);
         xscreen(0, 512, 4);
         auto startTicks = SDL_GetTicks();
         Parser parser;
@@ -1093,11 +1086,12 @@ class PetitComputer
             {
                 uint elapse;
                 startTicks = SDL_GetTicks();
+                int oldmaincnt = maincnt;
                 //do
                 {
                     try
                     {
-                        for(int i = 0; i < 128 && !vsyncFrame && running; i++)
+                        for(int i = 0; !quit && maincnt == oldmaincnt && !vsyncFrame && running; i++)
                         {
                             //writefln("%04X:%s", vm.pc, vm.getCurrent);
                             running = vm.runStep();
