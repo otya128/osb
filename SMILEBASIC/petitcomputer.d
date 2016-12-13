@@ -1170,6 +1170,7 @@ class PetitComputer
                     break;
                 }
             }
+            graphic.updateVM();
         } while(directMode);
         scope(exit)
         {
