@@ -351,8 +351,8 @@ class Graphic
             paint(x, y, color, dx, dy, dx2, dy2);
             if(dx == int.max) return;
             int h = dy2 - dy;
-            glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, width, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * width));
-            //        glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
+            //glTexSubImage2D(GL_TEXTURE_2D , 0, 0, dy, width, h, tf, GL_UNSIGNED_BYTE, pixels + (dy * width));
+            glDrawPixels(512, dy2, tf, GL_UNSIGNED_BYTE, buffer.ptr);
         }
     }
     Paint paint;
