@@ -1091,7 +1091,7 @@ class PetitComputer
                 {
                     try
                     {
-                        for(int i = 0; !quit && maincnt == oldmaincnt && !vsyncFrame && running; i++)
+                        for(int i = 0; !quit /*&& maincnt == oldmaincnt */&& !vsyncFrame && running; i++)
                         {
                             //writefln("%04X:%s", vm.pc, vm.getCurrent);
                             running = vm.runStep();
@@ -1151,7 +1151,15 @@ class PetitComputer
                 } //while(elapse <= 1000 / 60);
                 if(vsyncFrame)
                 {
-                    SDL_Delay(cast(uint)(vsyncFrame * frame));
+                    //FIXME:VSYNC IS NOT WAIT
+                    //A=MAINCNT:WAIT 50:A=MAINCNT-A->A=50
+                    //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
+                    auto endmaincnt = maincnt + vsyncFrame;
+                    graphic.updateVM();
+                    while (maincnt < endmaincnt)
+                    {
+                        SDL_Delay(cast(uint)(frame));
+                    }
                     vsyncFrame = 0;
                 }
                 //maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
