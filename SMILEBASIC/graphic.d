@@ -554,12 +554,49 @@ class Graphic
     }
     int gspoit(int page, int x, int y)
     {
-        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
         int ui;
         //flush
-        updateVM();
+        //if (drc)
+        //    glFinish();
+        //drc = 0;
         glReadPixels(x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &ui);
         return ui;
+    }
+    void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
+    {
+        if (w * h > array.length)
+            return;
+        gsave(savepage, x, y, w, h, cast(int[])paint.buffer, flag);
+        for (int i = 0; i < array.length; i++)
+        {
+            array[i] = cast(double)cast(int)paint.buffer[i];
+        }
+    }
+    void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
+    {
+        if (w * h > array.length)
+            return;
+        //endian?
+        if (false && flag)//0=32bit
+        {
+            glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, array.ptr);
+        }
+        else
+        {
+            glReadPixels(x, y, w, h, GL_BGRA, GL_UNSIGNED_BYTE, array.ptr);
+        }
+        if (flag)
+        {
+            //ARRRRRGGGGGBBBBB
+            for (int i = 0; i < array.length; i++)
+            {
+                auto a = (array[i] & 0xFF000000) >> 24;
+                auto r = (array[i] & 0x00FF0000) >> 16;
+                auto g = (array[i] & 0x0000FF00) >> 8;
+                auto b = (array[i] & 0x000000FF);
+                array[i] = (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
+            }
+        }
     }
     int gprio;
     void render()

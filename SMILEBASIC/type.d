@@ -388,5 +388,14 @@ class Array(T)
         array ~= v;
         dim[0]++;
     }
+    @property void length(int size)
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array.length = size;
+        dim[0] = size;
+    }
 
 }

@@ -538,6 +538,55 @@ class BuiltinFunction
     {
         return p.graphic.gspoit(p.graphic.useGRP, x, y);
     }
+    static void GSAVE(PetitComputer p, int savepage, int x, int y, int w, int h, Value ary, int flag)
+    {
+        if (w < 0)
+            throw new OutOfRange("GSAVE", 4);
+        if (h < 0)
+            throw new OutOfRange("GSAVE", 5);
+        if (!ary.isNumberArray)
+            throw new TypeMismatch("GSAVE", 6);
+        int size = w * h;
+        if (ary.type == ValueType.IntegerArray)
+        {
+            if (size > ary.length)
+            {
+                ary.integerArray.length = size;
+            }
+            p.graphic.gsave(savepage, x, y, w, h, ary.integerArray.array, flag);
+        }
+        else if (ary.type == ValueType.DoubleArray)
+        {
+            if (size > ary.length)
+            {
+                ary.doubleArray.length = size;
+            }
+            p.graphic.gsave(savepage, x, y, w, h, ary.doubleArray.array, flag);
+        }   
+    }
+    static void GSAVE(PetitComputer p, int x, int y, int w, int h, Value ary, int flag)
+    {
+        if (w < 0)
+            throw new OutOfRange("GSAVE", 3);
+        if (h < 0)
+            throw new OutOfRange("GSAVE", 4);
+        if (!ary.isNumberArray)
+            throw new TypeMismatch("GSAVE", 5);
+        GSAVE(p, p.graphic.useGRP, x, y, w, h, ary, flag);
+    }
+    static void GSAVE(PetitComputer p, int savepage, Value ary, int flag)
+    {
+        if (!ary.isNumberArray)
+            throw new TypeMismatch("GSAVE", 2);
+        auto writeArea = p.graphic.writeArea[p.displaynum];
+        GSAVE(p, savepage, writeArea.x, writeArea.y, writeArea.w, writeArea.h, ary, flag);
+    }
+    static void GSAVE(PetitComputer p, Value ary, int flag)
+    {
+        if (!ary.isNumberArray)
+            throw new TypeMismatch("GSAVE", 1);
+        GSAVE(p, p.graphic.useGRP, ary, flag);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
