@@ -567,7 +567,6 @@ class PetitComputer
         {
             DerelictSDL2.load();
             DerelictSDL2Image.load();
-            graphic.initGraphicPages();
             sprite.sppage[] = 4;
             bgpage[] = 5;
             SDL_Init(SDL_INIT_VIDEO);
@@ -650,6 +649,7 @@ class PetitComputer
             }
             int loopcnt;
             DerelictGL3.reload();
+            graphic.initGraphicPages();
             //3graphic.initGLGraphicPages();
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

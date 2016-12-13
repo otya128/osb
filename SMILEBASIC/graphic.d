@@ -78,10 +78,7 @@ class Graphic
     {
         width = w;
         height = h;
-        initGraphicPages();/*
-        DrawMessage dm;
-        dm.type = DrawType.INIT;
-        sendDrawMessage(dm);*/
+        initGraphicPages();
     }
     void getSize(out int w, out int h)
     {
@@ -92,18 +89,21 @@ class Graphic
     {
         if (GRP.length != 0 && GRP[0].glTexture/*TODO:gl texture 0?*/)
         {
-            oldGRP = GRP;
+            foreach(g; GRP)
+            {
+                g.deleteGL();
+            }
         }
-        GRP = new GraphicPage[6];
+        else
+        {
+            GRP = new GraphicPage[6];
+        }
         for(int i = 0; i < 4; i++)
         {
             GRP[i] = createEmptyPage();
         }
         GRP[4] = createGRPF(petitcom.spriteFile);
         GRP[5] = createGRPF(petitcom.BGFile);
-    }
-    void initGLGraphicPages()
-    {
         foreach(g; GRP)
         {
             g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
@@ -448,138 +448,6 @@ class Graphic
         chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[usePage[display]].buffer);
     }
-    void draw2()
-    {
-        if (!GRP[0].glTexture)
-        {
-            if (oldGRP.length)
-            {
-                foreach (i; oldGRP)
-                {
-                    i.deleteGL;
-                }
-                oldGRP = null;
-            }
-            initGLGraphicPages();
-        }
-        //betuni kouzoutai demo sonnnani sokudo kawaranasasou
-        auto len = drawMessageLength;
-        GLint old;
-        int oldpage = drawMessageQueue[0].page;
-        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[oldpage].buffer);
-
-        //glAlphaFunc(GL_GEQUAL, 0.0);
-        void chScreen(int x, int y, int w, int h)
-        {
-            glViewport(x, y, w, h);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
-        }
-        DrawType dt;
-        static const size = 255.5f;
-        DrawMessage dm = drawMessageQueue[0];
-        int display = dm.display;
-        chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
-        switch(dm.type)
-        {
-            case DrawType.CLIPWRITE:
-                writeArea[display].x = dm.x;
-                writeArea[display].y = dm.y;
-                writeArea[display].w = dm.w;
-                writeArea[display].h = dm.h;
-                break;
-            case DrawType.PSET:
-                glBegin(GL_POINTS);
-                glColor4ubv(cast(ubyte*)&dm.color);
-                glVertex2f(dm.x, dm.y);
-                glEnd();
-                break;
-            case DrawType.LINE:
-                {
-                    glBegin(GL_LINES);
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    glVertex2f(dm.x, dm.y);
-                    glVertex2f(dm.x2, dm.y2);
-                    //glFlush();
-                    glEnd();
-                }
-                break;
-            case DrawType.FILL:
-                {
-                    glBegin(GL_QUADS);
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    glVertex2f(dm.x, dm.y);
-                    glVertex2f(dm.x, dm.y2);
-                    glVertex2f(dm.x2, dm.y2);
-                    glVertex2f(dm.x2, dm.y);
-                    glEnd();
-                }
-                break;
-            case DrawType.BOX:
-                {
-                    glBegin(GL_LINE_LOOP);
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    glVertex2f(dm.x, dm.y);
-                    glVertex2f(dm.x, dm.y2);
-                    glVertex2f(dm.x2, dm.y2);
-                    glVertex2f(dm.x2, dm.y);
-                    glEnd();
-                }
-                break;
-            case DrawType.PAINT:
-                {
-                    glBindTexture(GL_TEXTURE_2D, GRP[oldpage].glTexture);
-                    if(dt != DrawType.PAINT)
-                    {
-                        glFinish();
-                        //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
-                        glReadPixels(0, 0, width, height, GRP[oldpage].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
-                    }
-                    paint.gpaintBuffer(paint.buffer.ptr, dm.x, dm.y, dm.color, GRP[oldpage].textureFormat);
-                    //gpaintBufferExW(oldpage, dm.x, dm.y, dm.color);
-                }
-                break;
-            case DrawType.CIRCLE1:
-                {
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    drawCircle(dm.x, dm.y, dm.circle.r);
-                }
-                break;
-            case DrawType.CIRCLE2:
-                {
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    drawCircle(dm.x, dm.y, dm.circle.r, dm.circle.startr, dm.circle.endr, dm.circle.flag);
-                }
-                break;
-            case DrawType.PUTCHR:
-                {
-                    glColor4ubv(cast(ubyte*)&dm.color);
-                    glEnable(GL_TEXTURE_2D);
-                    glEnable(GL_ALPHA_TEST);
-                    glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
-                    glMatrixMode(GL_MODELVIEW);
-                    glPushMatrix();
-                    glTranslatef(dm.x, dm.y, 0);
-                    glScalef(dm.character.scalex, dm.character.scaley, 1);
-                    glBegin(GL_QUADS);
-                    drawText(dm.character.text);
-                    glEnd();
-                    glPopMatrix();
-                    glDisable(GL_ALPHA_TEST);
-                    glDisable(GL_TEXTURE_2D);
-                }
-                break;
-            default:
-        }
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_DEPTH_TEST);
-        drc++;
-    }
-    DrawMessage[] drawMessageQueue = new DrawMessage[1];
-    int drawMessageLength;
-    bool drawflag;
     bool flushRequired;
     void updateVM()
     {
@@ -587,44 +455,10 @@ class Graphic
             glFlush();
         drc = 0;
     }
-    void sendDrawMessage(DrawMessage dm)
-    {
-        if (dm.type != DrawType.CLIPWRITE)
-        {
-            dm.color = petitcom.toGLColor(this.GRP[0].textureFormat, dm.color & 0xFFF8F8F8);
-        }
-        drawMessageQueue[0] = dm;
-        draw2();
-    }
-    void sendDrawMessage(DrawType type, byte page, short x, short y, uint color)
-    {
-        DrawMessage dm;
-        dm.type = type;
-        dm.page = page;
-        dm.x = x;
-        dm.y = y;
-        dm.color = color;
-        dm.display = cast(byte)petitcom.displaynum;
-        sendDrawMessage(dm);
-    }
-    void sendDrawMessage(DrawType type, byte page, short x, short y, short x2, short y2, uint color)
-    {
-        DrawMessage dm;
-        dm.type = type;
-        dm.page = page;
-        dm.x = x;
-        dm.y = y;
-        dm.x2 = x2;
-        dm.y2 = y2;
-        dm.color = color;
-        dm.display = cast(byte)petitcom.displaynum;
-        sendDrawMessage(dm);
-    }
     uint convertColor(uint color)
     {
         return petitcom.toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
     }
-    //TODO:範囲チェック
     void gpset(int page, int x, int y, uint color)
     {
         color = convertColor(color);
@@ -674,34 +508,25 @@ class Graphic
     }
     void gpaint(int page, int x, int y, uint color)
     {
-        sendDrawMessage(DrawType.PAINT, cast(byte)page, cast(short)x, cast(short)y, color);
+        color = convertColor(color);
+        updateVM();
+        //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
+        glReadPixels(0, 0, width, height, GRP[useGRP].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
+        paint.gpaintBuffer(paint.buffer.ptr, x, y, color, GRP[useGRP].textureFormat);
     }
     void gcircle(int page, int x, int y, int r, uint color)
     {
-        DrawMessage dm;
-        dm.page = cast(byte)page;
-        dm.x = cast(short)x;
-        dm.y = cast(short)y;
-        dm.circle.r = cast(short)r;
-        dm.color = color;
-        dm.type = DrawType.CIRCLE1;
-        dm.display = cast(byte)petitcom.displaynum;
-        sendDrawMessage(dm);
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        drawCircle(x, y, r);
+        drc++;
     }
     void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
     {
-        DrawMessage dm;
-        dm.page = cast(byte)page;
-        dm.x = cast(short)x;
-        dm.y = cast(short)y;
-        dm.circle.r = cast(short)r;
-        dm.circle.startr = cast(short)startr;
-        dm.circle.endr = cast(short)endr;
-        dm.circle.flag = cast(short)flag;
-        dm.color = color;
-        dm.type = DrawType.CIRCLE2;
-        dm.display = cast(byte)petitcom.displaynum;
-        sendDrawMessage(dm);
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        drawCircle(x, y, r, startr, endr, flag);
+        drc++;
     }
     void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
     {
@@ -710,17 +535,22 @@ class Graphic
     }
     void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
     {
-        DrawMessage dm;
-        dm.page = cast(byte)page;
-        dm.x = cast(short)x;
-        dm.y = cast(short)y;
-        dm.character.scalex = scalex;
-        dm.character.scaley = scaley;
-        dm.character.text = text;
-        dm.color = color;
-        dm.type = DrawType.PUTCHR;
-        dm.display = cast(byte)petitcom.displaynum;
-        sendDrawMessage(dm);
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_ALPHA_TEST);
+        glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glTranslatef(x, y, 0);
+        glScalef(scalex, scaley, 1);
+        glBegin(GL_QUADS);
+        drawText(text);
+        glEnd();
+        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        drc++;
     }
     int gspoit(int page, int x, int y)
     {
@@ -781,14 +611,11 @@ class Graphic
     {
         if (clipmode)
         {
-            DrawMessage dm;
-            dm.display = cast(byte)petitcom.displaynum;
-            dm.x = cast(short)x;
-            dm.y = cast(short)y;
-            dm.w = cast(short)w;
-            dm.h = cast(short)h;
-            dm.type = DrawType.CLIPWRITE;
-            sendDrawMessage(dm);
+            writeArea[petitcom.displaynum].x = x;
+            writeArea[petitcom.displaynum].y = y;
+            writeArea[petitcom.displaynum].w = w;
+            writeArea[petitcom.displaynum].h = h;
+            this.display(petitcom.displaynum);
         }
         else
         {
