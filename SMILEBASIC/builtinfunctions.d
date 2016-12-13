@@ -465,6 +465,10 @@ class BuiltinFunction
     {
         p.graphic.gcolor = color;
     }
+    static int GCOLOR(PetitComputer p)
+    {
+        return p.graphic.gcolor;
+    }
     static void GPRIO(PetitComputer p, int z)
     {
         p.graphic.gprio = z;
