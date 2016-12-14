@@ -199,4 +199,22 @@ class BG
                 }
             }
         }
+    void load(T)(int x, int y, int w, int h, T[] array, int charoff)
+        if (is(T == int) || is(T == double))
+        {
+            int srci;
+            for (int i = x; i < x + w; i++)
+            {
+                for (int j = y; j < y + h; j++)
+                {
+                    srci++;
+                    int index = i + j * width;
+                    if (index < 0)
+                        continue;
+                    auto scr = cast(int)array[srci - 1];
+                    auto chr = ((scr & 0xFFF) + charoff) & /*mask?*/0xFFF;
+                    chip[index].screenData = (scr & 0xF000) | chr;
+                }
+            }
+        }
 }

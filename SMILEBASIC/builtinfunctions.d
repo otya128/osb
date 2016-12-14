@@ -1864,6 +1864,46 @@ class BuiltinFunction
         }
         BGSAVE(p, layer, 0, 0, p.getBG(layer).width, p.getBG(layer).height, ary);
     }
+    static void BGLOAD(PetitComputer p, int layer, int x, int y, int w, int h, Value ary, int bgcharoffset)
+    {
+        if (w < 1)
+        {
+            throw new OutOfRange("BGLOAD", 4);
+        }
+        if (h < 1)
+        {
+            throw new OutOfRange("BGLOAD", 4);
+        }
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("BGLOAD", 6);
+        }
+        if (ary.type == ValueType.IntegerArray)
+        {
+            if (w * h > ary.length)
+                ary.integerArray.length = w * h;
+            p.getBG(layer).load(x, y, w, h, ary.integerArray.array, bgcharoffset);
+        }
+        if (ary.type == ValueType.DoubleArray)
+        {
+            if (w * h > ary.length)
+                ary.doubleArray.length = w * h;
+            p.getBG(layer).load(x, y, w, h, ary.doubleArray.array, bgcharoffset);
+        }
+
+    }
+    static void BGLOAD(PetitComputer p, int layer, int x, int y, int w, int h, Value ary)
+    {
+        BGLOAD(p, layer, x, y, w, h, ary, 0);
+    }
+    static void BGLOAD(PetitComputer p, int layer, Value ary)
+    {
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("BGLOAD", 2);
+        }
+        BGLOAD(p, layer, 0, 0, p.getBG(layer).width, p.getBG(layer).height, ary, 0);
+    }
     static void EFCON()
     {
     }
