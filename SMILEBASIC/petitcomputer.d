@@ -376,13 +376,6 @@ class PetitComputer
     {
         glViewport(cast(int)(x * scaleX), cast(int)(y * scaleY), cast(int)(w * scaleX), cast(int)(h * scaleY));
     }
-    void chScreen(int x, int y, int w, int h)
-    {
-        glViewport2(x, y, w, h);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, w, h, 0, 1024, -2048);
-    }
     void chScreen2(int x, int y, int w, int h)
     {
         glViewport2(x, currentDisplay.yoffset - h - y, w, h);
@@ -634,7 +627,6 @@ class PetitComputer
             graphic.GRPFWidth = console.GRPF.surface.w;
             graphic.GRPFHeight = console.GRPF.surface.h;
             console.GRPF.createTexture(renderer, textureScaleMode);
-            chScreen(0, 0, 400, 240);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
             version(Windows)
@@ -683,16 +675,6 @@ class PetitComputer
                 synchronized(renderSync)
                 {
                     glLoadIdentity();
-                    //graphic.draw();
-                    chScreen(0, 0, 400, 240);
-                    if(xscreenmode == 1)
-                    {
-                        chScreen(0, 240, 400, 240);
-                    }
-                    if(xscreenmode == 2)
-                    {
-                        chScreen(0, 0, 320, 480);
-                    }
                     {
                         ubyte r, g, b, a;
                         RGBRead(petitcomBackcolor, r, g, b, a);
@@ -731,10 +713,6 @@ class PetitComputer
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
-                    if(xscreenmode == 1)
-                    {
-                        chScreen(0, 240, 400, 240);
-                    }
                     //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
                     //とりあえず一番楽な方法
                     //これだと同一Zでスプライトが一番下に来てしまうのでZ値を補正する必要がある->やった

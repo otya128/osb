@@ -294,7 +294,6 @@ class Console
         {
             glMatrixMode(GL_MODELVIEW);
             glLoadIdentity();
-            petitcom.chScreen(0, 0, 400, 240);
         }
         synchronized(this)
         {
