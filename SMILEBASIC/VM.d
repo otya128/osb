@@ -1719,7 +1719,18 @@ class RestoreExprCode : Code
         vm.pop(label);
         if(!label.isString)
             throw new TypeMismatch();
-        datatable.dataIndex = datatable.label[label.stringValue];
+        if (label.stringValue in datatable.label)
+        {
+            datatable.dataIndex = datatable.label[label.stringValue];
+        }
+        else if (label.stringValue in vm.currentSlot.globalDataTable.label)
+        {
+            datatable.dataIndex = vm.currentSlot.globalDataTable.label[label.stringValue];
+        }
+        else
+        {
+            throw new UndefinedLabel();
+        }
     }
     override string toString(VM vm)
     {
