@@ -340,19 +340,19 @@ class Array(T)
     ref T opIndex(int i1, int i2)
     {
         if(dimCount != 2) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[1] || i2 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] + i2];
     }
     ref T opIndex(int i1, int i2, int i3)
     {
         if(dimCount != 3) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[2] || i2 >= dim[1] || i3 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] * dim[1] + i2 * dim[0] + i3];
     }
     ref T opIndex(int i1, int i2, int i3, int i4)
     {
         if(dimCount != 4) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[3] || i2 >= dim[2] || i3 >= dim[1] || i4 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1];//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3];
     }
     T opIndexAssign(T v, int i1)
@@ -364,19 +364,19 @@ class Array(T)
     T opIndexAssign(T v, int i1, int i2)
     {
         if(dimCount != 2) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[1] || i2 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] + i2] = v;
     }
     T opIndexAssign(T v, int i1, int i2, int i3)
     {
         if(dimCount != 3) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[2] || i2 >= dim[1] || i3 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1 * dim[0] * dim[1] + i2 * dim[0] + i3] = v;
     }
     T opIndexAssign(T v, int i1, int i2, int i3, int i4)
     {
         if(dimCount != 4) throw new SyntaxError();
-        if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2] && i4 >= dim[3]) throw new SubscriptOutOfRange();
+        if(i1 >= dim[3] || i2 >= dim[2] || i3 >= dim[1] || i4 >= dim[0]) throw new SubscriptOutOfRange();
         return array[i1] = v;//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3] = v;
     }
     void push(T v)
