@@ -1920,21 +1920,45 @@ class BuiltinFunction
     {
         auto args = retro(rawargs);
         //文字列はリテラル渡すとType mismatch
-        if(args.length > 5 || args.length < 2 || !args[0].isArray)
+        if(args.length > 5 || args.length < 2)
         {
             throw new IllegalFunctionCall("COPY");
+        }
+        if (!args[0].isArray)
+        {
+            throw new TypeMismatch("COPY", 1);
         }
         //COPY string, string->文字列COPY
         //COPY array, string->DATA COPY
         Value dst = args[0];
         int dstoffset = 0;
-        int srcoffset = 0;
-        int len = dst.length;//省略時はコピー元の末尾まで
-        if(args[1].isString && !args[0].isString)
+        int sourceArrayIndex = 1;
+        if (!args[1].isArray)
         {
+            if (!args[1].isNumber)
+                throw new TypeMismatch("COPY", 2);
+            dstoffset = args[1].castInteger;
+            sourceArrayIndex = 2;
+        }
+
+        int srcoffset = 0;
+        int len = dst.length - dstoffset;//省略時はコピー元の末尾まで
+        if(args[sourceArrayIndex].isString && !args[0].isString)
+        {
+            if (args.length > sourceArrayIndex + 2)
+            {
+                throw new SyntaxError();//syntax error?why???
+            }
+            if (args.length == sourceArrayIndex + 2)
+            {
+                if (!args[sourceArrayIndex + 1].isNumber)
+                    throw new TypeMismatch("COPY", sourceArrayIndex + 2);
+                len = args[sourceArrayIndex + 1].castInteger;
+            }
+
             //DATAから
             VM vm = p.vm;
-            vm.restoreData(args[1].castString);
+            vm.restoreData(args[sourceArrayIndex].castString);
             for(int i = 0; i < len; i++)
             {
                 Value data = vm.readData();
@@ -1942,7 +1966,42 @@ class BuiltinFunction
             }
             return;
         }
-        throw new IllegalFunctionCall("COPY (Not implemented error)");
+        if (!args[sourceArrayIndex].isArray)
+        {
+            throw new TypeMismatch("COPY", sourceArrayIndex + 1);
+        }
+        Value src = args[sourceArrayIndex];
+        if (args.length > sourceArrayIndex + 3)
+        {
+            throw new SyntaxError();//syntax error?why???
+        }
+        if (args.length == sourceArrayIndex + 3)
+        {
+            if (!args[sourceArrayIndex + 1].isNumber)
+                throw new TypeMismatch("COPY", sourceArrayIndex + 2);
+            srcoffset = args[sourceArrayIndex + 1].castInteger;
+            if (!args[sourceArrayIndex + 2].isNumber)
+                throw new TypeMismatch("COPY", sourceArrayIndex + 3);
+            len = args[sourceArrayIndex + 2].castInteger;
+        }
+        else if (args.length == sourceArrayIndex + 2)
+        {
+            if (!args[sourceArrayIndex + 1].isNumber)
+                throw new TypeMismatch("COPY", sourceArrayIndex + 2);
+            len = args[sourceArrayIndex + 1].castInteger;
+        }
+        else
+        {
+            for(int i = 0; i < len; i++)
+            {
+                dst[i + dstoffset] = src[i + srcoffset];
+            }
+            return;
+        }
+        for(int i = 0; i < len; i++)
+        {
+            dst[i + dstoffset] = src[i + srcoffset];
+        }
     }
     @BasicName("LOAD")
     static Value LOAD1(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
