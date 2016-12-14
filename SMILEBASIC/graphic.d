@@ -615,6 +615,14 @@ class Graphic
         auto b = (argb32 & 0x000000FF);
         return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
     }
+    int RGBA16ToARGB32Color(int rgba16)
+    {
+        auto a = (rgba16 & 0b0000000000000001) == 1 ? 0xFF000000 : 0;
+        auto r = (rgba16 & 0b1111100000000000) >> 11;
+        auto g = (rgba16 & 0b0000011111000000) >> 6;
+        auto b = (rgba16 & 0b0000000000111110) >> 1;
+        return a | r << 19 | g << 11 | b << 3;
+    }
     void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
     {
         if (w * h > array.length)
@@ -630,7 +638,7 @@ class Graphic
             //ARRRRRGGGGGBBBBB
             for (int i = 0; i < array.length; i++)
             {
-                paint.buffer[i] = ARGB32ToRGBA16Color(array[i]);
+                paint.buffer[i] = RGBA16ToARGB32Color(array[i]);
             }
             glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , paint.buffer.ptr);
         }
