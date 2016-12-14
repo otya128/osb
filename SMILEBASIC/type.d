@@ -388,6 +388,17 @@ class Array(T)
         array ~= v;
         dim[0]++;
     }
+    T pop()
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        auto last = array[$ - 1];
+        array.length--;
+        dim[0]--;
+        return last;
+    }
     @property void length(int size)
     {
         if (dimCount != 1)

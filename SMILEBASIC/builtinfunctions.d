@@ -2526,6 +2526,36 @@ class BuiltinFunction
                 throw new TypeMismatch();
         }
     }
+    static Value POP(Value ary)
+    {
+        if (!ary.isArray)
+        {
+            throw new TypeMismatch("POP", 1);
+        }
+        if (ary.length == 0)
+        {
+            throw new SubscriptOutOfRange("POP");
+        }
+        switch (ary.type)
+        {
+            case ValueType.String:
+                throw new IllegalFunctionCall("NOTIMPL:POP string");
+            case ValueType.IntegerArray:
+                if (ary.integerArray.dimCount != 1)
+                    throw new TypeMismatch("POP", 1);
+                return Value(ary.integerArray.pop());
+            case ValueType.DoubleArray:
+                if (ary.doubleArray.dimCount != 1)
+                    throw new TypeMismatch("POP", 1);
+                return Value(ary.doubleArray.pop());
+            case ValueType.StringArray:
+                if (ary.stringArray.dimCount != 1)
+                    throw new TypeMismatch("POP", 1);
+                return Value(ary.stringArray.pop());
+            default:
+                throw new TypeMismatch();
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
