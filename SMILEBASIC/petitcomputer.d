@@ -718,7 +718,7 @@ class PetitComputer
                     if(currentDisplay.rect.length > 1 && BGvisibles[1])
                     {
                         chRenderingDisplay(1);
-                        glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage[0]].glTexture);
+                        glBindTexture(GL_TEXTURE_2D, graphic.GRP[bgpage[1]].glTexture);
                         for(int i = bgmax; i < bg.length; i++)
                         {
                             bg[i].render(1, currentDisplay.rect[1].w, currentDisplay.rect[1].h);
