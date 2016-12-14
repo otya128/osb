@@ -392,7 +392,7 @@ class PetitComputer
         glViewport2(x + currentDisplay.rect[i].x, currentDisplay.yoffset - h - y - currentDisplay.rect[i].y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        glOrtho(x, x + w, y + h, y, 1024, -2048);
+        glOrtho(x, x + w - 1, y + h - 1, y, 1024, -2048);
     }
     Button[] buttonTable;
     Sprite sprite;

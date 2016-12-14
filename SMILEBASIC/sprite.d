@@ -701,6 +701,7 @@ class Sprite
                         disw = petitcom.currentDisplay.rect[1].w / 2;
                         disw2 = petitcom.currentDisplay.rect[1].w;
                         petitcom.chRenderingDisplay(1, clipRect[1].x, clipRect[1].y, clipRect[1].w, clipRect[1].h);
+                        glMatrixMode(GL_MODELVIEW);
                         aspect = disw2 / dish2;
                         texture = petitcom.graphic.GRP[sppage[1]].glTexture;
                         glBindTexture(GL_TEXTURE_2D, texture);
@@ -715,6 +716,7 @@ class Sprite
                             disw = petitcom.currentDisplay.rect[0].w / 2;
                             disw2 = petitcom.currentDisplay.rect[0].w;
                             petitcom.chRenderingDisplay(0, clipRect[0].x, clipRect[0].y, clipRect[0].w, clipRect[0].h);
+                            glMatrixMode(GL_MODELVIEW);
                             aspect = disw2 / dish2;
                             texture = petitcom.graphic.GRP[sppage[0]].glTexture;
                             glBindTexture(GL_TEXTURE_2D, texture);
