@@ -576,6 +576,12 @@ class Graphic
     {
         if (w * h > array.length)
             return;
+        auto oldPage = useGRP;
+        useGRP = savepage;
+        scope (exit)
+        {
+            useGRP = oldPage;
+        }
         //endian?
         if (false && flag)//0=32bit
         {
