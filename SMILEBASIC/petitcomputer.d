@@ -172,6 +172,7 @@ struct Display
 {
     SDL_Rect[] rect;
     Size windowSize;
+    int yoffset;
 }
 class RingBuffer(T)
 {
@@ -384,7 +385,7 @@ class PetitComputer
     }
     void chScreen2(int x, int y, int w, int h)
     {
-        glViewport2(x, currentDisplay.windowSize.height - h - y, w, h);
+        glViewport2(x, currentDisplay.yoffset - h - y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, w, h, 0, 1024, -2048);
@@ -395,7 +396,7 @@ class PetitComputer
     }
     void chRenderingDisplay(int i, int x, int y, int w, int h)
     {
-        glViewport2(x + currentDisplay.rect[i].x, currentDisplay.windowSize.height - h - y - currentDisplay.rect[i].y, w, h);
+        glViewport2(x + currentDisplay.rect[i].x, currentDisplay.yoffset - h - y - currentDisplay.rect[i].y, w, h);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(x, x + w, y + h, y, 1024, -2048);
@@ -456,6 +457,7 @@ class PetitComputer
                 currentDisplay = Display([display0, display1], Size(std.algorithm.max(resolutionTable[gamepad].width, resolutionTable[tv].width), resolutionTable[gamepad].height + resolutionTable[tv].height));
                 xscreenmode = 4;
             }
+            currentDisplay.yoffset = currentDisplay.windowSize.height;
             int grpw, grph;
             graphic.getSize(grpw, grph);
             //1024*1024?
@@ -747,8 +749,10 @@ class PetitComputer
                     int mousex, mousey;
                     if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
                     {
+                        int ww, wh;
+                        SDL_GetWindowSize(window, &ww, &wh);
                         mousex = cast(int)(mousex / scaleX);
-                        mousey = cast(int)(mousey / scaleY);
+                        mousey = cast(int)(mousey / scaleY) - (wh - currentDisplay.yoffset);
                         import std.algorithm.comparison : clamp;
                         auto old = touchPosition;
                         if (x.mode != XMode.WIIU)
@@ -858,6 +862,12 @@ class PetitComputer
                                 sendKey(key);
                             }
                             keybuffermutex.unlock();
+                            break;
+                        case SDL_MOUSEWHEEL:
+                            synchronized (renderSync)
+                            {
+                                currentDisplay.yoffset -= event.wheel.y * 10;
+                            }
                             break;
                         default:
                             break;
