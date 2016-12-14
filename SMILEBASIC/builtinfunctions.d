@@ -1828,6 +1828,42 @@ class BuiltinFunction
     {
         return p.getBG(layer).get(x, y, flag);
     }
+    static void BGSAVE(PetitComputer p, int layer, int x, int y, int w, int h, Value ary)
+    {
+        if (w < 1)
+        {
+            throw new OutOfRange("BGSAVE", 4);
+        }
+        if (h < 1)
+        {
+            throw new OutOfRange("BGSAVE", 4);
+        }
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("BGSAVE", 6);
+        }
+        if (ary.type == ValueType.IntegerArray)
+        {
+            if (w * h > ary.length)
+                ary.integerArray.length = w * h;
+            p.getBG(layer).save(x, y, w, h, ary.integerArray.array);
+        }
+        if (ary.type == ValueType.DoubleArray)
+        {
+            if (w * h > ary.length)
+                ary.doubleArray.length = w * h;
+            p.getBG(layer).save(x, y, w, h, ary.doubleArray.array);
+        }
+        
+    }
+    static void BGSAVE(PetitComputer p, int layer, Value ary)
+    {
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("BGSAVE", 2);
+        }
+        BGSAVE(p, layer, 0, 0, p.getBG(layer).width, p.getBG(layer).height, ary);
+    }
     static void EFCON()
     {
     }

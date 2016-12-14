@@ -11,6 +11,10 @@ struct BGChip
     {
         return i;
     }
+    void screenData(int a)
+    {
+        i = a;
+    }
 }
 //912枚まで描画されるみたい
 //->899枚まで描画してその後は一番下のみ描画の様子
@@ -179,4 +183,20 @@ class BG
             return chip[x + y * width].screenData;
         }
     }
+    void save(T)(int x, int y, int w, int h, T[] array)
+        if (is(T == int) || is(T == double))
+        {
+            int desti;
+            for (int i = x; i < x + w; i++)
+            {
+                for (int j = y; j < y + h; j++)
+                {
+                    desti++;
+                    int index = i + j * width;
+                    if (index < 0)
+                        continue;
+                    array[desti - 1] = cast(int)chip[index].screenData;
+                }
+            }
+        }
 }
