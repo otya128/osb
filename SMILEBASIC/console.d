@@ -284,7 +284,7 @@ class Console
     void adjustScreen()
     {
         glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
+        glPushMatrix();
         glScalef(fontWidth / 8f, fontHeight / 8f, 1);
     }
     void render()
@@ -293,7 +293,7 @@ class Console
         scope (exit)
         {
             glMatrixMode(GL_MODELVIEW);
-            glLoadIdentity();
+            glPopMatrix();
         }
         synchronized(this)
         {
