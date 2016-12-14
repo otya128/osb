@@ -577,7 +577,14 @@ class Graphic
         if (w * h > array.length)
             return;
         auto oldPage = useGRP;
-        useGRP = savepage;
+        if (savepage == -1)
+        {
+            glBindFramebufferEXT(GL_FRAMEBUFFER, petitcom.console.GRPF.buffer);
+        }
+        else
+        {
+            useGRP = savepage;
+        }
         scope (exit)
         {
             useGRP = oldPage;

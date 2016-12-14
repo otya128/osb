@@ -649,6 +649,7 @@ class PetitComputer
             }
             int loopcnt;
             DerelictGL3.reload();
+            console.GRPF.createBuffer();
             graphic.initGraphicPages();
             //3graphic.initGLGraphicPages();
             //glEnable(GL_BLEND);
