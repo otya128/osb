@@ -741,51 +741,33 @@ class PetitComputer
                     glDepthMask(GL_TRUE);
                     glDisable(GL_BLEND);
                     SDL_GL_SwapWindow(window);
-                }
-                auto renderticks = (SDL_GetTicks() - profile);
-                if(renderprofile) writeln(renderticks);
-                int mousex, mousey;
-                if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
-                {
-                    mousex = cast(int)(mousex / scaleX);
-                    mousey = cast(int)(mousey / scaleY);
-                    import std.algorithm.comparison : clamp;
-                    auto old = touchPosition;
-                    if (x.mode != XMode.WIIU)
+                    auto renderticks = (SDL_GetTicks() - profile);
+                    if(renderprofile) writeln(renderticks);
+                    int mousex, mousey;
+                    if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
                     {
-                        if (mousey >= screenHeight)
+                        mousex = cast(int)(mousex / scaleX);
+                        mousey = cast(int)(mousey / scaleY);
+                        import std.algorithm.comparison : clamp;
+                        auto old = touchPosition;
+                        if (x.mode != XMode.WIIU)
                         {
-                            mousey -= screenHeight;
-                            mousex -= (screenWidth - screenWidthDisplay1) / 2;
-                        }
-                        mousex = mousex.clamp(5, 314);
-                        mousey = mousey.clamp(5, 234);
-                        touchPosition = Touch(old.tm + 1, mousex, mousey);
-                    }
-                    else
-                    {
-                        //!!WiiU
-                        if (xscreenmode == 3)//XSCREEN 5
-                        {
-                            auto w = currentDisplay.rect[0].w;
-                            auto h = currentDisplay.rect[0].h;
-                            auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
-                            auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
-                            auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
-                            auto gamepady = cast(int)(mousey * (480 / cast(float)h));
-                            touchPosition = Touch(old.tm + 1,
-                                                  x3DS.clamp(5, 314), y3DS.clamp(5, 234),
-                                                  gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                  mousex.clamp(8, w - 13), mousey.clamp(8, h - 9));
+                            if (mousey >= screenHeight)
+                            {
+                                mousey -= screenHeight;
+                                mousex -= (screenWidth - screenWidthDisplay1) / 2;
+                            }
+                            mousex = mousex.clamp(5, 314);
+                            mousey = mousey.clamp(5, 234);
+                            touchPosition = Touch(old.tm + 1, mousex, mousey);
                         }
                         else
                         {
-                            auto w = currentDisplay.rect[1].w;
-                            auto h = currentDisplay.rect[1].h;
-                            mousex -= currentDisplay.rect[1].x;
-                            mousey -= currentDisplay.rect[1].y;
-                            if (mousex >= 0 && mousey >= 0)
+                            //!!WiiU
+                            if (xscreenmode == 3)//XSCREEN 5
                             {
+                                auto w = currentDisplay.rect[0].w;
+                                auto h = currentDisplay.rect[0].h;
                                 auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
                                 auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
                                 auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
@@ -793,16 +775,34 @@ class PetitComputer
                                 touchPosition = Touch(old.tm + 1,
                                                       x3DS.clamp(5, 314), y3DS.clamp(5, 234),
                                                       gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                      mousex.clamp(12, w - 13), mousey.clamp(8, h - 9));
+                                                      mousex.clamp(8, w - 13), mousey.clamp(8, h - 9));
+                            }
+                            else
+                            {
+                                auto w = currentDisplay.rect[1].w;
+                                auto h = currentDisplay.rect[1].h;
+                                mousex -= currentDisplay.rect[1].x;
+                                mousey -= currentDisplay.rect[1].y;
+                                if (mousex >= 0 && mousey >= 0)
+                                {
+                                    auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
+                                    auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
+                                    auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
+                                    auto gamepady = cast(int)(mousey * (480 / cast(float)h));
+                                    touchPosition = Touch(old.tm + 1,
+                                                          x3DS.clamp(5, 314), y3DS.clamp(5, 234),
+                                                          gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
+                                                          mousex.clamp(12, w - 13), mousey.clamp(8, h - 9));
+                                }
                             }
                         }
                     }
-                }
-                else
-                {
-                    if (touchPosition.tm)
+                    else
                     {
-                        touchPosition = Touch(0, mousex, mousey);
+                        if (touchPosition.tm)
+                        {
+                            touchPosition = Touch(0, mousex, mousey);
+                        }
                     }
                 }
                 while (SDL_PollEvent(&event))
