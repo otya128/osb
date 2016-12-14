@@ -590,13 +590,62 @@ class Graphic
             //ARRRRRGGGGGBBBBB
             for (int i = 0; i < array.length; i++)
             {
-                auto a = (array[i] & 0xFF000000) >> 24;
-                auto r = (array[i] & 0x00FF0000) >> 16;
-                auto g = (array[i] & 0x0000FF00) >> 8;
-                auto b = (array[i] & 0x000000FF);
-                array[i] = (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
+                array[i] = ARGB32ToRGBA16Color(array[i]);
             }
         }
+    }
+    int ARGB32ToRGBA16Color(int argb32)
+    {
+        auto a = (argb32 & 0xFF000000) >> 24;
+        auto r = (argb32 & 0x00FF0000) >> 16;
+        auto g = (argb32 & 0x0000FF00) >> 8;
+        auto b = (argb32 & 0x000000FF);
+        return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
+    }
+    void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
+    {
+        if (w * h > array.length)
+            return;
+        if (!copymode)
+        {
+            glEnable(GL_ALPHA_TEST);
+        }
+        glRasterPos2i(x, y);
+        //convertColor
+        if (flag)
+        {
+            //ARRRRRGGGGGBBBBB
+            for (int i = 0; i < array.length; i++)
+            {
+                paint.buffer[i] = ARGB32ToRGBA16Color(array[i]);
+            }
+            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , paint.buffer.ptr);
+        }
+        else
+        {
+            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , array.ptr);
+        }
+        if (!copymode)
+        {
+            glDisable(GL_ALPHA_TEST);
+        }
+    }
+    void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
+    {
+        for (int i = 0; i < array.length; i++)
+        {
+            paint.buffer[i] = cast(int)array[i];
+        }
+        gload(x, y, w, h, cast(int[])paint.buffer, flag, copymode);
+    }
+    void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
+        if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
+    {
+        for (int i = 0; i < array.length; i++)
+        {
+            paint.buffer[i] = cast(int)palette[cast(int)array[i]];
+        }
+        gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
     }
     int gprio;
     void render()

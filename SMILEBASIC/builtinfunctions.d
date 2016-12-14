@@ -591,6 +591,79 @@ class BuiltinFunction
             throw new TypeMismatch("GSAVE", 1);
         GSAVE(p, p.graphic.useGRP, ary, flag);
     }
+    static void GLOAD(PetitComputer p, int x, int y, int w, int h, Value ary, Value flagOrPalette, int copymode)
+    {
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("GLOAD", 5);
+        }
+        if (w < 0)
+            throw new OutOfRange("GLOAD", 3);
+        if (h < 0)
+            throw new OutOfRange("GLOAD", 4);
+        if (w * h > ary.length)
+        {
+            throw new SubscriptOutOfRange("GLOAD", 5);
+        }
+        if (flagOrPalette.isNumber)
+        {
+            int colorflag = flagOrPalette.castInteger;
+            if (ary.type == ValueType.IntegerArray)
+            {
+                p.graphic.gload(x, y, w, h, ary.integerArray.array, colorflag, copymode);
+            }
+            if (ary.type == ValueType.DoubleArray)
+            {
+                p.graphic.gload(x, y, w, h, ary.doubleArray.array, colorflag, copymode);
+            }
+        }
+        else if (flagOrPalette.isNumberArray)
+        {
+            if (ary.type == ValueType.IntegerArray)
+            {
+                if (flagOrPalette.type == ValueType.IntegerArray)
+                {
+                    p.graphic.gloadPalette(x, y, w, h, ary.integerArray.array, flagOrPalette.integerArray.array, copymode);
+                }
+                if (flagOrPalette.type == ValueType.DoubleArray)
+                {
+                    p.graphic.gloadPalette(x, y, w, h, ary.integerArray.array, flagOrPalette.doubleArray.array, copymode);
+                }
+            }
+            if (ary.type == ValueType.DoubleArray)
+            {
+                if (flagOrPalette.type == ValueType.IntegerArray)
+                {
+                    p.graphic.gloadPalette(x, y, w, h, ary.doubleArray.array, flagOrPalette.integerArray.array, copymode);
+                }
+                if (flagOrPalette.type == ValueType.DoubleArray)
+                {
+                    p.graphic.gloadPalette(x, y, w, h, ary.doubleArray.array, flagOrPalette.doubleArray.array, copymode);
+                }
+            }
+        }
+        else
+        {
+            throw new TypeMismatch("GLOAD", 6);
+        }
+    }
+    static void GLOAD(PetitComputer p, Value ary, Value flagOrPalette, int copymode)
+    {
+        if (!ary.isNumberArray)
+        {
+            throw new TypeMismatch("GLOAD", 1);
+        }
+        auto writeArea = p.graphic.writeArea[p.displaynum];
+        if (writeArea.w * writeArea.h > ary.length)
+        {
+            throw new SubscriptOutOfRange("GLOAD", 1);
+        }
+        if (!flagOrPalette.isNumber && !flagOrPalette.isNumberArray)
+        {
+            throw new TypeMismatch("GLOAD", 2);
+        }
+        GLOAD(p, writeArea.x, writeArea.y, writeArea.w, writeArea.h, ary, flagOrPalette, copymode);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
