@@ -347,7 +347,7 @@ class Array(T)
     {
         if(dimCount != 3) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
-        return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3];
+        return array[i1 * dim[0] * dim[1] + i2 * dim[0] + i3];
     }
     ref T opIndex(int i1, int i2, int i3, int i4)
     {
@@ -371,7 +371,7 @@ class Array(T)
     {
         if(dimCount != 3) throw new SyntaxError();
         if(i1 >= dim[0] && i2 >= dim[1] && i3 >= dim[2]) throw new SubscriptOutOfRange();
-        return array[i1 * dim[0] * dim[1] + i2 * dim[1] + i3] = v;
+        return array[i1 * dim[0] * dim[1] + i2 * dim[0] + i3] = v;
     }
     T opIndexAssign(T v, int i1, int i2, int i3, int i4)
     {
