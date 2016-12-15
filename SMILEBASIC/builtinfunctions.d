@@ -517,7 +517,7 @@ class BuiltinFunction
     }
     static void GPUTCHR(PetitComputer p, int x, int y, Value str, int color)
     {
-        GPUTCHR(p, x, y, str, 1, 1, p.graphic.gcolor);
+        GPUTCHR(p, x, y, str, 1, 1, color);
     }
     static void GPUTCHR(PetitComputer p, int x, int y, Value str, int scalex, int scaley)
     {
