@@ -757,13 +757,11 @@ class Sprite
                 float flipx = cast(float)sprite.scalex, flipy = cast(float)sprite.scaley, flipx2 = x, flipy2 = y;
                 if(sprite.attr & SpriteAttr.hflip)
                 {
-                    flipx = -flipx;
-                    flipx2 = x2 - cast(int)(sprite.homex * sprite.scalex);//sprite.homex * sprite.scalex);
+                    swap(u, u2);
                 }
                 if(sprite.attr & SpriteAttr.vflip)
                 {
-                    flipy = -flipy;
-                    flipy2 = y2 - cast(int)(sprite.homey * sprite.scaley);
+                    swap(v, v2);
                 }
                 version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
