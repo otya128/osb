@@ -91,7 +91,24 @@ class Console
     {
         CSRZs[petitcom.displaynum] = value;
     }
-    int consoleForeColor, consoleBackColor;
+    int[2] foreColors, backColors;
+    @property ref foreColor()
+    {
+        return foreColors[petitcom.displaynum];
+    }
+    @property void foreColor(int value)
+    {
+        foreColors[petitcom.displaynum] = value;
+    }
+    @property ref backColor()
+    {
+        return backColors[petitcom.displaynum];
+    }
+    @property void backColor(int value)
+    {
+        backColors[petitcom.displaynum] = value;
+    }
+
     bool showCursor;
     bool animationCursor;
     SDL_Rect[] fontTable = new SDL_Rect[65536];
@@ -112,14 +129,15 @@ class Console
             consoleWidth = petitcom.screenWidth / fontWidth;
             consoleHeight = petitcom.screenHeight / fontHeight;
             console = new ConsoleCharacter[][][petitcom.currentDisplay.rect.length];
-            consoleForeColor = 15;//#T_WHITE
+            foreColor = 15;//#T_WHITE
+            backColor = 0;
             for(int i = 0; i < console.length; i++)
             {
                 console[i] = new ConsoleCharacter[][petitcom.currentDisplay.rect[i].h / fontHeight];
                 for(int j = 0; j < console[i].length; j++)
                 {
                     console[i][j] = new ConsoleCharacter[petitcom.currentDisplay.rect[i].w / fontWidth];
-                    console[i][j][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+                    console[i][j][] = ConsoleCharacter(0, foreColor, backColor);
                 }
             }
             CSRXs[] = 0;
@@ -201,7 +219,7 @@ class Console
     {
         for(int i = 0; i < consoleC.length; i++)
         {
-            consoleC[i][] = ConsoleCharacter(0, consoleForeColor, consoleBackColor);
+            consoleC[i][] = ConsoleCharacter(0, foreColor, backColor);
         }
         CSRX = 0;
         CSRY = 0;
@@ -383,7 +401,7 @@ class Console
                 else
                 {
                     auto t = min(CSRX + TABSTEP - CSRX % TABSTEP, consoleWidthC - 1);
-                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
+                    consoleC[CSRY][CSRX..t] = ConsoleCharacter(0, foreColor, backColor, attr, CSRZ);
                     CSRX += TABSTEP - (CSRX % TABSTEP) - 1;
                     if(CSRX + 1 >= consoleWidthC)
                     {
@@ -394,7 +412,7 @@ class Console
             }
             else if(c != '\n')
             {
-                consoleC[CSRY][CSRX] = ConsoleCharacter(c, consoleForeColor, consoleBackColor, attr, CSRZ);
+                consoleC[CSRY][CSRX] = ConsoleCharacter(c, foreColor, backColor, attr, CSRZ);
                 tab = tab ? 2 : 0;
             }
             CSRX++;
@@ -418,6 +436,6 @@ class Console
             consoleC[i] = consoleC[i + 1];
         }
         consoleC[consoleHeightC - 1] = tmp;
-        tmp[] = ConsoleCharacter(0, consoleForeColor, consoleBackColor, attr, CSRZ);
+        tmp[] = ConsoleCharacter(0, foreColor, backColor, attr, CSRZ);
     }
 }

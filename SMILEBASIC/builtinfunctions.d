@@ -245,10 +245,10 @@ class BuiltinFunction
     }
     static void COLOR(PetitComputer p, DefaultValue!int fore, DefaultValue!(int, false) back)
     {
-        fore.setDefaultValue(p.console.consoleForeColor);
-        back.setDefaultValue(p.console.consoleBackColor);
-        p.console.consoleForeColor = cast(int)fore;
-        p.console.consoleBackColor = cast(int)back;
+        fore.setDefaultValue(p.console.foreColor);
+        back.setDefaultValue(p.console.backColor);
+        p.console.foreColor = cast(int)fore;
+        p.console.backColor = cast(int)back;
     }
     static void ATTR(PetitComputer p, int attr)
     {
