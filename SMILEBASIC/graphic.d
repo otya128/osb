@@ -668,7 +668,17 @@ class Graphic
         }
         gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
     }
-    int gprio;
+    int[2] gprios = [1, 1];
+
+    @property ref gprio()
+    {
+        return gprios[petitcom.displaynum];
+    }
+    @property void gprio(int value)
+    {
+        gprios[petitcom.displaynum] = value;
+    }
+
     void render()
     {
         for (int i = 0; i < petitcom.currentDisplay.rect.length; i++)
@@ -681,7 +691,7 @@ class Graphic
         if (!visibles[display])
             return;
         petitcom.chRenderingDisplay(display);
-        float z = gprio;
+        float z = gprios[display];
         glColor3f(1.0, 1.0, 1.0);
         glBindTexture(GL_TEXTURE_2D, GRP[showPage[display]].glTexture);
         glEnable(GL_TEXTURE_2D);
