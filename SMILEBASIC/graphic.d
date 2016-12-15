@@ -668,7 +668,7 @@ class Graphic
         }
         gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
     }
-    int[2] gprios = [1, 1];
+    int[2] gprios = [511, 511];
 
     @property ref gprio()
     {
