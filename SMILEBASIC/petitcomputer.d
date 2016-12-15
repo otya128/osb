@@ -860,7 +860,6 @@ class PetitComputer
         catch(Throwable t)
         {
             writeln(t);
-            readln();
         }
     }
     SDL_Window* window;
@@ -1155,7 +1154,6 @@ class PetitComputer
                 graphic.updateVM();
                 if(quit)
                 {
-                    quit = false;
                     break;
                 }
             }
