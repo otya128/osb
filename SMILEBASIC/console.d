@@ -323,6 +323,15 @@ class Console
                 petitcom.chRenderingDisplay(i);
                 int consoleWidth = petitcom.currentDisplay.rect[i].w / fontWidth;
                 int consoleHeight = petitcom.currentDisplay.rect[i].h / fontHeight;
+                glEnable(GL_TEXTURE_2D);
+
+                glBegin(GL_QUADS);
+                for(int y = 0; y < consoleHeight; y++)
+                    for(int x = 0; x < consoleWidth; x++)
+                    {
+                        drawCharacter(x, y, console[i][y][x]);
+                    }
+                glEnd();
                 glDisable(GL_TEXTURE_2D);
                 glBegin(GL_QUADS);
                 for(int y = 0; y < consoleHeight; y++)
@@ -332,10 +341,10 @@ class Console
                         if(back)
                         {
                             glColor4ubv(cast(ubyte*)&back);
-                            glVertex3f(x * 8, y * 8 + 8, 1024);
-                            glVertex3f(x * 8, y * 8, 1024);
-                            glVertex3f(x * 8 + 8, y * 8, 1024);
-                            glVertex3f(x * 8 + 8, y * 8 + 8, 1024);
+                            glVertex3f(x * 8, y * 8 + 8, console[i][y][x].z);
+                            glVertex3f(x * 8, y * 8, console[i][y][x].z);
+                            glVertex3f(x * 8 + 8, y * 8, console[i][y][x].z);
+                            glVertex3f(x * 8 + 8, y * 8 + 8, console[i][y][x].z);
                         }
                     }
                 if(petitcom.displaynum == i && showCursor && animationCursor)
@@ -346,15 +355,6 @@ class Console
                     glVertex3f((CSRX * 8 + 2), (CSRY * 8), -256);
                     glVertex3f((CSRX * 8 + 2), (CSRY * 8 + 8), -256);
                 }
-                glEnd();
-                glEnable(GL_TEXTURE_2D);
-
-                glBegin(GL_QUADS);
-                for(int y = 0; y < consoleHeight; y++)
-                    for(int x = 0; x < consoleWidth; x++)
-                    {
-                        drawCharacter(x, y, console[i][y][x]);
-                    }
                 glEnd();
             }
         }
