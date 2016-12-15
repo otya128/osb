@@ -1145,7 +1145,7 @@ class PetitComputer
                     //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
                     auto endmaincnt = maincnt + vsyncFrame;
                     graphic.updateVM();
-                    while (maincnt < endmaincnt)
+                    while (maincnt < endmaincnt && !quit)
                     {
                         SDL_Delay(cast(uint)(frame));
                     }
