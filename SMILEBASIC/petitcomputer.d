@@ -573,7 +573,7 @@ class PetitComputer
         {
             writeln(t);
         }
-        bool renderprofile = true;
+        bool renderprofile = false;
         try
         {
             version(Windows)

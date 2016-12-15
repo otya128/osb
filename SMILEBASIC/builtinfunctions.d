@@ -2691,6 +2691,15 @@ class BuiltinFunction
                 throw new TypeMismatch();
         }
     }
+    static void BACKTRACE(PetitComputer p)
+    {
+        auto bt = p.vm.backTrace;
+        foreach (t; bt)
+        {
+            p.console.print(t.slot, ":\t", t.line, ":\t", t.name, "\n");
+            //TODO:=== Press ENTER ===
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

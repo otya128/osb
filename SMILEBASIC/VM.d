@@ -9,6 +9,12 @@ import std.uni;
 import std.utf;
 import std.conv;
 import std.stdio;
+struct Trace
+{
+    int slot;
+    int line;
+    wstring name;
+}
 struct VMVariable
 {
     int index;
@@ -50,9 +56,12 @@ class VM
     Value[] stack;
     int bp;
     PetitComputer petitcomputer;
+    Trace[] backTraceStack;
+    int traceI;
     this()
     {
         this.stack = new Value[16384];
+        this.backTraceStack = new Trace[16384];
         for(int i = 0; i < slots.length; i++)
         {
             slots[i] = new VMSlot();
@@ -126,6 +135,7 @@ class VM
     void init(PetitComputer petitcomputer)
     {
         this.petitcomputer = petitcomputer;
+        traceI = 0;
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
     }
     void processBreakPoint()
@@ -243,6 +253,18 @@ class VM
     void popDataIndex()
     {
        this.currentSlot.globalDataTable.dataIndex = olddti;
+    }
+    void pushBackTrace(wstring name)
+    {
+        backTraceStack[traceI++] = Trace(currentSlotNumber, currentLocation.line, name);
+    }
+    void popBackTrace()
+    {
+        traceI--;
+    }
+    Trace[] backTrace()
+    {
+        return backTraceStack[0..traceI];
     }
 }
 enum CodeType
@@ -872,6 +894,7 @@ class GosubAddr : Code
     }
     override void execute(VM vm)
     {
+        vm.pushBackTrace("");
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.pc = address - 1;
     }
@@ -908,6 +931,7 @@ class GosubExpr : Code
         vm.pop(label);
         if(label.isString)
         {
+            vm.pushBackTrace(label.castString);
             vm.pushpc;
             int pc;
             if (sc && sc.func)
@@ -953,6 +977,7 @@ class ReturnSubroutine : Code
         vm.pc = pc.integerValue;
         */
         vm.poppc;
+        vm.popBackTrace();
     }
     override string toString(VM vm)
     {
@@ -1269,6 +1294,7 @@ class ReturnFunction : Code
         }
         //vm.pc = pc.integerValue;
         vm.bp = bp.integerValue;
+        vm.popBackTrace();
     }
     override string toString(VM vm)
     {
@@ -1314,6 +1340,7 @@ class CallFunctionCode : Code
         {
             throw new IllegalFunctionCall(name.to!string);
         }
+        vm.pushBackTrace(name);
         //TODO:args
         auto bp = vm.stacki;
         vm.push(Value());
@@ -1421,6 +1448,7 @@ class CallFunctionS : Code
             callBuintinFunc(bfunc, vm);
             return;
         }
+        vm.pushBackTrace(name);
         callFunc(func, vm);
     }
     override string toString(VM vm)
@@ -1543,6 +1571,7 @@ class OnGosub : OnBase
         int index = on(vm);
         if(index < 0) return;
         vm.pushpc;//vm.push(Value(vm.pc));
+        vm.pushBackTrace("");
         vm.pc = index - 1;
     }
     override string toString(VM vm)
