@@ -844,7 +844,7 @@ class PetitComputer
                         case SDL_MOUSEWHEEL:
                             synchronized (renderSync)
                             {
-                                currentDisplay.yoffset -= event.wheel.y * 10;
+                                currentDisplay.yoffset -= event.wheel.y * 8;
                             }
                             break;
                         default:
