@@ -1006,6 +1006,7 @@ class Parser
                     if(!e)
                         syntaxError();
                     node = new Goto(e, lex.location);
+                    return node;
                 }
                 break;
             case TokenType.Gosub:
@@ -1019,6 +1020,7 @@ class Parser
                     if(!e)
                         syntaxError();
                     node = new Gosub(e, lex.location);
+                    return node;
                 }
                 break;
             case TokenType.If:
