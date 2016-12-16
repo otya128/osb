@@ -675,7 +675,6 @@ class Sprite
         auto texture = petitcom.graphic.GRP[sppage[0]].glTexture;
         float aspect = disw2 / dish2;
         float z = -0.01f;
-        int spmax = petitcom.xscreenmode == 1 ? this.spmax : 512;//XSCREENが2,3じゃないと下画面は描画しない
         glBindTexture(GL_TEXTURE_2D, texture);
         glEnable(GL_TEXTURE_2D);
         // glDisable(GL_TEXTURE_2D);
