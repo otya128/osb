@@ -124,3 +124,12 @@ class Hardware : SystemVariable
             return Value(cast(int)vm.petitcomputer.hardware);
         }
 }
+class MilliSecond : SystemVariable
+{
+    @property
+        override Value value()
+        {
+            import derelict.sdl2.sdl;
+            return Value(cast(int)SDL_GetTicks());
+        }
+}

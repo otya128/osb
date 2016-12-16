@@ -228,6 +228,7 @@ class Compiler
         addSystemVariable("TABSTEP", new TabStep());
         addSystemVariable("RESULT", new Result());
         addSystemVariable("HARDWARE", new Hardware());
+        addSystemVariable("MILLISEC", new MilliSecond());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {
