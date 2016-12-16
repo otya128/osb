@@ -686,9 +686,15 @@ class Compiler
                     }
                 }
                 goto default;
+            case NodeType.VarRef:
+                {
+                    auto varref = cast(VarRef)expr;
+                    compileExpression(varref.expression, sc);
+                    genCode(new PopVarExpression(sc));
+                }
+                break;
                 default:
-                    stderr.writeln("ERROR");
-                    break;
+                    throw new SyntaxError();
 
         }
     }

@@ -2052,6 +2052,41 @@ class PushVarExpression : Code
     }
 }
 
+class PopVarExpression : Code
+{
+    Scope sc;
+    this(Scope sc)
+    {
+        this.sc = sc;
+    }
+    override void execute(VM vm)
+    {
+        Value valv;
+        vm.pop(valv);
+        Value expr;
+        vm.pop(expr);
+        auto name = valv.castString;
+
+        VMVariable vmv = VMVariable(int.min);
+        if (sc.func)
+        {
+            vmv = sc.func.variable.get(name, vmv);
+            if (vmv.index != int.min)
+            {
+                vm.stack[vm.bp + vmv.index] = expr;
+                return;
+            }
+        }
+        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        if (vmv.index == int.min)
+        {
+            throw new UndefinedVariable();
+        }
+        vm.currentSlot.global[vmv.index] = expr;
+    }
+}
+
+
 class SetX : Code
 {
     wstring func;
