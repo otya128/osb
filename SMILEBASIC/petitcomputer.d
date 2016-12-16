@@ -854,7 +854,7 @@ class PetitComputer
                 long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                 if(delay > 0)
                     SDL_Delay(cast(uint)delay);
-                maincnt++;
+                maincntRender++;
             }
         }
         catch(Throwable t)
@@ -864,7 +864,7 @@ class PetitComputer
     }
     SDL_Window* window;
     otya.smilebasic.vm.VM vm;
-    int maincnt;
+    int maincntRender;
     bool running;
     bool stopflg;
     void stop()
@@ -890,6 +890,7 @@ class PetitComputer
     Slot[] slot;
     bool isRunningDirectMode = false;
     GLenum textureScaleMode;
+    int maincnt;
     void run(bool nodirectmode = false, string inputfile = "", bool antialiasing = false)
     {
         if (antialiasing)
@@ -1074,12 +1075,12 @@ class PetitComputer
             {
                 uint elapse;
                 startTicks = SDL_GetTicks();
-                int oldmaincnt = maincnt;
+                int oldmaincnt = maincntRender;
                 //do
                 {
                     try
                     {
-                        for(int i = 0; !quit /*&& maincnt == oldmaincnt */&& !vsyncFrame && running; i++)
+                        for(int i = 0; !quit && maincntRender == oldmaincnt && !vsyncFrame && running; i++)
                         {
                             //writefln("%04X:%s", vm.pc, vm.getCurrent);
                             running = vm.runStep();
@@ -1137,16 +1138,25 @@ class PetitComputer
                     }
                     //elapse = SDL_GetTicks() - startTicks;
                 } //while(elapse <= 1000 / 60);
+                if (maincntRender != oldmaincnt)
+                {
+                    maincnt++;
+                }
                 if(vsyncFrame)
                 {
                     //FIXME:VSYNC IS NOT WAIT
                     //A=MAINCNT:WAIT 50:A=MAINCNT-A->A=50
                     //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
-                    auto endmaincnt = maincnt + vsyncFrame;
                     graphic.updateVM();
+                    auto endmaincnt = maincnt + vsyncFrame;
                     while (maincnt < endmaincnt && !quit)
                     {
-                        SDL_Delay(cast(uint)(frame));
+                        oldmaincnt = maincntRender;
+                        SDL_Delay(1);
+                        if (maincntRender != oldmaincnt)
+                        {
+                            maincnt++;
+                        }
                     }
                     vsyncFrame = 0;
                 }
@@ -1184,6 +1194,11 @@ class PetitComputer
         int oldCSRY = this.console.CSRY;
         int pos;
         int historyIndex = cast(int)inputHistory.length;
+        int oldmaincnt = maincntRender;
+        scope (exit)
+        {
+            maincnt += maincntRender - oldmaincnt;
+        }
         void setText(wstring text)
         {
             console.CSRX = oldCSRX;
