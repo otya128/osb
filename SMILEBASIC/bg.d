@@ -65,6 +65,13 @@ class BG
         version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
         //viewport
         //clipx,clipy
+        int bgchipwidth = 512 / chipWidth;
+        int bgchipheight = 512 / chipHeight;
+        int bgchipwidth2 = petitcom.graphic.width / chipWidth;
+        int bgchipheight2 = petitcom.graphic.height / chipHeight;
+        int chipNumberMax = bgchipwidth * bgchipheight;
+        int chipNumberMax2 = bgchipwidth2 * bgchipheight2;
+        bool isHR = (petitcom.graphic.width > 512) || (petitcom.graphic.height > 512);
         glBegin(GL_QUADS);
         int rendercount = 0;
         for(int x = 0; x < width; x++)
@@ -77,12 +84,28 @@ class BG
             {
                 BGChip bgc = chip[x + y * width];
                 if(!bgc.i) continue;
-                int u = (bgc.i % 32) * 16;
-                int v = (bgc.i / 32) * 16;
-                int u2 = u + 16;
-                int v2 = v + 16;
-                int w = 16;
-                int h = 16;
+                int u = (bgc.i % bgchipwidth) * chipWidth;
+                int v = (bgc.i / bgchipheight) * chipHeight;
+                if (bgc.i >= chipNumberMax)
+                {
+                    if (isHR)
+                    {
+                        if (bgc.i >= bgchipheight2 * bgchipwidth)
+                        {
+                            u += 512;
+                            v %= petitcom.graphic.height;
+                        }
+                    }
+                    else
+                    {
+                        u = ((bgc.i % chipNumberMax) % bgchipwidth) * chipWidth;
+                        v = ((bgc.i % chipNumberMax) / bgchipheight) * chipHeight;
+                    }
+                }
+                int u2 = u + chipWidth;
+                int v2 = v + chipHeight;
+                int w = chipWidth;
+                int h = chipHeight;
                 glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1 , v2 / (cast(float)petitcom.graphic.height) - 1);
                 glVertex3f((x * w), (y * h + h), 0);
                 glTexCoord2f(u / (cast(float)petitcom.graphic.width) - 1, v / (cast(float)petitcom.graphic.height) - 1);
