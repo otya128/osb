@@ -485,7 +485,7 @@ class BuiltinFunction
             throw new OutOfRange("GCLIP");
         if (clipmode)
         {
-            if (sx >= 512 || sy >= 512 || ex >= 512 || ey >= 512)
+            if (sx >= p.graphic.width || sy >= p.graphic.height || ex >= p.graphic.width || ey >= p.graphic.height)
                 throw new OutOfRange("GCLIP");
         }
         if (sx > ex)
