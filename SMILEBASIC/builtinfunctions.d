@@ -274,10 +274,6 @@ class BuiltinFunction
     }
     static void VSYNC(PetitComputer p, int time)
     {
-        if (time == 0)
-        {
-            return;
-        }
         p.vsync(time);
     }
     static void WAIT(PetitComputer p, DefaultValue!int time)

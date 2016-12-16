@@ -321,13 +321,13 @@ class PetitComputer
     SDL_Renderer* renderer;
     int vsyncFrame;
     int vsyncCount;
+    int prevVSyncCount;
     bool isVSync;
     bool waitFlag;
     void vsync(int f)
     {
         waitFlag = true;
         isVSync = true;
-        vsyncCount = 0;
         vsyncFrame = f;
     }
     void wait(int f)
@@ -1151,6 +1151,7 @@ class PetitComputer
                 if (maincntRender != oldmaincnt)
                 {
                     maincnt++;
+                    vsyncCount++;
                 }
                 if(waitFlag)
                 {
@@ -1158,6 +1159,10 @@ class PetitComputer
                     //A=MAINCNT:WAIT 50:A=MAINCNT-A->A=50
                     //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
                     graphic.updateVM();
+                    if (isVSync && prevVSyncCount)
+                    {
+                        vsyncFrame -= vsyncCount - prevVSyncCount;
+                    }
                     auto endmaincnt = maincnt + vsyncFrame;
                     oldmaincnt = maincntRender;
                     while (maincnt < endmaincnt && !quit)
@@ -1172,6 +1177,7 @@ class PetitComputer
                     vsyncFrame = 0;
                     waitFlag = false;
                     isVSync = false;
+                    prevVSyncCount = vsyncCount;
                 }
                 //maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
                 graphic.updateVM();
@@ -1211,6 +1217,7 @@ class PetitComputer
         scope (exit)
         {
             maincnt += maincntRender - oldmaincnt;
+            vsyncCount += maincntRender - oldmaincnt;
         }
         void setText(wstring text)
         {
