@@ -116,3 +116,11 @@ class Result : SystemVariable
             return Value(vm.petitcomputer.project.result);
         }
 }
+class Hardware : SystemVariable
+{
+    @property
+        override Value value()
+        {
+            return Value(cast(int)vm.petitcomputer.hardware);
+        }
+}

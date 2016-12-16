@@ -227,6 +227,7 @@ class Compiler
         addSystemVariable("FREEMEM", new FreeMem());
         addSystemVariable("TABSTEP", new TabStep());
         addSystemVariable("RESULT", new Result());
+        addSystemVariable("HARDWARE", new Hardware());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {

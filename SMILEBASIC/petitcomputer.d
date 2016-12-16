@@ -213,6 +213,12 @@ class RingBuffer(T)
         return buffer[(start != -1 ? start + index : index) % buffer.length];
     }
 }
+enum Hardware
+{
+    threeDS = 0,
+    new3DS = 1,
+    wiiU = 2,
+}
 class PetitComputer
 {
     this()
@@ -1463,6 +1469,7 @@ class PetitComputer
             std.stdio.stderr.writefln("Unknown XON %s", func);
         }
     }
+    Hardware hardware = Hardware.wiiU;
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {
