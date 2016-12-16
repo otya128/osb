@@ -33,10 +33,8 @@ enum ConsoleAttribute
 class Console
 {
 
-    int fontWidth;
-    int fontHeight;
-    int consoleWidth;
-    int consoleHeight;
+    int[2] fontWidths;
+    int[2] fontHeights;
     int consoleWidthDisplay1;
     int consoleHeightDisplay1;
     int consoleWidth4;
@@ -67,6 +65,22 @@ class Console
     int[2] CSRXs;
     int[2] CSRYs;
     int[2] CSRZs;
+    @property ref fontWidth()
+    {
+        return fontWidths[petitcom.displaynum];
+    }
+    @property int fontWidth(int value)
+    {
+        return fontWidths[petitcom.displaynum] = value;
+    }
+    @property ref fontHeight()
+    {
+        return fontHeights[petitcom.displaynum];
+    }
+    @property int fontHeight(int value)
+    {
+        return fontHeights[petitcom.displaynum] = value;
+    }
     @property ref CSRX()
     {
         return CSRXs[petitcom.displaynum];
@@ -121,35 +135,51 @@ class Console
     {
         return fontWidth;
     }
+    void resizeConsole()
+    {
+        console.length = petitcom.currentDisplay.rect.length;
+        for(int i = 0; i < petitcom.currentDisplay.rect.length; i++)
+        {
+            auto h = petitcom.currentDisplay.rect[i].h / fontHeights[i];
+            auto w = petitcom.currentDisplay.rect[i].w / fontWidths[i];
+            if (!console[i] || console[i].length != h || console[i][0].length != w)
+            {
+                console[i] = new ConsoleCharacter[][h];
+                for(int j = 0; j < console[i].length; j++)
+                {
+                    console[i][j] = new ConsoleCharacter[w];
+                    console[i][j][] = ConsoleCharacter(0, foreColor, backColor);
+                }
+                CSRXs[i] = 0;
+                CSRYs[i] = 0;
+                CSRZs[i] = 0;
+            }
+        }
+    }
+    void initConsole()
+    {
+        fontWidths = 8;
+        fontHeights = 8;
+        CSRXs = 0;
+        CSRYs = 0;
+        CSRZs = 0;
+        foreColors = 15;//#T_WHITE
+        backColors = 0;
+        resizeConsole();
+    }
     void width(int w)
     {
         synchronized(this)
         {
+            cls();
             fontWidth = fontHeight = w;
-            consoleWidth = petitcom.screenWidth / fontWidth;
-            consoleHeight = petitcom.screenHeight / fontHeight;
-            console = new ConsoleCharacter[][][petitcom.currentDisplay.rect.length];
-            foreColor = 15;//#T_WHITE
-            backColor = 0;
-            for(int i = 0; i < console.length; i++)
-            {
-                console[i] = new ConsoleCharacter[][petitcom.currentDisplay.rect[i].h / fontHeight];
-                for(int j = 0; j < console[i].length; j++)
-                {
-                    console[i][j] = new ConsoleCharacter[petitcom.currentDisplay.rect[i].w / fontWidth];
-                    console[i][j][] = ConsoleCharacter(0, foreColor, backColor);
-                }
-            }
-            CSRXs[] = 0;
-            CSRYs[] = 0;
-            CSRZs[] = 0;
+            resizeConsole();
             display(petitcom.displaynum);
         }
     }
-    //FIXME:画面サイズが変わらないと画面はクリアされないのにクリアされる
     void changeDisplay(ref Display display)
     {
-        width(fontWidth);
+        resizeConsole();
     }
     bool visible()
     {
@@ -162,7 +192,7 @@ class Console
     this(PetitComputer p)
     {
         petitcom = p;
-        width = 8;
+        initConsole();
 
         for(int i = 0; i < consoleColor.length; i++)
             consoleColorGL[i] = petitcom.toGLColor(consoleColor[i]);
@@ -299,15 +329,17 @@ class Console
             glVertex3i(x2, y2, z);
         }
     }
-    void adjustScreen()
+    void adjustScreen(int disp)
     {
         glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
         glPushMatrix();
-        glScalef(fontWidth / 8f, fontHeight / 8f, 1);
+        glScalef(fontWidths[disp] / 8f, fontHeights[disp] / 8f, 1);
     }
     void render()
     {
-        adjustScreen();
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
         scope (exit)
         {
             glMatrixMode(GL_MODELVIEW);
@@ -321,8 +353,9 @@ class Console
                 if (!visibles[i] && !showCursor)
                     continue;
                 petitcom.chRenderingDisplay(i);
-                int consoleWidth = petitcom.currentDisplay.rect[i].w / fontWidth;
-                int consoleHeight = petitcom.currentDisplay.rect[i].h / fontHeight;
+                adjustScreen(i);
+                int consoleWidth = petitcom.currentDisplay.rect[i].w / fontWidths[i];
+                int consoleHeight = petitcom.currentDisplay.rect[i].h / fontHeights[i];
                 glEnable(GL_TEXTURE_2D);
 
                 glBegin(GL_QUADS);

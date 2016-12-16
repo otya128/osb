@@ -870,6 +870,7 @@ class PetitComputer
         catch(Throwable t)
         {
             writeln(t);
+            readln();
         }
     }
     SDL_Window* window;
