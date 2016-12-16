@@ -1155,9 +1155,6 @@ class PetitComputer
                 }
                 if(waitFlag)
                 {
-                    //FIXME:VSYNC IS NOT WAIT
-                    //A=MAINCNT:WAIT 50:A=MAINCNT-A->A=50
-                    //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
                     graphic.updateVM();
                     if (isVSync && prevVSyncCount)
                     {
