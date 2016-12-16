@@ -283,7 +283,7 @@ class BuiltinFunction
     static void WAIT(PetitComputer p, DefaultValue!int time)
     {
         time.setDefaultValue(1);
-        p.vsync(cast(int)time);
+        p.wait(cast(int)time);
     }
     //TODO:プチコンのCLSには引数の個数制限がない
     static void CLS(PetitComputer p/*vaarg*/)

@@ -321,9 +321,19 @@ class PetitComputer
     SDL_Renderer* renderer;
     int vsyncFrame;
     int vsyncCount;
+    bool isVSync;
+    bool waitFlag;
     void vsync(int f)
     {
+        waitFlag = true;
+        isVSync = true;
         vsyncCount = 0;
+        vsyncFrame = f;
+    }
+    void wait(int f)
+    {
+        waitFlag = true;
+        isVSync = false;
         vsyncFrame = f;
     }
     Graphic graphic;
@@ -1080,7 +1090,7 @@ class PetitComputer
                 {
                     try
                     {
-                        for(int i = 0; !quit && maincntRender == oldmaincnt && !vsyncFrame && running; i++)
+                        for(int i = 0; !quit && maincntRender == oldmaincnt && !waitFlag && running; i++)
                         {
                             //writefln("%04X:%s", vm.pc, vm.getCurrent);
                             running = vm.runStep();
@@ -1142,23 +1152,26 @@ class PetitComputer
                 {
                     maincnt++;
                 }
-                if(vsyncFrame)
+                if(waitFlag)
                 {
                     //FIXME:VSYNC IS NOT WAIT
                     //A=MAINCNT:WAIT 50:A=MAINCNT-A->A=50
                     //A=MAINCNT:VSYNC 50:A=MAINCNT-A->A=0~50
                     graphic.updateVM();
                     auto endmaincnt = maincnt + vsyncFrame;
+                    oldmaincnt = maincntRender;
                     while (maincnt < endmaincnt && !quit)
                     {
-                        oldmaincnt = maincntRender;
                         SDL_Delay(1);
                         if (maincntRender != oldmaincnt)
                         {
                             maincnt++;
+                            oldmaincnt = maincntRender;
                         }
                     }
                     vsyncFrame = 0;
+                    waitFlag = false;
+                    isVSync = false;
                 }
                 //maincnt = cast(int)((SDL_GetTicks() - startcnt) / frame);
                 graphic.updateVM();
