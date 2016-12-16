@@ -92,12 +92,10 @@ class TabStep : SystemVariable
 }
 class Version : SystemVariable
 {
-    static VERSIONSTRING = "3.1.0";
-    static VERSION = 0x3010000;
     @property
         override Value value()
         {
-            return Value(VERSION);
+            return Value(vm.petitcomputer.version_);
         }
 }
 class FreeMem : SystemVariable

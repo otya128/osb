@@ -891,7 +891,7 @@ class PetitComputer
     }
     void printInformation()
     {
-        console.print("otyaSMILEBASIC ver ", otya.smilebasic.systemvariable.Version.VERSIONSTRING, "\n");
+        console.print("otyaSMILEBASIC ver ", versionString, "\n");
         console.print("(C)2015-2016 otya\n");
         console.print("8327164 bytes free\n");
         console.print("\n");
@@ -1470,6 +1470,8 @@ class PetitComputer
         }
     }
     Hardware hardware = Hardware.wiiU;
+    wstring versionString = "3.5.0";
+    int version_ = 0x3050000;
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {
