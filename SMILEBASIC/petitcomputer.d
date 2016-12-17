@@ -800,7 +800,9 @@ class PetitComputer
                     {
                         if (touchPosition.tm)
                         {
-                            touchPosition = Touch(0, mousex, mousey);
+                            auto old = touchPosition;
+                            old.tm = 0;
+                            touchPosition = old;
                         }
                     }
                 }
