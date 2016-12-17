@@ -1248,8 +1248,8 @@ class PopArray : Code
                 throw new TypeMismatch();
             }
             //TODO:文字列の挙動
-            throw new TypeMismatch();
-            //array.stringValue[index[0]] = assign.stringValue[0];
+            array.stringValue[index[0]] = assign.stringValue;
+            return;
         }
         throw new TypeMismatch();
     }
