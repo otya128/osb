@@ -46,6 +46,10 @@ struct Value
         this.type = ValueType.Integer;
         integerValue = value;
     }
+    this(bool value)
+    {
+        this(cast(int)value);
+    }
     this(double value)
     {
         this.type = ValueType.Double;
