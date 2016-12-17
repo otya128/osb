@@ -6,60 +6,6 @@ import derelict.opengl3.gl3;
 import otya.smilebasic.petitcomputer;
 import std.string;
 
-enum DrawType
-{
-    CLEAR,
-    PSET,
-    LINE,
-    FILL,
-    BOX,
-    CIRCLE1,
-    CIRCLE2,//startangle, endangle
-    TRI,
-    PAINT,
-    CLIPWRITE,
-    PUTCHR,
-    INIT,
-}
-struct Circle
-{
-    short r, startr, endr;
-    short flag;
-}
-struct Character
-{
-    int scalex;
-    int scaley;
-    wstring text;
-}
-struct DrawMessage
-{
-    DrawType type;
-    byte page;
-    byte display;
-    uint color;
-    short x;
-    short y;
-    union
-    {
-        struct
-        {
-            union
-            {
-                short x2;
-                short w;
-            }
-            union
-            {
-                short y2;
-                short h;
-            }
-            Circle circle;
-        }
-        Character character;
-    }
-    //
-}
 class Graphic
 {
     PetitComputer petitcom;
