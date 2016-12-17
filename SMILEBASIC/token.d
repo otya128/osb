@@ -80,6 +80,7 @@ enum TokenType
 
 enum TokenValueType
 {
+    none,
     integer,
     double_,
     string_
