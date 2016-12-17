@@ -388,7 +388,7 @@ class Array(T)
     {
         if(dimCount != 4) throw new SyntaxError();
         if(i1 >= dim[3] || i2 >= dim[2] || i3 >= dim[1] || i4 >= dim[0]) throw new SubscriptOutOfRange();
-        return array[i1];//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3];
+        return array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[0] * dim[1] + i3 * dim[0] + i4];
     }
     T opIndexAssign(T v, int i1)
     {
@@ -412,7 +412,7 @@ class Array(T)
     {
         if(dimCount != 4) throw new SyntaxError();
         if(i1 >= dim[3] || i2 >= dim[2] || i3 >= dim[1] || i4 >= dim[0]) throw new SubscriptOutOfRange();
-        return array[i1] = v;//array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[1] + i3] = v;
+        return array[i1 * dim[0] * dim[1] * dim[2] + i2 * dim[0] * dim[1] + i3 * dim[0] + i4] = v;
     }
     void push(T v)
     {
@@ -474,6 +474,12 @@ class Array(T)
         {
             case 1:
                 return index[0];
+            case 2:
+                return index[0] * dim[0] + index[1];
+            case 3:
+                return index[0] * dim[0] * dim[1] + index[1] * dim[0] + index[2];
+            case 4:
+                return index[0] * dim[0] * dim[1] * dim[2] + index[1] * dim[0] * dim[1] + index[2] * dim[0] + index[3];
             default:
                 throw new RangeError();
         }
