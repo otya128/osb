@@ -1082,7 +1082,8 @@ class PetitComputer
                 }
                 running = true;
             }
-            //vm.dump;
+            version (dumpVM)
+                vm.dump;
             this.vm = vm;
             int startcnt = SDL_GetTicks();
             float frame = 1000f / 60f;
@@ -1099,7 +1100,8 @@ class PetitComputer
                     {
                         for(int i = 0; !quit && maincntRender == oldmaincnt && !waitFlag && running; i++)
                         {
-                            //writefln("%04X:%s", vm.pc, vm.getCurrent);
+                            version (traceVM)
+                                writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
                             running = vm.runStep();
                             debug if(trace && loc.line != vm.currentLocation.line)
                             {
