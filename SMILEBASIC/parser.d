@@ -168,11 +168,11 @@ class Lexical
                 num = numstr.to!double;
                 if(num <= int.max && num >= int.min && !dot)
                 {
-                    token = Token(TokenType.Integer, Value(cast(int)num));
+                    token = Token(TokenType.Integer, TokenValue(cast(int)num));
                 }
                 else
                 {
-                    token = Token(TokenType.Integer, Value(num));
+                    token = Token(TokenType.Integer, TokenValue(num));
                 }
                 break;
             }
@@ -199,17 +199,17 @@ class Lexical
                     //TRUE/FALSEは3.1でもDATAに使える定数
                     if(r == TokenType.True)
                     {
-                        token = Token(TokenType.Integer, Value(1));
+                        token = Token(TokenType.Integer, TokenValue(1));
                         break;
                     }
                     if(r == TokenType.False)
                     {
-                        token = Token(TokenType.Integer, Value(0));
+                        token = Token(TokenType.Integer, TokenValue(0));
                         break;
                     }
                     if(r != TokenType.Unknown)
                     {
-                        token = Token(r, Value(iden));
+                        token = Token(r, TokenValue(iden));
                         break;
                     }
                 }
@@ -226,7 +226,7 @@ class Lexical
                 }
                 else
                 {
-                    token = Token(TokenType.Iden, Value(iden));
+                    token = Token(TokenType.Iden, TokenValue(iden));
                     break;
                 }
             }
@@ -245,7 +245,7 @@ class Lexical
                     }
                     str ~= c;
                 }
-                token = Token(TokenType.String, Value(str));
+                token = Token(TokenType.String, TokenValue(str));
                 break;
             }
             if(c == '@' || c == '#')
@@ -267,11 +267,11 @@ class Lexical
                 }
                 if (isLabel)
                 {
-                    token = Token(TokenType.Label, Value(iden));
+                    token = Token(TokenType.Label, TokenValue(iden));
                 }
                 else
                 {
-                    token = Token(TokenType.Constant, Value(std.uni.toUpper(iden)));
+                    token = Token(TokenType.Constant, TokenValue(std.uni.toUpper(iden)));
                 }
                 break;
             }
@@ -327,7 +327,7 @@ class Lexical
                     }
                     wstring numstr = code[start..i];
                     int num = numstr.to!uint(16);
-                    token = Token(TokenType.Integer, Value(num));
+                    token = Token(TokenType.Integer, TokenValue(num));
                     break;
                 }
                 if(code[i + 1].toUpper == 'B')
@@ -344,7 +344,7 @@ class Lexical
                     }
                     wstring numstr = code[start..i];
                     int num = numstr.to!uint(2);
-                    token = Token(TokenType.Integer, Value(num));
+                    token = Token(TokenType.Integer, TokenValue(num));
                     break;
                 }
                 if(code[i + 1] == '&')
@@ -1324,11 +1324,11 @@ class Parser
         }
         else
         {
-            expr = new Constant(Value(1), lex.location);
+            expr = new Constant(TokenValue(1), lex.location);
         }
         if(dec)
         {
-            expr = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, expr, lex.location);
+            expr = new BinaryOperator(new Constant(TokenValue(0), lex.location), TokenType.Minus, expr, lex.location);
         }
         return new Inc(var, expr, lex.location);
     }
@@ -1482,7 +1482,7 @@ class Parser
         else
         {
             //とりあえず
-            step = new Constant(Value(1), lex.location);
+            step = new Constant(TokenValue(1), lex.location);
         }
         token = lex.front();
         Statements statements = forStatements();
@@ -1712,7 +1712,7 @@ class Parser
         return print;
     }
     //compilerでやるべきな気がする
-    bool constcalc(Value left, Value right, TokenType type, out double result)
+    bool constcalc(TokenValue left, TokenValue right, TokenType type, out double result)
     {
         switch (type)
         {
@@ -1797,7 +1797,7 @@ class Parser
                     {
                         if (constcalc(leftconst.value, rightconst.value, op.operator, result))
                         {
-                            auto l = new Constant(Value(result), lex.location);
+                            auto l = new Constant(TokenValue(result), lex.location);
                             constexpr = true;
                             if(order != getOPRank(token.type))
                                 return l;
@@ -1898,14 +1898,14 @@ class Parser
                     lex.popFront();
                     auto a = term(2/*array*/, null);
                     double result;
-                    if (a.type == NodeType.Constant && constcalc(Value(0), (cast(Constant)a).value, TokenType.Minus, result))
+                    if (a.type == NodeType.Constant && constcalc(TokenValue(0), (cast(Constant)a).value, TokenType.Minus, result))
                     {
-                        node = new Constant(Value(result), lex.location);
+                        node = new Constant(TokenValue(result), lex.location);
                         return node;
                     }
                     else
                     {
-                        node = new BinaryOperator(new Constant(Value(0), lex.location), TokenType.Minus, a, lex.location);
+                        node = new BinaryOperator(new Constant(TokenValue(0), lex.location), TokenType.Minus, a, lex.location);
                         return node;
                     }
                 }
@@ -1918,7 +1918,7 @@ class Parser
                 {
                     if (token.value.castString in constant)
                     {
-                        node = new Constant(Value(constant[token.value.castString]), lex.location);
+                        node = new Constant(TokenValue(constant[token.value.castString]), lex.location);
                     }
                     else
                     {

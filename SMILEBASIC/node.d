@@ -60,8 +60,8 @@ abstract class Expression : Node
 }
 class Constant : Expression
 {
-    Value value;
-    this(Value v, SourceLocation loc)
+    TokenValue value;
+    this(TokenValue v, SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.Constant;
@@ -515,14 +515,14 @@ class Inc : Statement
 }
 class Data : Statement
 {
-    Value[] data;
+    TokenValue[] data;
     this(SourceLocation loc)
     {
         super.location = loc;
         this.type = NodeType.Data;
-        this.data = new Value[0];
+        this.data = new TokenValue[0];
     }
-    void addData(Value v)
+    void addData(TokenValue v)
     {
         data ~= v;
     }

@@ -256,6 +256,10 @@ class Compiler
     {
         code ~= new Push(value);
     }
+    void genCodeImm(TokenValue value)
+    {
+        code ~= new Push(value.toSBImm);
+    }
     void genCodePushGlobal(int ind)
     {
         code ~= new PushG(ind);
@@ -1132,7 +1136,7 @@ class Compiler
                 {
                     auto data = cast(Data)i;
                     foreach(j; data.data)
-                        s.data.addData(j);
+                        s.data.addData(j.toSBImm);
                 }
                 break;
             case NodeType.Read:
