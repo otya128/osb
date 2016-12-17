@@ -924,7 +924,7 @@ class PetitComputer
         slot = new Slot[5];
         keybuffer = new Key[128];
         init();
-        graphic = new Graphic(this);
+        graphic = new GraphicFBO(this);
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
         sprite = new Sprite(this);

@@ -20,6 +20,7 @@ class Graphic
         //nnnue
         paint.buffer = new uint[width * height];
     }
+    int GRPFWidth, GRPFHeight;
     void setSize(int w, int h)
     {
         width = w;
@@ -302,317 +303,32 @@ class Graphic
         }
     }
     Paint paint;
-    //(x+r,y):0°
-    //(x,y+r):90°
-    void drawCircle(int x, int y, int r, int startr, int endr, int flag)
-    {
-        import std.math : sin, cos, PI;
-        import std.algorithm.comparison : min;
-        int count = min(r, 1000);
-        if (flag)
-        {
-            glBegin(GL_LINE_LOOP);
-            glVertex2i(x, y);
-        }
-        else
-        {
-            glBegin(GL_LINE_STRIP);
-        }
-        startr = startr % 360;
-        endr = endr % 360;
-        if (startr > endr)
-        {
-            endr += 360;
-        }
-        for (int i = 0; i <= r; i++)
-        {
-            //float a = i * (360f / count);
-            float angle = (cast(float)i / count) * ((endr - startr) / 180f) * PI + (startr / 180f * PI);
-            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
-        }
-        glEnd();
-    }
-    void drawCircle(int x, int y, int r)
-    {
-        import std.math : sin, cos, PI;
-        import std.algorithm.comparison : min;
-        int count = min(r, 1000);
-        glBegin(GL_LINE_STRIP);
-        for (int i = 0; i <= r; i++)
-        {
-            //float a = i * (360f / r);
-            float angle = cast(float)i / count * 2f * PI;
-            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
-        }
-        glEnd();
-    }
-    void drawText(wstring text)
-    {
-        int x;
-        foreach (c; text)
-        {
-            drawCharacter(x, 0, c);
-            x += 8;
-        }
-    }
-    int GRPFWidth, GRPFHeight;
-    void drawCharacter(int x, int y, wchar character)
-    {
-        auto rect = petitcom.console.fontTable[character];
-        float tx1 = (rect.x) / (cast(float)GRPFWidth) - 1;
-        float ty1 = (rect.y + 8) / (cast(float)GRPFHeight) - 1;
-        float tx2 = (rect.x + 8) / (cast(float)GRPFWidth) - 1;
-        float ty2 = (rect.y) / (cast(float)GRPFHeight) - 1;
-        glTexCoord2f(tx1 , ty1);
-        glVertex3i(x, y + 8, 0);
-        glTexCoord2f(tx1, ty2);
-        glVertex3i(x, y, 0);
-        glTexCoord2f(tx2, ty2);
-        glVertex3i(x + 8, y, 0);
-        glTexCoord2f(tx2, ty1);
-        glVertex3i(x + 8, y + 8, 0);
-    }
-    void initVM()
-    {
-        SDL_GL_MakeCurrent(petitcom.window, petitcom.contextVM);
-        glAlphaFunc(GL_GEQUAL, 0.1f);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_ALPHA_TEST);
-        glDisable(GL_DEPTH_TEST);
-    }
-    int drc = 0;
-    void display(int display)
-    {
-        void chScreen(int x, int y, int w, int h)
-        {
-            glViewport(x, y, w, h);
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
-            glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
-        }
-        chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
-        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[usePage[display]].buffer);
-    }
-    bool flushRequired;
-    void updateVM()
-    {
-        if (drc)
-            glFlush();
-        drc = 0;
-    }
-    uint convertColor(uint color)
-    {
-        return petitcom.toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
-    }
-    void gpset(int page, int x, int y, uint color)
-    {
-        color = convertColor(color);
-        glBegin(GL_POINTS);
-        glColor4ubv(cast(ubyte*)&color);
-        glVertex2f(x, y);
-        glEnd();
-        drc++;
-    }
-    void gline(int page, int x, int y, int x2, int y2, uint color)
-    {
-        color = convertColor(color);
-        glBegin(GL_LINES);
-        glColor4ubv(cast(ubyte*)&color);
-        glVertex2f(x, y);
-        glVertex2f(x2, y2);
-        glEnd();
-        drc++;
-    }
-    void gbox(int page, int x, int y, int x2, int y2, uint color)
-    {
-        color = convertColor(color);
-        glBegin(GL_LINE_LOOP);
-        glColor4ubv(cast(ubyte*)&color);
-        glVertex2f(x, y);
-        glVertex2f(x, y2);
-        glVertex2f(x2, y2);
-        glVertex2f(x2, y);
-        glEnd();
-        drc++;
-    }
-    void gfill(int page, int x, int y, int x2, int y2, uint color)
-    {
-        color = convertColor(color);
-        glBegin(GL_QUADS);
-        glColor4ubv(cast(ubyte*)&color);
-        glVertex2f(x, y);
-        glVertex2f(x, y2);
-        glVertex2f(x2, y2);
-        glVertex2f(x2, y);
-        glEnd();
-        drc++;
-    }
-    void gcls(int page, uint color)
-    {
-        gfill(page, 0, 0, width - 1, height - 1, color);
-    }
-    void gpaint(int page, int x, int y, uint color)
-    {
-        color = convertColor(color);
-        updateVM();
-        //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
-        glReadPixels(0, 0, width, height, GRP[useGRP].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
-        paint.gpaintBuffer(paint.buffer.ptr, x, y, color, GRP[useGRP].textureFormat);
-    }
-    void gcircle(int page, int x, int y, int r, uint color)
-    {
-        color = convertColor(color);
-        glColor4ubv(cast(ubyte*)&color);
-        drawCircle(x, y, r);
-        drc++;
-    }
-    void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
-    {
-        color = convertColor(color);
-        glColor4ubv(cast(ubyte*)&color);
-        drawCircle(x, y, r, startr, endr, flag);
-        drc++;
-    }
-    void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
-    {
-        import std.conv : to;
-        gputchr(page, x, y, (cast(wchar)text).to!wstring, scalex, scaley, color);
-    }
-    void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
-    {
-        color = convertColor(color);
-        glColor4ubv(cast(ubyte*)&color);
-        glEnable(GL_TEXTURE_2D);
-        glEnable(GL_ALPHA_TEST);
-        glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glTranslatef(x, y, 0);
-        glScalef(scalex, scaley, 1);
-        glBegin(GL_QUADS);
-        drawText(text);
-        glEnd();
-        glPopMatrix();
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_ALPHA_TEST);
-        drc++;
-    }
-    int gspoit(int page, int x, int y)
-    {
-        int ui;
-        //flush
-        //if (drc)
-        //    glFinish();
-        //drc = 0;
-        glReadPixels(x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &ui);
-        return ui;
-    }
-    void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
-    {
-        if (w * h > array.length)
-            return;
-        gsave(savepage, x, y, w, h, cast(int[])paint.buffer, flag);
-        for (int i = 0; i < array.length; i++)
-        {
-            array[i] = cast(double)cast(int)paint.buffer[i];
-        }
-    }
-    void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
-    {
-        if (w * h > array.length)
-            return;
-        auto oldPage = useGRP;
-        if (savepage == -1)
-        {
-            glBindFramebufferEXT(GL_FRAMEBUFFER, petitcom.console.GRPF.buffer);
-        }
-        else
-        {
-            useGRP = savepage;
-        }
-        scope (exit)
-        {
-            useGRP = oldPage;
-        }
-        //endian?
-        if (false && flag)//0=32bit
-        {
-            glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, array.ptr);
-        }
-        else
-        {
-            glReadPixels(x, y, w, h, GL_BGRA, GL_UNSIGNED_BYTE, array.ptr);
-        }
-        if (flag)
-        {
-            //ARRRRRGGGGGBBBBB
-            for (int i = 0; i < array.length; i++)
-            {
-                array[i] = ARGB32ToRGBA16Color(array[i]);
-            }
-        }
-    }
-    int ARGB32ToRGBA16Color(int argb32)
-    {
-        auto a = (argb32 & 0xFF000000) >> 24;
-        auto r = (argb32 & 0x00FF0000) >> 16;
-        auto g = (argb32 & 0x0000FF00) >> 8;
-        auto b = (argb32 & 0x000000FF);
-        return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
-    }
-    int RGBA16ToARGB32Color(int rgba16)
-    {
-        auto a = (rgba16 & 0b0000000000000001) == 1 ? 0xFF000000 : 0;
-        auto r = (rgba16 & 0b1111100000000000) >> 11;
-        auto g = (rgba16 & 0b0000011111000000) >> 6;
-        auto b = (rgba16 & 0b0000000000111110) >> 1;
-        return a | r << 19 | g << 11 | b << 3;
-    }
-    void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
-    {
-        if (w * h > array.length)
-            return;
-        if (!copymode)
-        {
-            glEnable(GL_ALPHA_TEST);
-        }
-        glRasterPos2i(x, y);
-        //convertColor
-        if (flag)
-        {
-            //ARRRRRGGGGGBBBBB
-            for (int i = 0; i < array.length; i++)
-            {
-                paint.buffer[i] = RGBA16ToARGB32Color(array[i]);
-            }
-            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , paint.buffer.ptr);
-        }
-        else
-        {
-            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , array.ptr);
-        }
-        if (!copymode)
-        {
-            glDisable(GL_ALPHA_TEST);
-        }
-    }
-    void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
-    {
-        for (int i = 0; i < array.length; i++)
-        {
-            paint.buffer[i] = cast(int)array[i];
-        }
-        gload(x, y, w, h, cast(int[])paint.buffer, flag, copymode);
-    }
+    abstract void initVM();
+    abstract void display(int display);
+    abstract void updateVM();
+    abstract void gpset(int page, int x, int y, uint color);
+    abstract void gline(int page, int x, int y, int x2, int y2, uint color);
+    abstract void gbox(int page, int x, int y, int x2, int y2, uint color);
+    abstract void gfill(int page, int x, int y, int x2, int y2, uint color);
+    abstract void gcls(int page, uint color);
+    abstract void gpaint(int page, int x, int y, uint color);
+    abstract void gcircle(int page, int x, int y, int r, uint color);
+    abstract void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color);
+    abstract void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color);
+    abstract void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color);
+    abstract int gspoit(int page, int x, int y);
+    abstract void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag);
+    abstract void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag);
+    abstract void gload(int x, int y, int w, int h, int[] array, int flag, int copymode);
+    abstract void gload(int x, int y, int w, int h, double[] array, int flag, int copymode);
     void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
-        if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
+    if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
     {
-        for (int i = 0; i < array.length; i++)
+        if (cast(GraphicFBO)this)
         {
-            paint.buffer[i] = cast(int)palette[cast(int)array[i]];
+            GraphicFBO gfbo = (cast(GraphicFBO)this);
+            gfbo.gloadPalette(x, y, w, h, array, palette, copymode);
         }
-        gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
     }
     int[2] gprios = [511, 511];
 
@@ -685,4 +401,323 @@ class Graphic
             displayArea[petitcom.displaynum] = SDL_Rect(x, y, w, h);
         }
     }
+}
+
+class GraphicFBO : Graphic
+{
+    this(PetitComputer p)
+    {
+        super(p);
+    }
+    //(x+r,y):0°
+    //(x,y+r):90°
+    void drawCircle(int x, int y, int r, int startr, int endr, int flag)
+    {
+        import std.math : sin, cos, PI;
+        import std.algorithm.comparison : min;
+        int count = min(r, 1000);
+        if (flag)
+        {
+            glBegin(GL_LINE_LOOP);
+            glVertex2i(x, y);
+        }
+        else
+        {
+            glBegin(GL_LINE_STRIP);
+        }
+        startr = startr % 360;
+        endr = endr % 360;
+        if (startr > endr)
+        {
+            endr += 360;
+        }
+        for (int i = 0; i <= r; i++)
+        {
+            //float a = i * (360f / count);
+            float angle = (cast(float)i / count) * ((endr - startr) / 180f) * PI + (startr / 180f * PI);
+            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
+        }
+        glEnd();
+    }
+    void drawCircle(int x, int y, int r)
+    {
+        import std.math : sin, cos, PI;
+        import std.algorithm.comparison : min;
+        int count = min(r, 1000);
+        glBegin(GL_LINE_STRIP);
+        for (int i = 0; i <= r; i++)
+        {
+            //float a = i * (360f / r);
+            float angle = cast(float)i / count * 2f * PI;
+            glVertex2f(cos(angle) * r + x, sin(angle) * r + y);
+        }
+        glEnd();
+    }
+    void drawText(wstring text)
+    {
+        int x;
+        foreach (c; text)
+        {
+            drawCharacter(x, 0, c);
+            x += 8;
+        }
+    }
+    void drawCharacter(int x, int y, wchar character)
+    {
+        auto rect = petitcom.console.fontTable[character];
+        float tx1 = (rect.x) / (cast(float)GRPFWidth) - 1;
+        float ty1 = (rect.y + 8) / (cast(float)GRPFHeight) - 1;
+        float tx2 = (rect.x + 8) / (cast(float)GRPFWidth) - 1;
+        float ty2 = (rect.y) / (cast(float)GRPFHeight) - 1;
+        glTexCoord2f(tx1 , ty1);
+        glVertex3i(x, y + 8, 0);
+        glTexCoord2f(tx1, ty2);
+        glVertex3i(x, y, 0);
+        glTexCoord2f(tx2, ty2);
+        glVertex3i(x + 8, y, 0);
+        glTexCoord2f(tx2, ty1);
+        glVertex3i(x + 8, y + 8, 0);
+    }
+    override void initVM()
+    {
+        SDL_GL_MakeCurrent(petitcom.window, petitcom.contextVM);
+        glAlphaFunc(GL_GEQUAL, 0.1f);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_DEPTH_TEST);
+    }
+    int drc = 0;
+    override void display(int display)
+    {
+        void chScreen(int x, int y, int w, int h)
+        {
+            glViewport(x, y, w, h);
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(x, x + w - 1, y, y + h - 1, -256, 1024);//wakaranai
+        }
+        chScreen(writeArea[display].x, writeArea[display].y, writeArea[display].w, writeArea[display].h);
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[usePage[display]].buffer);
+    }
+    bool flushRequired;
+    override void updateVM()
+    {
+        if (drc)
+            glFlush();
+        drc = 0;
+    }
+    uint convertColor(uint color)
+    {
+        return petitcom.toGLColor(this.GRP[0].textureFormat, color & 0xFFF8F8F8);
+    }
+    override void gpset(int page, int x, int y, uint color)
+    {
+        color = convertColor(color);
+        glBegin(GL_POINTS);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glEnd();
+        drc++;
+    }
+    override void gline(int page, int x, int y, int x2, int y2, uint color)
+    {
+        color = convertColor(color);
+        glBegin(GL_LINES);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x2, y2);
+        glEnd();
+        drc++;
+    }
+    override void gbox(int page, int x, int y, int x2, int y2, uint color)
+    {
+        color = convertColor(color);
+        glBegin(GL_LINE_LOOP);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x, y2);
+        glVertex2f(x2, y2);
+        glVertex2f(x2, y);
+        glEnd();
+        drc++;
+    }
+    override void gfill(int page, int x, int y, int x2, int y2, uint color)
+    {
+        color = convertColor(color);
+        glBegin(GL_QUADS);
+        glColor4ubv(cast(ubyte*)&color);
+        glVertex2f(x, y);
+        glVertex2f(x, y2);
+        glVertex2f(x2, y2);
+        glVertex2f(x2, y);
+        glEnd();
+        drc++;
+    }
+    override void gcls(int page, uint color)
+    {
+        gfill(page, 0, 0, width - 1, height - 1, color);
+    }
+    override void gpaint(int page, int x, int y, uint color)
+    {
+        color = convertColor(color);
+        updateVM();
+        //glGetTexImage(GL_TEXTURE_2D,0,GRP[oldpage].textureFormat,GL_UNSIGNED_BYTE,buffer.ptr);
+        glReadPixels(0, 0, width, height, GRP[useGRP].textureFormat, GL_UNSIGNED_BYTE, paint.buffer.ptr);
+        paint.gpaintBuffer(paint.buffer.ptr, x, y, color, GRP[useGRP].textureFormat);
+    }
+    override void gcircle(int page, int x, int y, int r, uint color)
+    {
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        drawCircle(x, y, r);
+        drc++;
+    }
+    override void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
+    {
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        drawCircle(x, y, r, startr, endr, flag);
+        drc++;
+    }
+    override void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
+    {
+        import std.conv : to;
+        gputchr(page, x, y, (cast(wchar)text).to!wstring, scalex, scaley, color);
+    }
+    override void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
+    {
+        color = convertColor(color);
+        glColor4ubv(cast(ubyte*)&color);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_ALPHA_TEST);
+        glBindTexture(GL_TEXTURE_2D, petitcom.console.GRPF.glTexture);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glTranslatef(x, y, 0);
+        glScalef(scalex, scaley, 1);
+        glBegin(GL_QUADS);
+        drawText(text);
+        glEnd();
+        glPopMatrix();
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        drc++;
+    }
+    override int gspoit(int page, int x, int y)
+    {
+        int ui;
+        //flush
+        //if (drc)
+        //    glFinish();
+        //drc = 0;
+        glReadPixels(x, y, 1, 1, GRP[page].textureFormat, GL_UNSIGNED_BYTE, &ui);
+        return ui;
+    }
+    override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
+    {
+        if (w * h > array.length)
+            return;
+        gsave(savepage, x, y, w, h, cast(int[])paint.buffer, flag);
+        for (int i = 0; i < array.length; i++)
+        {
+            array[i] = cast(double)cast(int)paint.buffer[i];
+        }
+    }
+    override void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
+    {
+        if (w * h > array.length)
+            return;
+        auto oldPage = useGRP;
+        if (savepage == -1)
+        {
+            glBindFramebufferEXT(GL_FRAMEBUFFER, petitcom.console.GRPF.buffer);
+        }
+        else
+        {
+            useGRP = savepage;
+        }
+        scope (exit)
+        {
+            useGRP = oldPage;
+        }
+        //endian?
+        if (false && flag)//0=32bit
+        {
+            glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, array.ptr);
+        }
+        else
+        {
+            glReadPixels(x, y, w, h, GL_BGRA, GL_UNSIGNED_BYTE, array.ptr);
+        }
+        if (flag)
+        {
+            //ARRRRRGGGGGBBBBB
+            for (int i = 0; i < array.length; i++)
+            {
+                array[i] = ARGB32ToRGBA16Color(array[i]);
+            }
+        }
+    }
+    int ARGB32ToRGBA16Color(int argb32)
+    {
+        auto a = (argb32 & 0xFF000000) >> 24;
+        auto r = (argb32 & 0x00FF0000) >> 16;
+        auto g = (argb32 & 0x0000FF00) >> 8;
+        auto b = (argb32 & 0x000000FF);
+        return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
+    }
+    int RGBA16ToARGB32Color(int rgba16)
+    {
+        auto a = (rgba16 & 0b0000000000000001) == 1 ? 0xFF000000 : 0;
+        auto r = (rgba16 & 0b1111100000000000) >> 11;
+        auto g = (rgba16 & 0b0000011111000000) >> 6;
+        auto b = (rgba16 & 0b0000000000111110) >> 1;
+        return a | r << 19 | g << 11 | b << 3;
+    }
+    override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
+    {
+        if (w * h > array.length)
+            return;
+        if (!copymode)
+        {
+            glEnable(GL_ALPHA_TEST);
+        }
+        glRasterPos2i(x, y);
+        //convertColor
+        if (flag)
+        {
+            //ARRRRRGGGGGBBBBB
+            for (int i = 0; i < array.length; i++)
+            {
+                paint.buffer[i] = RGBA16ToARGB32Color(array[i]);
+            }
+            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , paint.buffer.ptr);
+        }
+        else
+        {
+            glDrawPixels(w , h , GL_BGRA , GL_UNSIGNED_BYTE , array.ptr);
+        }
+        if (!copymode)
+        {
+            glDisable(GL_ALPHA_TEST);
+        }
+    }
+    override void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
+    {
+        for (int i = 0; i < array.length; i++)
+        {
+            paint.buffer[i] = cast(int)array[i];
+        }
+        gload(x, y, w, h, cast(int[])paint.buffer, flag, copymode);
+    }
+    void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
+        if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
+        {
+            for (int i = 0; i < array.length; i++)
+            {
+                paint.buffer[i] = cast(int)palette[cast(int)array[i]];
+            }
+            gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
+        }
 }
