@@ -114,8 +114,8 @@ class Graphic
     }
 
     bool[2] visibles = [true, true];
-    private int[2] showPage = [0, 1];
-    private int[2] usePage = [0, 1];
+    protected int[2] showPage = [0, 1];
+    protected int[2] usePage = [0, 1];
     bool visible()
     {
         return visibles[petitcom.displaynum];
@@ -411,6 +411,7 @@ class GraphicFBO : Graphic
     }
     override @property void useGRP(int page)
     {
+        super.useGRP = page;
         glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
     }
     override @property int useGRP()
@@ -731,7 +732,7 @@ class GraphicFBO : Graphic
         }
 }
 
-class GraphicPBO : Graphic
+class Graphic2 : Graphic
 {
     this(PetitComputer p)
     {
@@ -748,39 +749,221 @@ class GraphicPBO : Graphic
         foreach(g; GRP)
         {
             g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
-            g.createBuffer();
         }
     }
     override void initVM()
     {
+        SDL_GL_MakeCurrent(petitcom.window, petitcom.contextVM);
+        glAlphaFunc(GL_GEQUAL, 0.1f);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_TEXTURE_2D);
+        glDisable(GL_ALPHA_TEST);
+        glDisable(GL_DEPTH_TEST);
     }
 
+    int olddisplay;
     override void display(int display)
     {
+        if (df)
+        {
+            glBindTexture(GL_TEXTURE_2D, this.GRP[usePage[olddisplay]].glTexture);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+            df = false;
+        }
+        olddisplay = display;
+        buffer = cast(int*)this.GRP[usePage[display]].surface.pixels;
     }
 
+    bool df;
+    void updateTexture()
+    {
+        glBindTexture(GL_TEXTURE_2D, this.GRP[useGRP].glTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+    }
     override void updateVM()
     {
+        if (df)
+        {
+            updateTexture;
+            df = false;
+        }
+    }
+
+    int* buffer;
+    override @property void useGRP(int page)
+    {
+        updateVM;
+        super.useGRP(page);
+        buffer = cast(int*)this.GRP[useGRP].surface.pixels;
+    }
+    override @property int useGRP()
+    {
+        return super.useGRP;
     }
 
     override void gpset(int page, int x, int y, uint color)
     {
+        buffer[y * height + x] = color;
+        df = true;
     }
 
+    import std.math;
     override void gline(int page, int x, int y, int x2, int y2, uint color)
     {
+        int dx = abs(x2 - x);
+        int dy = abs(y2 - y);
+        int sx, sy;
+        if (x < x2)
+            sx = 1;
+        else
+            sx = -1;
+        if (y < y2)
+            sy = 1;
+        else
+            sy = -1;
+        int err = dx - dy;
+
+        auto wa = writeArea[petitcom.displaynum];
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        while (true)
+        {
+            if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+                buffer[y * height + x] = color;
+            if (x == x2 && y == y2) break;
+            int e2 = 2 * err;
+            if (e2 > -dy)
+            {
+                err = err - dy;
+                x = x + sx;
+            }
+            if (e2 <  dx)
+            {
+                err = err + dx;
+                y = y + sy;
+            }
+        }
+        df = true;
     }
 
     override void gbox(int page, int x, int y, int x2, int y2, uint color)
     {
+        int sx, sy, ex, ey;
+        if (x > x2)
+        {
+            sx = x2;
+            ex = x;
+        }
+        else
+        {
+            sx = x;
+            ex = x2;
+        }
+        if (y > y2)
+        {
+            sy = y2;
+            ey = y;
+        }
+        else
+        {
+            sy = y;
+            ey = y2;
+        }
+        auto wa = writeArea[petitcom.displaynum];
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        void drawLine1(int y)
+        {
+            for (int x = sx; x <= ex; x++)
+            {
+                if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+                    buffer[y * height + x] = color;
+            }
+        }
+        drawLine1(sy);
+        drawLine1(ey);
+        void drawLine2(int x)
+        {
+            for (int y = sy; y <= ey; y++)
+            {
+                if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+                    buffer[y * height + x] = color;
+            }
+        }
+        drawLine2(ex);
+        drawLine2(sx);
+        df = true;
     }
 
     override void gfill(int page, int x, int y, int x2, int y2, uint color)
     {
+        int sx, sy, ex, ey;
+        if (x > x2)
+        {
+            sx = x2;
+            ex = x;
+        }
+        else
+        {
+            sx = x;
+            ex = x2;
+        }
+        if (y > y2)
+        {
+            sy = y2;
+            ey = y;
+        }
+        else
+        {
+            sy = y;
+            ey = y2;
+        }
+        auto wa = writeArea[petitcom.displaynum];
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        //clipping
+        if (wa.x > sx)
+        {
+            if (wa.x > ex)
+            {
+                return;
+            }
+            sx = wa.x;
+        }
+        if (cx2 < ex)
+        {
+            if (cx2 < sx)
+            {
+                return;
+            }
+            ex = cx2;
+        }
+        if (wa.y > sy)
+        {
+            if (wa.y > ey)
+            {
+                return;
+            }
+            sy = wa.y;
+        }
+        if (cy2 < ey)
+        {
+            if (cy2 < sy)
+            {
+                return;
+            }
+            ey = cy2;
+        }
+        for (y = sy; y <= ey; y++)
+        {
+            (buffer + y * height + sx)[0..(ex - sx + 1)] = color;
+        }
+        df = true;
     }
 
     override void gcls(int page, uint color)
     {
+        gfill(page, 0, 0, width - 1, height - 1, color);
     }
 
     override void gpaint(int page, int x, int y, uint color)
@@ -799,13 +982,21 @@ class GraphicPBO : Graphic
     {
     }
 
+    void drawCharacter(int x, int y, int scalex, int scaley, wchar c)
+    {
+        auto rect = petitcom.console.fontTable[c];
+    }
     override void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
     {
+        int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
+        foreach (c; text)
+        {
+        }
     }
 
     override int gspoit(int page, int x, int y)
     {
-        return 0;
+        return buffer[y * height + x];
     }
 
     override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)

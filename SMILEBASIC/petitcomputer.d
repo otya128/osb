@@ -140,6 +140,7 @@ class GraphicPage
         glDeleteTextures(1, &glTexture);
         buffer = render = glTexture = 0;
     }
+
 }
 
 version(Windows)
@@ -926,7 +927,7 @@ class PetitComputer
         slot = new Slot[5];
         keybuffer = new Key[128];
         init();
-        graphic = new GraphicPBO(this);
+        graphic = new Graphic2(this);
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
         sprite = new Sprite(this);
@@ -942,7 +943,6 @@ class PetitComputer
             renderCondition.wait();
         }
         graphic.initVM();
-        display(0);
         xscreen(0, 512, 4);
         auto startTicks = SDL_GetTicks();
         Parser parser;
