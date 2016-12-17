@@ -456,7 +456,7 @@ class Array(T)
     {
         if(dimCount != 1 || v.dimCount != 1 ) throw new SyntaxError();
         if(i1 >= dim[0]) throw new SubscriptOutOfRange();
-        array = array[0..i1] ~ v.array ~ array[i1..$];
+        array = array[0..i1] ~ v.array ~ array[i1 + 1..$];
         dim[0] = cast(int)array.length;
     }
     Array!T opOpAssign(string op = "~")(Array!T v)
@@ -492,10 +492,7 @@ class Array(T)
     void insert(Array!T ary, int index)
     {
         if(dimCount != 1 || ary.dimCount != 1 ) throw new SyntaxError();
-        if (length == 0)
-        {
-            throw new SubscriptOutOfRange();
-        }
+        if(index >= dim[0]) throw new SubscriptOutOfRange();
         array = array[0..index] ~ ary.array ~ array[index + 1..$];
         dim[0] = cast(int)array.length;
     }
@@ -537,8 +534,8 @@ struct ArrayReference(T)
     void swap(T2)(ref T2 t2)
     if (!is(T2 T3 == ArrayReference!T3))
     {
-        T temp = reference.array[index];
-        reference.array[index] = cast(T)t2;
-        t2 = cast(T2)temp;
+        T temp = reference[index];
+        reference[index] = t2;
+        t2 = temp;
     }
 }

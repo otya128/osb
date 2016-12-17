@@ -1994,6 +1994,43 @@ class SwapCode : Code
                 return;
             }
         }
+
+        if (refitem2.type == ValueType.StringReference && refitem1.type == ValueType.Reference)
+        {
+            swap(refitem1, refitem2);
+        }
+        if (refitem1.type == ValueType.StringReference && refitem2.type == ValueType.Reference)
+        {
+            auto str = refitem2.reference.castString;
+            wchar wc = cast(wchar)refitem1.stringReference;
+            refitem1.stringReference = str;
+            refitem2.reference.stringValue = new Array!wchar([wc]);
+            return;
+        }
+        if (refitem2.type == ValueType.StringArrayReference && refitem1.type == ValueType.Reference)
+        {
+            swap(refitem1, refitem2);
+        }
+        if (refitem1.type == ValueType.StringArrayReference && refitem2.type == ValueType.Reference)
+        {
+            auto str = refitem2.reference.castString;
+            auto str2 = cast(Array!wchar)refitem1.stringArrayReference;
+            refitem1.stringArrayReference = str;
+            refitem2.reference.stringValue = str2;
+            return;
+        }
+        if (refitem2.type == ValueType.StringReference && refitem1.type == ValueType.StringArrayReference)
+        {
+            swap(refitem1, refitem2);
+        }
+        if (refitem1.type == ValueType.StringReference && refitem2.type == ValueType.StringArrayReference)
+        {
+            auto str = cast(Array!wchar)refitem2.stringArrayReference;
+            wchar wc = cast(wchar)refitem1.stringReference;
+            refitem1.stringReference = str;
+            refitem2.stringArrayReference = new Array!wchar([wc]);
+            return;
+        }
         throw new TypeMismatch();
     }
 }
