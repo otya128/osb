@@ -475,11 +475,13 @@ class PetitComputer
                 if (grpw != 1024 || grph != 1024)
                 {
                     graphic.setSize(1024, 1024);
+                    graphic.initGraphicPages();
                 }
             }
             else if (grpw != 512 || grph != 512)
             {
                 graphic.setSize(512, 512);
+                graphic.initGraphicPages();
             }
             displaynum = 0;
             console.changeDisplay(currentDisplay);
@@ -924,7 +926,7 @@ class PetitComputer
         slot = new Slot[5];
         keybuffer = new Key[128];
         init();
-        graphic = new GraphicFBO(this);
+        graphic = new GraphicPBO(this);
         keybuffermutex = new Mutex();
         grpmutex = new Mutex();
         sprite = new Sprite(this);

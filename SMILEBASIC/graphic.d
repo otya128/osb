@@ -25,7 +25,6 @@ class Graphic
     {
         width = w;
         height = h;
-        initGraphicPages();
     }
     void getSize(out int w, out int h)
     {
@@ -34,14 +33,7 @@ class Graphic
     }
     void initGraphicPages()
     {
-        if (GRP.length != 0 && GRP[0].glTexture/*TODO:gl texture 0?*/)
-        {
-            foreach(g; GRP)
-            {
-                g.deleteGL();
-            }
-        }
-        else
+        if (GRP.length == 0)
         {
             GRP = new GraphicPage[6];
         }
@@ -51,11 +43,6 @@ class Graphic
         }
         GRP[4] = createGRPF(petitcom.spriteFile);
         GRP[5] = createGRPF(petitcom.BGFile);
-        foreach(g; GRP)
-        {
-            g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
-            g.createBuffer();
-        }
     }
     GraphicPage createGRPF(string file)
     {
@@ -147,7 +134,6 @@ class Graphic
     }
     @property void useGRP(int page)
     {
-        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
         usePage[petitcom.displaynum] = page;
     }
     @property void showGRP(int page)
@@ -409,6 +395,29 @@ class GraphicFBO : Graphic
     {
         super(p);
     }
+    override void initGraphicPages()
+    {
+        foreach(g; GRP)
+        {
+            if (g.glTexture)
+                g.deleteGL();
+        }
+        super.initGraphicPages();
+        foreach(g; GRP)
+        {
+            g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+            g.createBuffer();
+        }
+    }
+    override @property void useGRP(int page)
+    {
+        glBindFramebufferEXT(GL_FRAMEBUFFER, this.GRP[page].buffer);
+    }
+    override @property int useGRP()
+    {
+        return super.useGRP;
+    }
+    
     //(x+r,y):0°
     //(x,y+r):90°
     void drawCircle(int x, int y, int r, int startr, int endr, int flag)
@@ -720,4 +729,99 @@ class GraphicFBO : Graphic
             }
             gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
         }
+}
+
+class GraphicPBO : Graphic
+{
+    this(PetitComputer p)
+    {
+        super(p);
+    }
+    override void initGraphicPages()
+    {
+        foreach(g; GRP)
+        {
+            if (g.glTexture)
+                g.deleteGL();
+        }
+        super.initGraphicPages();
+        foreach(g; GRP)
+        {
+            g.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+            g.createBuffer();
+        }
+    }
+    override void initVM()
+    {
+    }
+
+    override void display(int display)
+    {
+    }
+
+    override void updateVM()
+    {
+    }
+
+    override void gpset(int page, int x, int y, uint color)
+    {
+    }
+
+    override void gline(int page, int x, int y, int x2, int y2, uint color)
+    {
+    }
+
+    override void gbox(int page, int x, int y, int x2, int y2, uint color)
+    {
+    }
+
+    override void gfill(int page, int x, int y, int x2, int y2, uint color)
+    {
+    }
+
+    override void gcls(int page, uint color)
+    {
+    }
+
+    override void gpaint(int page, int x, int y, uint color)
+    {
+    }
+
+    override void gcircle(int page, int x, int y, int r, uint color)
+    {
+    }
+
+    override void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
+    {
+    }
+
+    override void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
+    {
+    }
+
+    override void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
+    {
+    }
+
+    override int gspoit(int page, int x, int y)
+    {
+        return 0;
+    }
+
+    override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
+    {
+    }
+
+    override void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
+    {
+    }
+
+    override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
+    {
+    }
+
+    override void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
+    {
+    }
+
 }
