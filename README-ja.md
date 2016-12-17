@@ -1,5 +1,5 @@
 # otyaSMILEBASIC
-SMILEBASIC 3.x互換BASIC
+SMILEBASIC 3.x(3DS/WiiU)互換BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 

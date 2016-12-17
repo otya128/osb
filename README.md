@@ -1,6 +1,6 @@
 [Japanese](README-ja.md)
 # otyaSMILEBASIC
-SmileBASIC 3.x Compatible BASIC
+SmileBASIC 3.x(3DS/WiiU) Compatible BASIC
 
 <img src="https://raw.githubusercontent.com/otya128/otyaSMILEBASIC/master/screenshots/GAME4SHOOTER.png">
 
