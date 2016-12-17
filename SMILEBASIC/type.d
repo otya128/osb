@@ -16,6 +16,7 @@ enum ValueType : byte
     IntegerReference,
     DoubleReference,
     StringReference,
+    StringArrayReference,
 }
 struct VMAddress
 {
@@ -36,9 +37,10 @@ struct Value
         Array!(Array!wchar) stringArray;
         VMAddress internalAddress;
         Value* reference;
-        int* integerReference;
-        double* doubleReference;
-        Array!(wchar)* stringReference;
+        ArrayReference!int integerReference;
+        ArrayReference!double doubleReference;
+        ArrayReference!wchar stringReference;
+        ArrayReference!(Array!wchar) stringArrayReference;
     }
     this(int value)
     {
@@ -78,20 +80,25 @@ struct Value
         this.type = ValueType.Reference;
         reference = r;
     }
-    this(int* r)
+    this(ArrayReference!int r)
     {
         this.type = ValueType.IntegerReference;
         integerReference = r;
     }
-    this(double* r)
+    this(ArrayReference!double r)
     {
         this.type = ValueType.DoubleReference;
         doubleReference = r;
     }
-    this(Array!(wchar)* r)
+    this(ArrayReference!wchar r)
     {
         this.type = ValueType.StringReference;
         stringReference = r;
+    }
+    this(ArrayReference!(Array!wchar) r)
+    {
+        this.type = ValueType.StringArrayReference;
+        stringArrayReference = r;
     }
     void castOp(ValueType type)
     {
@@ -459,5 +466,73 @@ class Array(T)
         dim[0] = array.length;
         return this;
     }
+    int calcIndex(int[] index)
+    {
+        if(dimCount != index.length) throw new SyntaxError();
+        import core.exception;
+        switch(index.length)
+        {
+            case 1:
+                return index[0];
+            default:
+                throw new RangeError();
+        }
+    }
+    ArrayReference!T reference(int[] index)
+    {
+        auto i = calcIndex(index);
+        return ArrayReference!T(this, i);
+    }
+    void insert(Array!T ary, int index)
+    {
+        if(dimCount != 1 || ary.dimCount != 1 ) throw new SyntaxError();
+        if (length == 0)
+        {
+            throw new SubscriptOutOfRange();
+        }
+        array = array[0..index] ~ ary.array ~ array[index + 1..$];
+        dim[0] = array.length;
+    }
 
+}
+struct ArrayReference(T)
+{
+    Array!T reference;
+    int index;
+    T opAssign(T v)
+    {
+        return reference.array[index] = v;
+    }
+    static if (is(T == wchar))
+    {
+        void opAssign(Array!T ary)
+        {
+            reference.insert(ary, index);
+        }
+    }
+    T opOpAssign(string op)(T v)
+    {
+        mixin("return reference.array[index]" ~ op ~ "=v;");
+    }
+    T opBinary(string op)(T v)
+    {
+        mixin("return reference.array[index]" ~ op ~ "v;");
+    }
+    T2 opCast(T2)()
+    {
+        return cast(T2)reference.array[index];
+    }
+    void swap(T2)(ArrayReference!T2 t2)
+    {
+        T temp = reference.array[index];
+        reference.array[index] = cast(T)t2;
+        t2 = cast(T2)temp;
+    }
+    void swap(T2)(ref T2 t2)
+    if (!is(T2 T3 == ArrayReference!T3))
+    {
+        T temp = reference.array[index];
+        reference.array[index] = cast(T)t2;
+        t2 = cast(T2)temp;
+    }
 }

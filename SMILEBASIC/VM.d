@@ -1150,17 +1150,17 @@ class PushArrayRef : Code
         }
         if(array.type == ValueType.IntegerArray)
         {
-            vm.push(Value(&array.integerArray[index[0..dim]]));
+            vm.push(Value(array.integerArray.reference(index[0..dim])));
             return;
         }
         if(array.type == ValueType.DoubleArray)
         {
-            vm.push(Value(&array.doubleArray[index[0..dim]]));
+            vm.push(Value(array.doubleArray.reference(index[0..dim])));
             return;
         }
         if(array.type == ValueType.StringArray)
         {
-            vm.push(Value(&array.stringArray[index[0..dim]]));
+            vm.push(Value(array.stringArray.reference(index[0..dim])));
             return;
         }
         if(array.type == ValueType.String)
@@ -1170,8 +1170,8 @@ class PushArrayRef : Code
                 //TODO:syntaxError
                 throw new TypeMismatch();
             }
-            //String?
-            throw new TypeMismatch();
+            vm.push(Value(array.stringValue.reference(index[0..dim])));
+            return;
         }
         throw new TypeMismatch();
     }
@@ -1826,7 +1826,7 @@ class PopRererence : Code
             {
                 throw new TypeMismatch();
             }
-            *refv.integerReference = value.castInteger;
+            refv.integerReference = value.castInteger;
             return;
         }
         if (refv.type == ValueType.DoubleReference)
@@ -1835,7 +1835,16 @@ class PopRererence : Code
             {
                 throw new TypeMismatch();
             }
-            *refv.doubleReference = value.castDouble;
+            refv.doubleReference = value.castDouble;
+            return;
+        }
+        if (refv.type == ValueType.StringArrayReference)
+        {
+            if (!value.isString)
+            {
+                throw new TypeMismatch();
+            }
+            refv.stringArrayReference = value.castString;
             return;
         }
         if (refv.type == ValueType.StringReference)
@@ -1844,9 +1853,10 @@ class PopRererence : Code
             {
                 throw new TypeMismatch();
             }
-            *refv.stringReference = value.castString;
+            refv.stringReference = value.castString;
             return;
         }
+        throw new TypeMismatch();
     }
 }
 class IncRef : Code
@@ -1882,17 +1892,17 @@ class IncRef : Code
 
         if (refv.type == ValueType.IntegerReference && v.isNumber)
         {
-            *refv.integerReference += v.castInteger;
+            refv.integerReference += v.castInteger;
             return;
         }
         if (refv.type == ValueType.DoubleReference && v.isNumber)
         {
-            *refv.doubleReference += v.castDouble;
+            refv.doubleReference += v.castDouble;
             return;
         }
-        if (refv.type == ValueType.StringReference && v.isString)
+        if (refv.type == ValueType.StringArrayReference && v.isString)
         {
-            *refv.stringReference ~= v.castString;
+            refv.stringArrayReference ~= v.castString;
             return;
         }
         throw new TypeMismatch();
@@ -1905,86 +1915,86 @@ class IncRef : Code
 
 class SwapCode : Code
 {
-    void getPointer(ref Value v, out int* ip, out double* dp, out Array!(wchar)* sp)
-    {
-        ip = null;
-        dp = null;
-        sp = null;
-        if (v.type == ValueType.Reference)
-        {
-            if(v.reference.type == ValueType.Integer)
-            {
-                ip = &v.reference.integerValue;
-                return;
-            }
-            if(v.reference.type == ValueType.Double)
-            {
-                dp = &v.reference.doubleValue;
-                return;
-            }
-            if(v.reference.type == ValueType.String)
-            {
-                sp = &v.reference.stringValue;
-                return;
-            }
-        }
-        if (v.type == ValueType.IntegerReference)
-        {
-            ip = v.integerReference;
-            return;
-        }
-        if (v.type == ValueType.DoubleReference)
-        {
-            dp = v.doubleReference;
-            return;
-        }
-        if (v.type == ValueType.StringReference)
-        {
-            sp = v.stringReference;
-            return;
-        }
-        throw new TypeMismatch();
-    }
     override void execute(VM vm)
     {
+        import std.algorithm.mutation : swap;
         Value refitem2, refitem1;
         vm.pop(refitem2);
         vm.pop(refitem1);
-        double* dp1, dp2;
-        int* ip1, ip2;
-        Array!(wchar)* sp1, sp2;
-        getPointer(refitem1, ip1, dp1, sp1);
-        getPointer(refitem2, ip2, dp2, sp2);
-        if ((sp1 && (dp2 || ip2)) || (sp2 && (dp1 || ip1)))
+        if (refitem1.type == ValueType.IntegerReference && refitem2.type == ValueType.IntegerReference)
         {
-            throw new TypeMismatch();
-        }
-        import std.algorithm.mutation : swap;
-        if (sp1)
-        {
-            swap(*sp1, *sp2);
+            refitem1.integerReference.swap(refitem2.integerReference);
             return;
         }
-        if (ip1 && ip2)
+        if (refitem1.type == ValueType.IntegerReference && refitem2.type == ValueType.DoubleReference)
         {
-            swap(*ip1, *ip2);
+            refitem1.integerReference.swap(refitem2.doubleReference);
             return;
         }
-        if (dp1 && dp2)
+        if (refitem1.type == ValueType.DoubleReference && refitem2.type == ValueType.IntegerReference)
         {
-            swap(*dp1, *dp2);
+            refitem1.doubleReference.swap(refitem2.integerReference);
             return;
         }
-        double num1 = ip1 ? *ip1 : *dp1;
-        double num2 = ip2 ? *ip2 : *dp2;
-        if (ip2)
-            *ip2 = cast(int)num1;
-        else
-            *dp2 = num1;
-        if (ip1)
-            *ip1 = cast(int)num2;
-        else
-            *dp1 = num2;
+        if (refitem1.type == ValueType.DoubleReference && refitem2.type == ValueType.DoubleReference)
+        {
+            refitem1.doubleReference.swap(refitem2.doubleReference);
+            return;
+        }
+        int integer;
+        double double_;
+
+        if (refitem1.type == ValueType.IntegerReference && refitem2.type == ValueType.Reference)
+        {
+            integer = refitem2.reference.castInteger;
+            refitem1.integerReference.swap(integer);
+            if (refitem2.reference.type == ValueType.Integer)
+            {
+                refitem2.reference.integerValue = integer;
+            }
+            if (refitem2.reference.type == ValueType.Double)
+            {
+                refitem2.reference.doubleValue = integer;
+            }
+            return;
+        }
+        if (refitem1.type == ValueType.DoubleReference && refitem2.type == ValueType.Reference)
+        {
+            double_ = refitem2.reference.castDouble;
+            refitem1.doubleReference.swap(double_);
+            if (refitem2.reference.type == ValueType.Integer)
+            {
+                refitem2.reference.integerValue = cast(int)double_;
+            }
+            if (refitem2.reference.type == ValueType.Double)
+            {
+                refitem2.reference.doubleValue = double_;
+            }
+            return;
+        }
+        if (refitem1.type == ValueType.Reference && refitem2.type == ValueType.Reference)
+        {
+            if (refitem1.reference.type == refitem2.reference.type)
+            {
+                swap(*refitem1.reference, *refitem2.reference);
+                return;
+            }
+            if (refitem1.reference.type == ValueType.Integer && refitem2.reference.type == ValueType.Double)
+            {
+                integer = refitem2.reference.castInteger;
+                refitem2.reference.doubleValue = refitem1.reference.castDouble;
+                refitem1.reference.integerValue = integer;
+                return;
+            }
+            if (refitem1.reference.type == ValueType.Double && refitem2.reference.type == ValueType.Integer)
+            {
+                integer = refitem2.reference.castInteger;
+                refitem2.reference.integerValue = refitem1.reference.integerValue;
+                refitem1.reference.doubleValue = integer;
+                return;
+            }
+        }
+        throw new TypeMismatch();
     }
 }
 
