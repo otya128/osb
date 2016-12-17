@@ -2645,7 +2645,10 @@ class BuiltinFunction
         switch (ary.type)
         {
             case ValueType.String:
-                throw new IllegalFunctionCall("NOTIMPL:PUSH string");
+                if (ary.stringValue.dimCount != 1)
+                    throw new TypeMismatch("PUSH", 1);
+                ary.stringValue.push(exp.castString);
+                break;
             case ValueType.IntegerArray:
                 if (ary.integerArray.dimCount != 1)
                     throw new TypeMismatch("PUSH", 1);
@@ -2678,7 +2681,9 @@ class BuiltinFunction
         switch (ary.type)
         {
             case ValueType.String:
-                throw new IllegalFunctionCall("NOTIMPL:POP string");
+                if (ary.stringValue.dimCount != 1)
+                    throw new TypeMismatch("POP", 1);
+                return Value(ary.stringValue.pop());
             case ValueType.IntegerArray:
                 if (ary.integerArray.dimCount != 1)
                     throw new TypeMismatch("POP", 1);

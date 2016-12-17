@@ -61,6 +61,11 @@ struct Value
         this.type = ValueType.String;
         stringValue = new Array!wchar(value);
     }
+    this(wchar value)
+    {
+        this.type = ValueType.String;
+        stringValue = new Array!wchar([value]);
+    }
     this(Array!wchar value)
     {
         this.type = ValueType.String;
@@ -421,6 +426,15 @@ class Array(T)
         }
         array ~= v;
         dim[0]++;
+    }
+    void push(Array!T v)
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array ~= v.array;
+        dim[0] = cast(int)length;
     }
     T pop()
     {
