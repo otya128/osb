@@ -1041,6 +1041,10 @@ class NewArray : Code
             case ValueType.String:
                 array.type = ValueType.StringArray;
                 array.stringArray = new Array!(Array!wchar)(dim);
+                for (int i = 0; i < array.stringArray.array.length; i++)
+                {
+                    array.stringArray.array[i] = new Array!wchar(0);
+                }
                 break;
             default:
                 throw new TypeMismatch();
