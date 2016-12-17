@@ -305,7 +305,7 @@ class Array(T)
     {
         this(T[] array)
         {
-            dim[0] = array.length;
+            dim[0] = cast(int)array.length;
             dim[1] = 0;
             dim[2] = 0;
             dim[3] = 0;
@@ -450,20 +450,20 @@ class Array(T)
             throw new TypeMismatch();
         }
         array ~= input.array;
-        dim[0] = array.length;
+        dim[0] = cast(int)array.length;
     }
     void opIndexAssign(Array!T v, int i1)
     {
         if(dimCount != 1 || v.dimCount != 1 ) throw new SyntaxError();
         if(i1 >= dim[0]) throw new SubscriptOutOfRange();
         array = array[0..i1] ~ v.array ~ array[i1..$];
-        dim[0] = array.length;
+        dim[0] = cast(int)array.length;
     }
     Array!T opOpAssign(string op = "~")(Array!T v)
     {
         if(dimCount != 1 || v.dimCount != 1 ) throw new SyntaxError();
         array ~= v.array;
-        dim[0] = array.length;
+        dim[0] = cast(int)array.length;
         return this;
     }
     int calcIndex(int[] index)
@@ -491,7 +491,7 @@ class Array(T)
             throw new SubscriptOutOfRange();
         }
         array = array[0..index] ~ ary.array ~ array[index + 1..$];
-        dim[0] = array.length;
+        dim[0] = cast(int)array.length;
     }
 
 }
