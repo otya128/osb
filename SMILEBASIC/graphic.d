@@ -803,7 +803,7 @@ class Graphic2 : Graphic
 
     override void gpset(int page, int x, int y, uint color)
     {
-        buffer[y * height + x] = color;
+        buffer[y * width + x] = color;
         df = true;
     }
 
@@ -829,7 +829,7 @@ class Graphic2 : Graphic
         while (true)
         {
             if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
-                buffer[y * height + x] = color;
+                buffer[y * width + x] = color;
             if (x == x2 && y == y2) break;
             int e2 = 2 * err;
             if (e2 > -dy)
@@ -887,7 +887,7 @@ class Graphic2 : Graphic
             for (int y = sy; y <= ey; y++)
             {
                 if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
-                    buffer[y * height + x] = color;
+                    buffer[y * width + x] = color;
             }
         }
         drawLine2(ex);
@@ -956,7 +956,7 @@ class Graphic2 : Graphic
         }
         for (y = sy; y <= ey; y++)
         {
-            (buffer + y * height + sx)[0..(ex - sx + 1)] = color;
+            (buffer + y * width + sx)[0..(ex - sx + 1)] = color;
         }
         df = true;
     }
@@ -982,16 +982,54 @@ class Graphic2 : Graphic
     {
     }
 
-    void drawCharacter(int x, int y, int scalex, int scaley, wchar c)
+    int mulColor(int color, int color2)
+    {
+        ubyte r1, g1, b1, a1;
+        ubyte r2, g2, b2, a2;
+        PetitComputer.RGBRead(color, r1, g1, b1, a1);
+        PetitComputer.RGBRead(color2, r2, g2, b2, a2);
+        r1 = cast(ubyte)((r1 * r2) / 255);
+        g1 = cast(ubyte)((g1 * g2) / 255);
+        b1 = cast(ubyte)((b1 * b2) / 255);
+        if (a2 && a1)
+            a1 = 255;
+        else
+            a1 = 0;
+        return PetitComputer.RGB(a1, r1, g1, b1);
+    }
+    void drawCharacter(int x, int y, int scalex, int scaley, uint color, immutable wchar c)
     {
         auto rect = petitcom.console.fontTable[c];
+        int[8 * 8] font;
+        int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
+        for (int i = 0; i < 8; i ++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                font[i * 8 + j] = mulColor(grpfbuffer[rect.x + j + (rect.y + i) * GRPFWidth], color);
+            }
+        }
+        if (scalex == 1 && scaley == 1)
+        {
+            for (int iy = 0; iy < rect.h; iy++)
+            {
+                for (int ix = 0; ix < rect.w; ix++)
+                {
+                    if (font[iy * 8 + ix] >> 24/*is trans*/)
+                    {
+                        (buffer + (y + iy) * width + x + ix)[0] = font[iy * 8 + ix];
+                    }
+                }
+            }
+        }
     }
     override void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
     {
-        int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
-        foreach (c; text)
+        foreach (i, c; text)
         {
+            drawCharacter(x + scalex * cast(int)i * 8, y, scalex, scaley, color, c);
         }
+        df = true;
     }
 
     override int gspoit(int page, int x, int y)
