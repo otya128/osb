@@ -30,15 +30,15 @@ struct Value
         int integerValue;
         double doubleValue;
         //TODO:Array!wchar stringValue;にしたい
-        wstring stringValue;
+        Array!wchar stringValue;
         Array!int integerArray;
         Array!double doubleArray;
-        Array!wstring stringArray;
+        Array!(Array!wchar) stringArray;
         VMAddress internalAddress;
         Value* reference;
         int* integerReference;
         double* doubleReference;
-        wstring* stringReference;
+        Array!(wchar)* stringReference;
     }
     this(int value)
     {
@@ -53,6 +53,16 @@ struct Value
     this(wstring value)
     {
         this.type = ValueType.String;
+        stringValue = new Array!wchar(cast(wchar[])value.dup);
+    }
+    this(wchar[] value)
+    {
+        this.type = ValueType.String;
+        stringValue = new Array!wchar(value);
+    }
+    this(Array!wchar value)
+    {
+        this.type = ValueType.String;
         stringValue = value;
     }
     this(ValueType type)
@@ -60,7 +70,7 @@ struct Value
         this.type = type;
         if(type == ValueType.String)
         {
-            stringValue = "";
+            stringValue = new Array!wchar(0);
         }
     }
     this(Value* r)
@@ -78,7 +88,7 @@ struct Value
         this.type = ValueType.DoubleReference;
         doubleReference = r;
     }
-    this(wstring* r)
+    this(Array!(wchar)* r)
     {
         this.type = ValueType.StringReference;
         stringReference = r;
@@ -158,10 +168,16 @@ struct Value
         }
         throw new TypeMismatch();
     }
-    wstring castString()
+    Array!wchar castString()
     {
         if (this.type == ValueType.String)
             return this.stringValue;
+        throw new TypeMismatch();
+    }
+    wstring castDString()
+    {
+        if (this.type == ValueType.String)
+            return cast(immutable)this.stringValue.array;
         throw new TypeMismatch();
     }
     string toString()
@@ -202,7 +218,7 @@ struct Value
             //とりあえず破壊的に書き換えた
             //どのみちこれだと文字数を増やすことができないのでArray!wcharで管理させたい
             case ValueType.String:
-                (cast(wchar[])stringValue)[i] = v.castString[0];
+                stringValue[i] = v.castString;
                 break;
             case ValueType.IntegerArray:
                 integerArray.array[i] = v.castInteger;
@@ -277,6 +293,18 @@ class Array(T)
             array[] = 0;
         }
         dimCount = 1;
+    }
+    static if (!is(T == int))
+    {
+        this(T[] array)
+        {
+            dim[0] = array.length;
+            dim[1] = 0;
+            dim[2] = 0;
+            dim[3] = 0;
+            this.array = array;
+            dimCount = 1;
+        }
     }
     @property size_t length()
     {
@@ -407,6 +435,29 @@ class Array(T)
         }
         array.length = size;
         dim[0] = size;
+    }
+    void append(Array!T input)
+    {
+        if (dimCount != 1 || input.dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array ~= input.array;
+        dim[0] = array.length;
+    }
+    void opIndexAssign(Array!T v, int i1)
+    {
+        if(dimCount != 1 || v.dimCount != 1 ) throw new SyntaxError();
+        if(i1 >= dim[0]) throw new SubscriptOutOfRange();
+        array = array[0..i1] ~ v.array ~ array[i1..$];
+        dim[0] = array.length;
+    }
+    Array!T opOpAssign(string op = "~")(Array!T v)
+    {
+        if(dimCount != 1 || v.dimCount != 1 ) throw new SyntaxError();
+        array ~= v.array;
+        dim[0] = array.length;
+        return this;
     }
 
 }

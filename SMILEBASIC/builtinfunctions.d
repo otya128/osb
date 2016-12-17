@@ -527,7 +527,7 @@ class BuiltinFunction
         }
         else if (str.isString)
         {
-            p.graphic.gputchr(p.graphic.useGRP, x, y, str.castString, scalex, scaley, color);
+            p.graphic.gputchr(p.graphic.useGRP, x, y, str.castDString, scalex, scaley, color);
         }
         else
         {
@@ -1181,11 +1181,11 @@ class BuiltinFunction
         if(alen.isNumber)
         {
             len = alen.castInteger;
-            replace = areplace.castString;
+            replace = areplace.castDString;
         }
         else
         {
-            replace = alen.castString;
+            replace = alen.castDString;
             //省略されたらi以降の全文字を置換
             return str[0..i] ~ replace;
         }
@@ -1203,13 +1203,13 @@ class BuiltinFunction
         if(!vstr2.isDefault)
         {
             start = vstart.castInteger;
-            str1 = vstr1.castString;
+            str1 = vstr1.castDString;
             str2 = cast(wstring)vstr2;
         }
         else
         {
-            str1 = vstart.castString;
-            str2 = vstr1.castString;
+            str1 = vstart.castDString;
+            str2 = vstr1.castDString;
         }
         return cast(int)(str1[start..$].indexOf(str2, CaseSensitive.no));
     }
@@ -1383,9 +1383,9 @@ class BuiltinFunction
         {
             VM vm = p.vm;
             vm.pushDataIndex();
-            vm.restoreData(args[2].castString);
+            vm.restoreData(args[2].castDString);
             int keyframe = vm.readData.castInteger;
-            auto target = p.sprite.getSpriteAnimTarget(args[1].castString);
+            auto target = p.sprite.getSpriteAnimTarget(args[1].castDString);
             int item = 2;
             if((target & 7) == SpriteAnimTarget.XY || (target & 7) == SpriteAnimTarget.UV) item++;
             animdata = new double[item * keyframe + 1];
@@ -1412,7 +1412,7 @@ class BuiltinFunction
             }
         }
         if(args[1].isString)
-            p.sprite.spanim(no, args[1].castString, animdata);
+            p.sprite.spanim(no, args[1].castDString, animdata);
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
     }
@@ -1440,7 +1440,7 @@ class BuiltinFunction
                     {
                         VM vm = p.vm;
                         vm.pushDataIndex();
-                        vm.restoreData(va_args[0].castString);
+                        vm.restoreData(va_args[0].castDString);
                         auto count = vm.readData().castInteger;//読み込むスプライト数
                         int defno = 0;//?
                         for(int i = 0; i < count; i++)
@@ -1614,7 +1614,7 @@ class BuiltinFunction
     {
         alias retro!(Value[]) VaArgs;
         auto args = retro(va_args);
-        auto format = args[0].castString;
+        auto format = args[0].castDString;
         import std.array : appender;
         import std.format;
         FixedBuffer!(wchar, 1024) buffer;//String too long
@@ -1962,7 +1962,7 @@ class BuiltinFunction
 
             //DATAから
             VM vm = p.vm;
-            vm.restoreData(args[sourceArrayIndex].castString);
+            vm.restoreData(args[sourceArrayIndex].castDString);
             for(int i = 0; i < len; i++)
             {
                 Value data = vm.readData();
@@ -2103,9 +2103,9 @@ class BuiltinFunction
         }
         throw new CantUseInProgram("PROJECT");
     }
-    static void PROJECT(PetitComputer p, out wstring name)
+    static void PROJECT(PetitComputer p, out Array!wchar name)
     {
-        name = p.currentProject;
+        name = new Array!wchar(cast(wchar[])p.currentProject.dup);
     }
     //FILES TYPE$
     //((TXT|DAT):)?\w+/?
@@ -2215,7 +2215,7 @@ class BuiltinFunction
         {
             int[] integerArray;
             double[] doubleArray;
-            wstring[] stringArray;
+            Array!wchar[] stringArray;
         }
         this(ref Value v)
         {
@@ -2455,7 +2455,7 @@ class BuiltinFunction
 
         int[] iarray;
         double[] darray;
-        wstring[] sarray;
+        Array!wchar[] sarray;
         if (args[0].type == ValueType.IntegerArray)
         {
             iarray = args[0].integerArray.array[start..start + count];
@@ -2466,7 +2466,7 @@ class BuiltinFunction
         }
         if (args[0].type == ValueType.StringArray)
         {
-            sarray = args[0].stringArray.array[start..start + count];
+            sarray = args[0].stringArray.array[start..start + count].array;
         }
         if (args.length > 1)
         {
@@ -2510,7 +2510,7 @@ class BuiltinFunction
 
         int[] iarray;
         double[] darray;
-        wstring[] sarray;
+        Array!wchar[] sarray;
         if (args[0].type == ValueType.IntegerArray)
         {
             iarray = args[0].integerArray.array[start..start + count];
@@ -2521,7 +2521,7 @@ class BuiltinFunction
         }
         if (args[0].type == ValueType.StringArray)
         {
-            sarray = args[0].stringArray.array[start..start + count];
+            sarray = args[0].stringArray.array[start..start + count].array;
         }
         if (args.length > 1)
         {
@@ -2737,7 +2737,7 @@ class BuiltinFunction
                     alias BFD = BuiltinFunctionData!(BuiltinFunction, name, i);
                     wstring name2 = getBasicName!BFD(name ~ suffix);
                     auto func = builtinFunctions.get(name2, null);
-                    pragma(msg, AddFunc!BFD);
+                    //pragma(msg, AddFunc!BFD);
                     auto f = new BuiltinFunction(
                                                  GetFunctionParamType!(BFD),
                                                  GetFunctionReturnType!(BFD),
@@ -2839,6 +2839,10 @@ template GetBuiltinFunctionArgment(P...)
         const string arg = "ValueType.Integer, false";
     }
     else static if(is(P[0] == wstring))
+    {
+        const string arg = "ValueType.String, false";
+    }
+    else static if(is(P[0] == Array!wchar))
     {
         const string arg = "ValueType.String, false";
     }
@@ -3030,14 +3034,14 @@ DefaultValue!(double, false) fromDoubleToSkip(Value v)
 DefaultValue!wstring fromStringToDefault(Value v)
 {
     if(v.type == ValueType.String)
-        return DefaultValue!wstring(v.castString());
+        return DefaultValue!wstring(v.castDString());
     else
         return DefaultValue!wstring(true);
 }
 DefaultValue!(wstring, false) fromStringToSkip(Value v)
 {
     if(v.type == ValueType.String)
-        return DefaultValue!(wstring, false)(v.castString());
+        return DefaultValue!(wstring, false)(v.castDString());
     else
         return DefaultValue!(wstring, false)(true);
 }
@@ -3198,6 +3202,19 @@ template AddFuncArg(int L, int N, int M, int O, BFD, P...)
         {
             static if(storage & ParameterStorageClass.out_)
             {
+                static assert(false, "Invalid argument out wstring");
+            }
+            else
+            {
+                enum add = 1;
+                enum outadd = 0;
+                const string arg = "arg[" ~ I.to!string ~ "].castDString";
+            }
+        }
+        else static if(is(P[0] == Array!wchar))
+        {
+            static if(storage & ParameterStorageClass.out_)
+            {
                 enum add = 0;
                 enum outadd = 1;
                 const string arg = "ret[" ~ O.to!string ~ "].stringValue";
@@ -3329,6 +3346,10 @@ template OutArgsInit(BFD, int I = 0, int J = 0)
                 enum ret2 = "ValueType.Void;";
             }
             else static if(is(param[I] == wstring))
+            {
+                enum ret2 = "ValueType.String;";
+            }
+            else static if(is(param[I] == Array!wchar))
             {
                 enum ret2 = "ValueType.String;";
             }

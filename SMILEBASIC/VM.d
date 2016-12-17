@@ -325,7 +325,7 @@ class PrintCode : Code
                 case ValueType.String:
                     //write(arg.stringValue);
                     if(vm.petitcomputer)
-                        vm.petitcomputer.console.printString(arg.stringValue);
+                        vm.petitcomputer.console.printString(arg.castDString);
                     break;
                 default:
                     //type mismatch
@@ -556,10 +556,10 @@ class Operate : Code
         }
         if(l.type == ValueType.String)
         {
-            wstring ls = l.stringValue;
+            wchar[] ls = l.stringValue.array;
             if(r.type == ValueType.String)
             {
-                wstring rs = r.stringValue;
+                wchar[] rs = r.stringValue.array;
                 switch(operator)
                 {
                     case TokenType.Plus:
@@ -866,11 +866,11 @@ class GotoExpr : Code
             int pc;
             if (sc && sc.func)
             {
-                pc = sc.func.label.get(label.castString, int.min);
+                pc = sc.func.label.get(label.castDString, int.min);
             }
             else
             {
-                pc = vm.currentSlot.globalLabel.get(label.castString, int.min);
+                pc = vm.currentSlot.globalLabel.get(label.castDString, int.min);
             }
             if (pc == int.min)
             {
@@ -931,16 +931,16 @@ class GosubExpr : Code
         vm.pop(label);
         if(label.isString)
         {
-            vm.pushBackTrace(label.castString);
+            vm.pushBackTrace(label.castDString);
             vm.pushpc;
             int pc;
             if (sc && sc.func)
             {
-                pc = sc.func.label.get(label.castString, int.min);
+                pc = sc.func.label.get(label.castDString, int.min);
             }
             else
             {
-                pc = vm.currentSlot.globalLabel.get(label.castString, int.min);
+                pc = vm.currentSlot.globalLabel.get(label.castDString, int.min);
             }
             if (pc == int.min)
             {
@@ -1040,7 +1040,7 @@ class NewArray : Code
                 break;
             case ValueType.String:
                 array.type = ValueType.StringArray;
-                array.stringArray = new Array!wstring(dim);
+                array.stringArray = new Array!(Array!wchar)(dim);
                 break;
             default:
                 throw new TypeMismatch();
@@ -1434,7 +1434,7 @@ class CallFunctionS : Code
         {
             throw new TypeMismatch();
         }
-        auto name = vname.castString.toUpper;
+        auto name = vname.castDString.toUpper;
         Function func = vm.currentSlot.functions.get(name, null);
         if(!func)
         {
@@ -1748,13 +1748,13 @@ class RestoreExprCode : Code
         vm.pop(label);
         if(!label.isString)
             throw new TypeMismatch();
-        if (label.stringValue in datatable.label)
+        if (label.castDString in datatable.label)
         {
-            datatable.dataIndex = datatable.label[label.stringValue];
+            datatable.dataIndex = datatable.label[label.castDString];
         }
-        else if (label.stringValue in vm.currentSlot.globalDataTable.label)
+        else if (label.castDString in vm.currentSlot.globalDataTable.label)
         {
-            datatable.dataIndex = vm.currentSlot.globalDataTable.label[label.stringValue];
+            datatable.dataIndex = vm.currentSlot.globalDataTable.label[label.castDString];
         }
         else
         {
@@ -1875,7 +1875,7 @@ class IncRef : Code
             }
             if (refv.reference.isString && v.isString)
             {
-                refv.reference.stringValue~= v.stringValue;
+                refv.reference.stringValue.append(v.stringValue);
                 return;
             }
         }
@@ -1905,7 +1905,7 @@ class IncRef : Code
 
 class SwapCode : Code
 {
-    void getPointer(ref Value v, out int* ip, out double* dp, out wstring* sp)
+    void getPointer(ref Value v, out int* ip, out double* dp, out Array!(wchar)* sp)
     {
         ip = null;
         dp = null;
@@ -1952,7 +1952,7 @@ class SwapCode : Code
         vm.pop(refitem1);
         double* dp1, dp2;
         int* ip1, ip2;
-        wstring* sp1, sp2;
+        Array!(wchar)* sp1, sp2;
         getPointer(refitem1, ip1, dp1, sp1);
         getPointer(refitem2, ip2, dp2, sp2);
         if ((sp1 && (dp2 || ip2)) || (sp2 && (dp1 || ip1)))
@@ -1999,7 +1999,7 @@ class PushVarRefExpression : Code
     {
         Value valv;
         vm.pop(valv);
-        auto name = valv.castString;
+        auto name = valv.castDString;
 
         VMVariable vmv = VMVariable(int.min);
         if (sc.func)
@@ -2031,7 +2031,7 @@ class PushVarExpression : Code
     {
         Value valv;
         vm.pop(valv);
-        auto name = valv.castString;
+        auto name = valv.castDString;
 
         VMVariable vmv = VMVariable(int.min);
         if (sc.func)
@@ -2065,7 +2065,7 @@ class PopVarExpression : Code
         vm.pop(valv);
         Value expr;
         vm.pop(expr);
-        auto name = valv.castString;
+        auto name = valv.castDString;
 
         VMVariable vmv = VMVariable(int.min);
         if (sc.func)
