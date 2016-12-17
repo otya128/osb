@@ -30,7 +30,6 @@ struct Value
     {
         int integerValue;
         double doubleValue;
-        //TODO:Array!wchar stringValue;にしたい
         Array!wchar stringValue;
         Array!int integerArray;
         Array!double doubleArray;
