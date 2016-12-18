@@ -458,6 +458,10 @@ class Array(T)
             throw new TypeMismatch();
         }
         array.length = size;
+        static if (is(T == double))
+        {
+            array[array.length - size..$] = 0;
+        }
         dim[0] = size;
     }
     void append(Array!T input)
