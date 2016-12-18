@@ -1162,7 +1162,6 @@ class Graphic2 : Graphic
                     array[iy * arrayW + ix] = 0;
             }
         }
-        df = true;
     }
 
     override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
