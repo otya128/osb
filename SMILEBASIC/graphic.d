@@ -803,7 +803,13 @@ class Graphic2 : Graphic
 
     override void gpset(int page, int x, int y, uint color)
     {
-        buffer[y * width + x] = color;
+        auto wa = writeArea[petitcom.displaynum];
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+        {
+            buffer[y * width + x] = color;
+        }
         df = true;
     }
 
@@ -870,8 +876,8 @@ class Graphic2 : Graphic
             ey = y2;
         }
         auto wa = writeArea[petitcom.displaynum];
-        int cx2 = wa.x + wa.w;
-        int cy2 = wa.y + wa.h;
+        int cx2 = wa.x + wa.w - 1;
+        int cy2 = wa.y + wa.h - 1;
         void drawLine1(int y)
         {
             for (int x = sx; x <= ex; x++)
@@ -919,8 +925,8 @@ class Graphic2 : Graphic
             ey = y2;
         }
         auto wa = writeArea[petitcom.displaynum];
-        int cx2 = wa.x + wa.w;
-        int cy2 = wa.y + wa.h;
+        int cx2 = wa.x + wa.w - 1;
+        int cy2 = wa.y + wa.h - 1;
         //clipping
         if (wa.x > sx)
         {
@@ -1004,7 +1010,7 @@ class Graphic2 : Graphic
         auto wa = writeArea[petitcom.displaynum];
         int cx2 = wa.x + wa.w;
         int cy2 = wa.y + wa.h;
-        int sx, sy, w = rect.w, h = rect.h;
+        int sx, sy, w = rect.w * scalex, h = rect.h * scaley;
         //clipping
         if (wa.x > x)
         {
@@ -1041,15 +1047,15 @@ class Graphic2 : Graphic
             }
         }
         int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
-        for (int i = sy; i < sy + h; i ++)
-        {
-            for (int j = sx; j < sx + w; j++)
-            {
-                font[i * 8 + j] = mulColor(grpfbuffer[rect.x + j + (rect.y + i) * GRPFWidth], color);
-            }
-        }
         if (scalex == 1 && scaley == 1)
         {
+            for (int i = sy; i < sy + h; i ++)
+            {
+                for (int j = sx; j < sx + w; j++)
+                {
+                    font[i * 8 + j] = mulColor(grpfbuffer[rect.x + j + (rect.y + i) * GRPFWidth], color);
+                }
+            }
             for (int iy = sy; iy < sy + h; iy++)
             {
                 for (int ix = sx; ix < sx + w; ix++)
@@ -1058,6 +1064,24 @@ class Graphic2 : Graphic
                     {
                         (buffer + (y + iy) * width + x + ix)[0] = font[iy * 8 + ix];
                     }
+                }
+            }
+            return;
+        }
+        for (int i = sy / scaley; i < (sy + h) / scaley; i ++)
+        {
+            for (int j = sx / scalex; j < (sx + w) / scalex; j++)
+            {
+                font[i * 8 + j] = mulColor(grpfbuffer[rect.x + j + (rect.y + i) * GRPFWidth], color);
+            }
+        }
+        for (int iy = sy; iy < sy + h; iy++)
+        {
+            for (int ix = sx; ix < sx + w; ix++)
+            {
+                if (font[iy / scaley * 8 + ix / scalex] >> 24/*is trans*/)
+                {
+                    (buffer + (y + iy) * width + x + ix)[0] = font[iy / scaley * 8 + ix / scaley];
                 }
             }
         }
