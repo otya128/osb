@@ -8,7 +8,7 @@ import std.stdio;
 import std.ascii;
 import std.range;
 import std.string;
-import std.algorithm.sorting;
+import std.algorithm;
 import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
@@ -481,7 +481,6 @@ class BuiltinFunction
     }
     static void GCLIP(PetitComputer p, int clipmode, int sx, int sy, int ex, int ey)
     {
-        import std.algorithm : swap;
         if (sx < 0 || sy < 0 || ex < 0 || ey < 0)
             throw new OutOfRange("GCLIP");
         if (clipmode)
@@ -2544,7 +2543,6 @@ class BuiltinFunction
     }
     static double MAX(Value array)
     {
-        import std.algorithm.searching;
         if (array.type == ValueType.IntegerArray)
         {
             return minPos!"a > b"(array.integerArray.array)[0];
@@ -2557,7 +2555,6 @@ class BuiltinFunction
     }
     static double MAX(Value[] args)
     {
-        import std.algorithm.searching;
         if (args.length == 0)
         {
             throw new IllegalFunctionCall("MAX");
@@ -2566,7 +2563,6 @@ class BuiltinFunction
     }
     static double MIN(Value array)
     {
-        import std.algorithm.searching;
         if (array.type == ValueType.IntegerArray)
         {
             return minPos!"a < b"(array.integerArray.array)[0];
@@ -2579,7 +2575,6 @@ class BuiltinFunction
     }
     static double MIN(Value[] args)
     {
-        import std.algorithm.searching;
         if (args.length == 0)
         {
             throw new IllegalFunctionCall("MIN");
