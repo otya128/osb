@@ -986,6 +986,8 @@ class Graphic2 : Graphic
 
     override void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
     {
+        drawCharacter(x, y, scalex, scaley, color, cast(wchar)text);
+        df = true;
     }
 
     int mulColor(int color, int color2)
