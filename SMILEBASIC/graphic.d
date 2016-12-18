@@ -1174,12 +1174,34 @@ class Graphic2 : Graphic
         gsaveTempl(x, y, w, h, array, flag);
     }
 
+    void gloadTempl(T)(int x, int y, int w, int h, T[] array, int flag, int copymode)
+    {
+        int arrayH = h, arrayW = w;
+        int sx, sy;
+        if (clipXYWH(writeArea[petitcom.displaynum], x, y, w, h, sx, sy, w, h))
+            return;
+        for (int iy = sy; iy < h; iy++)
+        {
+            for (int ix = sx; ix < w; ix++)
+            {
+                auto c = cast(int)array[iy * arrayW + ix];
+                if (flag)
+                    c = RGBA16ToARGB32Color(c);
+                if (copymode || c >> 24)
+                    *(buffer + (iy + y) * width + (x + ix)) = c;
+            }
+        }
+        df = true;
+    }
+
     override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
     {
+        gloadTempl(x, y, w, h, array, flag, copymode);
     }
 
     override void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
     {
+        gloadTempl(x, y, w, h, array, flag, copymode);
     }
 
 }
