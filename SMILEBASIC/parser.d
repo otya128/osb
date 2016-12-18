@@ -1665,8 +1665,9 @@ class Parser
             auto exp = expression();
             if(exp is null)
             {
-                lex.popFront();
                 syntaxError();
+                lex.popFront();
+                token = lex.front();
                 continue;
             }
             print.addArgument(exp);
