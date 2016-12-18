@@ -8,6 +8,7 @@ import std.stdio;
 import std.ascii;
 import std.range;
 import std.string;
+import std.algorithm.sorting;
 import otya.smilebasic.error;
 import otya.smilebasic.type;
 import otya.smilebasic.petitcomputer;
@@ -2448,7 +2449,6 @@ class BuiltinFunction
     //もう少しまともな実装できそう
     static void SORT(Value[] arg)
     {
-        import std.algorithm.sorting;
         import std.range;
         int start, count;
         auto args = getSortArgument(arg, start, count);
@@ -2503,7 +2503,6 @@ class BuiltinFunction
     }
     static void RSORT(Value[] arg)
     {
-        import std.algorithm.sorting;
         import std.range;
         int start, count;
         auto args = getSortArgument(arg, start, count);
