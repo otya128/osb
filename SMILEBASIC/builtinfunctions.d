@@ -2703,6 +2703,44 @@ class BuiltinFunction
             //TODO:=== Press ENTER ===
         }
     }
+    static void FILL(Value array, Value value)
+    {
+        if (array.isString || !array.isArray)
+            throw new TypeMismatch("FILL", 1);
+        FILL(array, value, 0, array.length);
+    }
+    static void FILL(Value array, Value value, int offset)
+    {
+        if (array.isString || !array.isArray)
+            throw new TypeMismatch("FILL", 1);
+        FILL(array, value, offset, array.length - offset);
+    }
+    static void FILL(Value array, Value value, int offset, int len)
+    {
+        if (array.isString || !array.isArray)
+            throw new TypeMismatch("FILL", 1);
+        if (!value.canCast(array.elementType))
+            throw new TypeMismatch("FILL"/*no argument number*/);
+        if (offset < 0)
+            throw new OutOfRange("FILL", 3);
+        if (array.length < offset + len)
+            throw new OutOfRange("FILL", 4);
+        if (array.type == ValueType.StringArray)
+        {
+            for (int i = 0; i < len; i++)
+            {
+                array.stringArray.array[offset + i] = value.castString.dup/*copy*/;
+            }
+        }
+        if (array.type == ValueType.IntegerArray)
+        {
+            array.integerArray.array[offset..offset + len] = value.castInteger;
+        }
+        if (array.type == ValueType.DoubleArray)
+        {
+            array.doubleArray.array[offset..offset + len] = value.castDouble;
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

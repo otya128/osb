@@ -517,6 +517,16 @@ class Array(T)
         array = array[0..index] ~ ary.array ~ array[index + 1..$];
         dim[0] = cast(int)array.length;
     }
+    protected this(Array!T a)
+    {
+        this.dim = a.dim;
+        this.dimCount = a.dimCount;
+        this.array = a.array.dup;
+    }
+    Array!T dup()
+    {
+        return new Array!T(this);
+    }
 
 }
 struct ArrayReference(T)
