@@ -1001,19 +1001,58 @@ class Graphic2 : Graphic
     {
         auto rect = petitcom.console.fontTable[c];
         int[8 * 8] font;
-        int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
-        for (int i = 0; i < 8; i ++)
+        auto wa = writeArea[petitcom.displaynum];
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        int sx, sy, w = rect.w, h = rect.h;
+        //clipping
+        if (wa.x > x)
         {
-            for (int j = 0; j < 8; j++)
+            sx = wa.x - x;
+            w -= sx;
+            if (sx >=  rect.w)
+            {
+                return;
+            }
+        }
+        if (wa.w + wa.x < x + sx + w)
+        {
+            w = w - ((x + sx + w) - (wa.w + wa.x));
+            if (w < 1)
+            {
+                return;
+            }
+        }
+        if (wa.y > y)
+        {
+            sy = wa.y - y;
+            h -= sy;
+            if (sy >=  rect.h)
+            {
+                return;
+            }
+        }
+        if (wa.h < h)
+        {
+            h = h - ((y + sy + h) - (wa.h + wa.y));
+            if (h < 1)
+            {
+                return;
+            }
+        }
+        int* grpfbuffer = cast(int*)petitcom.console.GRPF.surface.pixels;
+        for (int i = sy; i < sy + h; i ++)
+        {
+            for (int j = sx; j < sx + w; j++)
             {
                 font[i * 8 + j] = mulColor(grpfbuffer[rect.x + j + (rect.y + i) * GRPFWidth], color);
             }
         }
         if (scalex == 1 && scaley == 1)
         {
-            for (int iy = 0; iy < rect.h; iy++)
+            for (int iy = sy; iy < sy + h; iy++)
             {
-                for (int ix = 0; ix < rect.w; ix++)
+                for (int ix = sx; ix < sx + w; ix++)
                 {
                     if (font[iy * 8 + ix] >> 24/*is trans*/)
                     {
