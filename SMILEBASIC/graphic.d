@@ -387,6 +387,22 @@ class Graphic
             displayArea[petitcom.displaynum] = SDL_Rect(x, y, w, h);
         }
     }
+    static int ARGB32ToRGBA16Color(int argb32)
+    {
+        auto a = (argb32 & 0xFF000000) >> 24;
+        auto r = (argb32 & 0x00FF0000) >> 16;
+        auto g = (argb32 & 0x0000FF00) >> 8;
+        auto b = (argb32 & 0x000000FF);
+        return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
+    }
+    static int RGBA16ToARGB32Color(int rgba16)
+    {
+        auto a = (rgba16 & 0b0000000000000001) == 1 ? 0xFF000000 : 0;
+        auto r = (rgba16 & 0b1111100000000000) >> 11;
+        auto g = (rgba16 & 0b0000011111000000) >> 6;
+        auto b = (rgba16 & 0b0000000000111110) >> 1;
+        return a | r << 19 | g << 11 | b << 3;
+    }
 }
 
 class GraphicFBO : Graphic
@@ -668,22 +684,6 @@ class GraphicFBO : Graphic
                 array[i] = ARGB32ToRGBA16Color(array[i]);
             }
         }
-    }
-    int ARGB32ToRGBA16Color(int argb32)
-    {
-        auto a = (argb32 & 0xFF000000) >> 24;
-        auto r = (argb32 & 0x00FF0000) >> 16;
-        auto g = (argb32 & 0x0000FF00) >> 8;
-        auto b = (argb32 & 0x000000FF);
-        return (a == 255) | r >> 3 << 11 | g >> 3 << 6 | b >> 3 << 1;
-    }
-    int RGBA16ToARGB32Color(int rgba16)
-    {
-        auto a = (rgba16 & 0b0000000000000001) == 1 ? 0xFF000000 : 0;
-        auto r = (rgba16 & 0b1111100000000000) >> 11;
-        auto g = (rgba16 & 0b0000011111000000) >> 6;
-        auto b = (rgba16 & 0b0000000000111110) >> 1;
-        return a | r << 19 | g << 11 | b << 3;
     }
     override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
     {
@@ -1005,6 +1005,49 @@ class Graphic2 : Graphic
             a1 = 0;
         return PetitComputer.RGB(a1, r1, g1, b1);
     }
+    bool clipXYWH(SDL_Rect wa, int x, int y, int w, int h, out int sx, out int sy, out int w2, out int h2)
+    {
+        int cx2 = wa.x + wa.w;
+        int cy2 = wa.y + wa.h;
+        w2 = w;
+        h2 = h;
+        //clipping
+        if (wa.x > x)
+        {
+            sx = wa.x - x;
+            w2 -= sx;
+            if (sx >=  w)
+            {
+                return true;
+            }
+        }
+        if (wa.w + wa.x < x + sx + w2)
+        {
+            w2 = w2 - ((x + sx + w2) - (wa.w + wa.x));
+            if (w < 1)
+            {
+                return true;
+            }
+        }
+        if (wa.y > y)
+        {
+            sy = wa.y - y;
+            h2 -= sy;
+            if (sy >=  h)
+            {
+                return true;
+            }
+        }
+        if (wa.h < h2)
+        {
+            h2 = h2 - ((y + sy + h2) - (wa.h + wa.y));
+            if (h < 1)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
     void drawCharacter(int x, int y, int scalex, int scaley, uint color, immutable wchar c)
     {
         auto rect = petitcom.console.fontTable[c];
@@ -1102,12 +1145,34 @@ class Graphic2 : Graphic
         return buffer[y * height + x];
     }
 
+    void gsaveTempl(T)(int x, int y, int w, int h, T[] array, int flag)
+    {
+        int arrayH = h, arrayW = w;
+        int sx, sy;
+        for (int iy = sy; iy < h; iy++)
+        {
+            for (int ix = sx; ix < w; ix++)
+            {
+                if (x >= 0 && y >= 0 && x < width && y < height)
+                {
+                    auto c = *(buffer + (iy + y) * width + (x + ix));
+                    array[iy * arrayW + ix] = flag ? ARGB32ToRGBA16Color(c) : c;
+                }
+                else
+                    array[iy * arrayW + ix] = 0;
+            }
+        }
+        df = true;
+    }
+
     override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
     {
+        gsaveTempl(x, y, w, h, array, flag);
     }
 
     override void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
     {
+        gsaveTempl(x, y, w, h, array, flag);
     }
 
     override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
