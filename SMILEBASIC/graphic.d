@@ -1145,10 +1145,11 @@ class Graphic2 : Graphic
         return buffer[y * height + x];
     }
 
-    void gsaveTempl(T)(int x, int y, int w, int h, T[] array, int flag)
+    void gsaveTempl(T)(int savepage, int x, int y, int w, int h, T[] array, int flag)
     {
         int arrayH = h, arrayW = w;
         int sx, sy;
+        int* buffer = cast(int*)GRP[savepage].surface.pixels;
         for (int iy = sy; iy < h; iy++)
         {
             for (int ix = sx; ix < w; ix++)
@@ -1166,12 +1167,12 @@ class Graphic2 : Graphic
 
     override void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag)
     {
-        gsaveTempl(x, y, w, h, array, flag);
+        gsaveTempl(savepage, x, y, w, h, array, flag);
     }
 
     override void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag)
     {
-        gsaveTempl(x, y, w, h, array, flag);
+        gsaveTempl(savepage, x, y, w, h, array, flag);
     }
 
     void gloadTempl(T)(int x, int y, int w, int h, T[] array, int flag, int copymode)
