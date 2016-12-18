@@ -352,6 +352,12 @@ class Push : Code
     }
     override void execute(VM vm)
     {
+        if (imm.type == ValueType.String)
+        {
+            //copy
+            vm.push(Value(imm.castDString));
+            return;
+        }
         vm.push(imm);
     }
     override string toString(VM vm)
