@@ -789,6 +789,10 @@ class Graphic2 : Graphic
         }
     }
 
+    int convertColor(int color)
+    {
+        return color & 0xFFF8F8F8;
+    }
     int* buffer;
     override @property void useGRP(int page)
     {
@@ -803,6 +807,7 @@ class Graphic2 : Graphic
 
     override void gpset(int page, int x, int y, uint color)
     {
+        color = convertColor(color);
         auto wa = writeArea[petitcom.displaynum];
         int cx2 = wa.x + wa.w;
         int cy2 = wa.y + wa.h;
@@ -816,6 +821,7 @@ class Graphic2 : Graphic
     import std.math;
     override void gline(int page, int x, int y, int x2, int y2, uint color)
     {
+        color = convertColor(color);
         int dx = abs(x2 - x);
         int dy = abs(y2 - y);
         int sx, sy;
@@ -854,6 +860,7 @@ class Graphic2 : Graphic
 
     override void gbox(int page, int x, int y, int x2, int y2, uint color)
     {
+        color = convertColor(color);
         int sx, sy, ex, ey;
         if (x > x2)
         {
@@ -903,6 +910,7 @@ class Graphic2 : Graphic
 
     override void gfill(int page, int x, int y, int x2, int y2, uint color)
     {
+        color = convertColor(color);
         int sx, sy, ex, ey;
         if (x > x2)
         {
@@ -969,23 +977,28 @@ class Graphic2 : Graphic
 
     override void gcls(int page, uint color)
     {
+        color = convertColor(color);
         gfill(page, 0, 0, width - 1, height - 1, color);
     }
 
     override void gpaint(int page, int x, int y, uint color)
     {
+        color = convertColor(color);
     }
 
     override void gcircle(int page, int x, int y, int r, uint color)
     {
+        color = convertColor(color);
     }
 
     override void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
     {
+        color = convertColor(color);
     }
 
     override void gputchr(int page, int x, int y, int text, int scalex, int scaley, uint color)
     {
+        color = convertColor(color);
         drawCharacter(x, y, scalex, scaley, color, cast(wchar)text);
         df = true;
     }
@@ -1133,6 +1146,7 @@ class Graphic2 : Graphic
     }
     override void gputchr(int page, int x, int y, wstring text, int scalex, int scaley, uint color)
     {
+        color = convertColor(color);
         foreach (i, c; text)
         {
             drawCharacter(x + scalex * cast(int)i * 8, y, scalex, scaley, color, c);
@@ -1188,6 +1202,7 @@ class Graphic2 : Graphic
                 auto c = cast(int)array[iy * arrayW + ix];
                 if (flag)
                     c = RGBA16ToARGB32Color(c);
+                c = convertColor(c);
                 if (copymode || c >> 24)
                     *(buffer + (iy + y) * width + (x + ix)) = c;
             }
