@@ -697,22 +697,24 @@ class BuiltinFunction
         import std.random;
         return uniform(0.0, 1.0);
     }
-    static void DTREAD(DefaultValue!(wstring, false) date, out int Y, out int M, out int D/*W*/)
+    @StartOptional("W")
+    static void DTREAD(out int Y, out int M, out int D, out int W)
     {
         import std.datetime;
         auto currentTime = Clock.currTime();
-        if(date.isDefault)
-        {
-            Y = currentTime.year;
-            M = currentTime.month;
-            D = currentTime.day;
-        }
-        else
-        {
-            import std.format;
-            auto v = date.value;
-            formattedRead(v, "%d/%d/%d", &Y, &M, &D);
-        }
+        Y = currentTime.year;
+        M = currentTime.month;
+        D = currentTime.day;
+        W = cast(int)currentTime.dayOfWeek;//Represents the 7 days of the Gregorian week (Sunday is 0).
+    }
+    @StartOptional("W")
+    static void DTREAD(wstring date, out int Y, out int M, out int D, out int W)
+    {
+        import std.datetime;
+        import std.format;
+        auto v = date;
+        formattedRead(v, "%d/%d/%d", &Y, &M, &D);
+        W = cast(int)DateTime(Y, M, D).dayOfWeek;
     }
     static int LEN(Value ary)
     {
