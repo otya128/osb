@@ -1994,6 +1994,18 @@ class BuiltinFunction
                 throw new TypeMismatch("COPY", sourceArrayIndex + 2);
             len = args[sourceArrayIndex + 1].castInteger;
         }
+        else
+        {
+            len = src.length - srcoffset;
+        }
+        if (dst.length < len + dstoffset)
+        {
+            if (dst.dimCount != 1)
+            {
+                throw new SubscriptOutOfRange("COPY");
+            }
+            dst.length = len + dstoffset;
+        }
         if (src.type == ValueType.StringArray && dst.type == ValueType.StringArray)
         {
             for(int i = 0; i < len; i++)

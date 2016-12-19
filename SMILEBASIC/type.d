@@ -226,6 +226,42 @@ struct Value
                 throw new TypeMismatch();
         }
     }
+    @property void length(int len)
+    {
+        switch(this.type)
+        {
+            case ValueType.String:
+                stringValue.length = len;
+                return;
+            case ValueType.IntegerArray:
+                integerArray.length = len;
+                return;
+            case ValueType.DoubleArray:
+                doubleArray.length = len;
+                return;
+            case ValueType.StringArray:
+                stringArray.length = len;
+                return;
+            default:
+                throw new TypeMismatch();
+        }
+    }
+    @property int dimCount()
+    {
+        switch(this.type)
+        {
+            case ValueType.String:
+                return stringValue.dimCount;
+            case ValueType.IntegerArray:
+                return integerArray.dimCount;
+            case ValueType.DoubleArray:
+                return doubleArray.dimCount;
+            case ValueType.StringArray:
+                return stringArray.dimCount;
+            default:
+                throw new TypeMismatch();
+        }
+    }
     void opIndexAssign(Value v, int i)
     {
         switch(this.type)
