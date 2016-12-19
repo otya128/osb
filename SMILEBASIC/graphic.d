@@ -315,6 +315,11 @@ class Graphic
             GraphicFBO gfbo = (cast(GraphicFBO)this);
             gfbo.gloadPalette(x, y, w, h, array, palette, copymode);
         }
+        if (cast(Graphic2)this)
+        {
+            Graphic2 g = (cast(Graphic2)this);
+            g.gloadPalette(x, y, w, h, array, palette, copymode);
+        }
     }
     int[2] gprios = [511, 511];
 
@@ -1220,4 +1225,23 @@ class Graphic2 : Graphic
         gloadTempl(x, y, w, h, array, flag, copymode);
     }
 
+    void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
+    if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
+    {
+        int arrayH = h, arrayW = w;
+        int sx, sy;
+        if (clipXYWH(writeArea[petitcom.displaynum], x, y, w, h, sx, sy, w, h))
+            return;
+        for (int iy = sy; iy < h; iy++)
+        {
+            for (int ix = sx; ix < w; ix++)
+            {
+                auto c = cast(int)palette[cast(int)array[iy * arrayW + ix]];
+                c = convertColor(c);
+                if (copymode || c >> 24)
+                    *(buffer + (iy + y) * width + (x + ix)) = c;
+            }
+        }
+        df = true;
+    }
 }
