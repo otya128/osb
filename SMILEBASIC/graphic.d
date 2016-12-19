@@ -991,9 +991,44 @@ class Graphic2 : Graphic
         color = convertColor(color);
     }
 
-    override void gcircle(int page, int x, int y, int r, uint color)
+    override void gcircle(int page, int x0, int y0, int r, uint color)
     {
         color = convertColor(color);
+        /*== http://fussy.web.fc2.com/algo/algo2-1.htm ==*/
+        int x = r;
+        int y = 0;
+        int F = -2 * r + 3;
+
+        void pset(int x, int y, int color)
+        {
+            auto wa = writeArea[petitcom.displaynum];
+            int cx2 = wa.x + wa.w;
+            int cy2 = wa.y + wa.h;
+            if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+            {
+                buffer[y * width + x] = color;
+            }
+        }
+        while (x >= y)
+        {
+            pset(x0 + x, y0 + y, color);
+            pset(x0 - x, y0 + y, color);
+            pset(x0 + x, y0 - y, color);
+            pset(x0 - x, y0 - y, color);
+            pset(x0 + y, y0 + x, color);
+            pset(x0 - y, y0 + x, color);
+            pset(x0 + y, y0 - x, color);
+            pset(x0 - y, y0 - x, color);
+            if (F >= 0)
+            {
+                x--;
+                F -= 4 * x;
+            }
+            y++;
+            F += 4 * y + 2;
+        }
+        /*== http://fussy.web.fc2.com/algo/algo2-1.htm ==*/
+        df = true; 
     }
 
     override void gcircle(int page, int x, int y, int r, int startr, int endr, int flag, uint color)
