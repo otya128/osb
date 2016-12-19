@@ -1994,17 +1994,19 @@ class BuiltinFunction
                 throw new TypeMismatch("COPY", sourceArrayIndex + 2);
             len = args[sourceArrayIndex + 1].castInteger;
         }
+        if (src.type == ValueType.StringArray && dst.type == ValueType.StringArray)
+        {
+            for(int i = 0; i < len; i++)
+            {
+                dst.stringArray.array[i + dstoffset] = src.stringArray.array[i + srcoffset].dup;
+            }
+        }
         else
         {
             for(int i = 0; i < len; i++)
             {
                 dst[i + dstoffset] = src[i + srcoffset];
             }
-            return;
-        }
-        for(int i = 0; i < len; i++)
-        {
-            dst[i + dstoffset] = src[i + srcoffset];
         }
     }
     @BasicName("LOAD")
