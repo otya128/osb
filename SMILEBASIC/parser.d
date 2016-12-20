@@ -1045,6 +1045,7 @@ class Parser
             case TokenType.Break:
                 node = new Break(lex.location);
                 break;
+            case TokenType.Next:
             case TokenType.Continue:
                 node = new Continue(lex.location);
                 break;
