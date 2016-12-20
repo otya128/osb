@@ -321,6 +321,7 @@ class Graphic
             g.gloadPalette(x, y, w, h, array, palette, copymode);
         }
     }
+    abstract void gcopy(int srcpage, int x, int y, int x2, int y2, int x3, int y3, int cpmode);
     int[2] gprios = [511, 511];
 
     @property ref gprio()
@@ -1199,7 +1200,7 @@ class Graphic2 : Graphic
         return buffer[y * height + x];
     }
 
-    void gsaveTempl(T)(int savepage, int x, int y, int w, int h, T[] array, int flag)
+    void gsaveTempl(T)(int savepage, int x, int y, int w, int h, T array, int flag)
     {
         int arrayH = h, arrayW = w;
         int sx, sy;
@@ -1229,7 +1230,7 @@ class Graphic2 : Graphic
         gsaveTempl(savepage, x, y, w, h, array, flag);
     }
 
-    void gloadTempl(T)(int x, int y, int w, int h, T[] array, int flag, int copymode)
+    void gloadTempl(T)(int x, int y, int w, int h, T array, int flag, int copymode)
     {
         int arrayH = h, arrayW = w;
         int sx, sy;
@@ -1278,5 +1279,18 @@ class Graphic2 : Graphic
             }
         }
         df = true;
+    }
+    //incomplete
+    override void gcopy(int srcpage, int x1, int y1, int x2, int y2, int x3, int y3, int cpmode)
+    {
+        import std.algorithm;
+        auto tempbuffer = paint.buffer;//aa
+        if (x1 > x2)
+            swap(x1, x2);
+        if (y1 > y2)
+            swap(y1, y2);
+        int w = x2 - x1 + 1, h = y2 - y1 + 1;
+        gsaveTempl(srcpage, x1, y1, w, h, tempbuffer, 0);
+        gloadTempl(x3, y3, w, h, tempbuffer, 0, cpmode);
     }
 }

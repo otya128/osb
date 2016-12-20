@@ -660,6 +660,14 @@ class BuiltinFunction
         }
         GLOAD(p, writeArea.x, writeArea.y, writeArea.w, writeArea.h, ary, flagOrPalette, copymode);
     }
+    static void GCOPY(PetitComputer p, int srcpage, int x, int y, int x2, int y2, int x3, int y3, int cpmode)
+    {
+        p.graphic.gcopy(srcpage, x, y, x2, y2, x3, y3, cpmode);
+    }
+    static void GCOPY(PetitComputer p, int x, int y, int x2, int y2, int x3, int y3, int cpmode)
+    {
+        GCOPY(p, p.graphic.useGRP, x, y, x2, y2, x3, y3, cpmode);
+    }
     static void BGMPLAY(PetitComputer p, int music)
     {
     }
