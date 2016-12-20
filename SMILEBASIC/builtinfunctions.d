@@ -477,6 +477,11 @@ class BuiltinFunction
         p.graphic.showGRP = showPage;
         p.graphic.useGRP = usePage;
     }
+    static void GPAGE(PetitComputer p, out int showPage, out int usePage)
+    {
+        showPage = p.graphic.showGRP;
+        usePage = p.graphic.useGRP;
+    }
     static void GCLIP(PetitComputer p, int clipmode)
     {
         p.graphic.clip(cast(bool)clipmode/*not checked*/);
