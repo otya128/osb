@@ -414,6 +414,8 @@ class BuiltinFunction
     }
     static void DISPLAY(PetitComputer p, int display)
     {
+        if (p.currentDisplay.count <= display || display < 0)
+            throw new OutOfRange("DISPLAY", 1);
         p.display(display);
     }
     static int DISPLAY(PetitComputer p)

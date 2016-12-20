@@ -174,6 +174,10 @@ struct Display
     SDL_Rect[] rect;
     Size windowSize;
     int yoffset;
+    int count()
+    {
+        return cast(int)rect.length;
+    }
 }
 class RingBuffer(T)
 {
