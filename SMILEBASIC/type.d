@@ -487,6 +487,35 @@ class Array(T)
         dim[0]--;
         return last;
     }
+    void unshift(T v)
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array = v ~ array;
+        dim[0]++;
+    }
+    void unshift(Array!T v)
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        array = v.array ~ array;
+        dim[0] = cast(int)length;
+    }
+    T shift()
+    {
+        if (dimCount != 1)
+        {
+            throw new TypeMismatch();
+        }
+        auto l = array[0];
+        array = array[1..$];
+        dim[0]--;
+        return l;
+    }
     @property void length(int size)
     {
         if (dimCount != 1)

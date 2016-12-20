@@ -2720,6 +2720,62 @@ class BuiltinFunction
                 throw new TypeMismatch();
         }
     }
+    static void UNSHIFT(Value ary, Value exp)
+    {
+        if (!ary.isArray)
+        {
+            throw new TypeMismatch("UNSHIFT", 1);
+        }
+        if (!exp.canCast(ary.elementType))
+        {
+            throw new TypeMismatch("UNSHIFT");
+        }
+        if (ary.dimCount != 1)
+            throw new TypeMismatch("UNSHIFT", 1);
+        switch (ary.type)
+        {
+            case ValueType.String:
+                ary.stringValue.unshift(exp.castString);
+                break;
+            case ValueType.IntegerArray:
+                ary.integerArray.unshift(exp.castInteger);
+                break;
+            case ValueType.DoubleArray:
+                ary.doubleArray.unshift(exp.castDouble);
+                break;
+            case ValueType.StringArray:
+                ary.stringArray.unshift(exp.castString);
+                break;
+            default:
+                throw new TypeMismatch();
+        }
+    }
+    static Value SHIFT(Value ary)
+    {
+        if (!ary.isArray)
+        {
+            throw new TypeMismatch("SHIFT", 1);
+        }
+        if (ary.dimCount != 1)
+            throw new TypeMismatch("SHIFT", 1);
+        if (ary.length == 0)
+        {
+            throw new SubscriptOutOfRange("SHIFT");
+        }
+        switch (ary.type)
+        {
+            case ValueType.String:
+                return Value(ary.stringValue.shift());
+            case ValueType.IntegerArray:
+                return Value(ary.integerArray.shift());
+            case ValueType.DoubleArray:
+                return Value(ary.doubleArray.shift());
+            case ValueType.StringArray:
+                return Value(ary.stringArray.shift());
+            default:
+                throw new TypeMismatch();
+        }
+    }
     static void BACKTRACE(PetitComputer p)
     {
         auto bt = p.vm.backTrace;
