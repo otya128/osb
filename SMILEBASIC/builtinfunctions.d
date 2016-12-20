@@ -1228,7 +1228,11 @@ class BuiltinFunction
             str1 = vstart.castDString;
             str2 = vstr1.castDString;
         }
-        return cast(int)(str1[start..$].indexOf(str2, CaseSensitive.no));
+        ptrdiff_t index = str1[start..$].indexOf(str2);
+        if (index == -1)
+            return -1;
+        else
+            return cast(int)(index + start);
     }
     static int ASC(wstring str)
     {
