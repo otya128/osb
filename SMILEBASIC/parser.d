@@ -799,6 +799,11 @@ class Parser
                 statements.addStatement(statement);
             }
         }
+        ignoreVarNext();
+        return statements;
+    }
+    void ignoreVarNext()
+    {
         lex.popFront();
         auto token = lex.front;
         if(token.type == TokenType.Iden)
@@ -812,9 +817,9 @@ class Parser
                 token = lex.front;
                 if(token.type != TokenType.Iden) break;
                 lex.popFront();
+                token = lex.front;
             }
         }
-        return statements;
     }
     Statements whileStatements()
     {
@@ -1046,6 +1051,9 @@ class Parser
                 node = new Break(lex.location);
                 break;
             case TokenType.Next:
+                node = new Continue(lex.location);
+                ignoreVarNext();
+                return node;
             case TokenType.Continue:
                 node = new Continue(lex.location);
                 break;
