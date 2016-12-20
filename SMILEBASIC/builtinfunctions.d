@@ -1144,6 +1144,10 @@ class BuiltinFunction
     }
     static Value FLOOR(Value val)
     {
+        if (!val.isNumber)
+        {
+            throw new TypeMismatch("FLOOR");
+        }
         if (val.isInteger)
         {
             return val;
@@ -1153,6 +1157,10 @@ class BuiltinFunction
     }
     static Value ROUND(Value val)
     {
+        if (!val.isNumber)
+        {
+            throw new TypeMismatch("ROUND");
+        }
         if (val.isInteger)
         {
             return val;
@@ -1162,6 +1170,10 @@ class BuiltinFunction
     }
     static Value CEIL(Value val)
     {
+        if (!val.isNumber)
+        {
+            throw new TypeMismatch("CEIL");
+        }
         if (val.isInteger)
         {
             return val;
