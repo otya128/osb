@@ -588,6 +588,7 @@ class PetitComputer
             sprite.sppage[] = 4;
             bgpage[] = 5;
             SDL_Init(SDL_INIT_VIDEO);
+            SDL_Init(SDL_INIT_GAMECONTROLLER);
 
             DerelictGL.load();
             DerelictGL3.load();
@@ -885,6 +886,21 @@ class PetitComputer
                                 currentDisplay.yoffset -= event.wheel.y * 8;
                             }
                             break;
+                        case SDL_CONTROLLERDEVICEADDED:
+                            {
+                                AddController(event.cdevice.which);
+                            }
+                            break;
+                        case SDL_CONTROLLERDEVICEREMOVED:
+                            {
+                                RemoveController(event.cdevice.which);
+                            }
+                            break;
+                        case SDL_CONTROLLERBUTTONDOWN:
+                            {
+                                writeln(event.jbutton);
+                            }
+                            break;
                         default:
                             break;
                     }
@@ -899,6 +915,25 @@ class PetitComputer
         {
             writeln(t);
             readln();
+        }
+    }
+    SDL_GameController*[int] controllers;
+    void AddController(int id)
+    {
+        if(SDL_IsGameController(id))
+        {
+            SDL_GameController* pad = SDL_GameControllerOpen(id);
+            if (pad)
+            {
+                controllers[id] = pad;
+            }
+        }
+    }
+    void RemoveController(int id)
+    {
+        if(SDL_IsGameController(id))
+        {
+            SDL_GameControllerClose(controllers.get(id, null));
         }
     }
     SDL_Window* window;
