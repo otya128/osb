@@ -579,6 +579,7 @@ class PetitComputer
     SDL_GLContext context;
     SDL_GLContext contextVM;
     Object renderSync = new Object();
+    Button[int] controllerTable;
     void render()
     {
         try
@@ -617,6 +618,17 @@ class PetitComputer
             buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
             buttonTable[SDL_SCANCODE_SPACE] = Button.A;
             buttonTable[SDL_SCANCODE_ESCAPE] = Button.START;
+
+            controllerTable[SDL_CONTROLLER_BUTTON_DPAD_UP] = Button.UP;
+            controllerTable[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = Button.DOWN;
+            controllerTable[SDL_CONTROLLER_BUTTON_DPAD_LEFT] = Button.LEFT;
+            controllerTable[SDL_CONTROLLER_BUTTON_DPAD_RIGHT] = Button.RIGHT;
+            controllerTable[SDL_CONTROLLER_BUTTON_A] = Button.A;
+            controllerTable[SDL_CONTROLLER_BUTTON_B] = Button.B;
+            controllerTable[SDL_CONTROLLER_BUTTON_X] = Button.X;
+            controllerTable[SDL_CONTROLLER_BUTTON_Y] = Button.Y;
+            controllerTable[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = Button.L;
+            controllerTable[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = Button.R;
             if(!window)
             {
                 write("can't create window: ");
@@ -898,7 +910,20 @@ class PetitComputer
                             break;
                         case SDL_CONTROLLERBUTTONDOWN:
                             {
-                                writeln(event.jbutton);
+                                auto jbtn = event.jbutton.button;
+                                if (jbtn in controllerTable)
+                                {
+                                    button |= controllerTable[event.jbutton.button];
+                                }
+                            }
+                            break;
+                        case SDL_CONTROLLERBUTTONUP:
+                            {
+                                auto jbtn = event.jbutton.button;
+                                if (jbtn in controllerTable)
+                                {
+                                    button &= ~controllerTable[event.jbutton.button];
+                                }
                             }
                             break;
                         default:
