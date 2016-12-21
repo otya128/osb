@@ -622,6 +622,7 @@ class PetitComputer
                 writeln(SDL_GetError.to!string);
                 return;
             }
+            bool fullscreen = false;
             scope(exit)
             {
                 quit = true;
@@ -830,6 +831,18 @@ class PetitComputer
                             synchronized (buttonLock)
                             {
                                 auto key = event.key.keysym.sym;
+                                if (event.key.keysym.mod & KMOD_ALT)
+                                {
+                                    if (key == SDLK_RETURN)
+                                    {
+                                        fullscreen = !fullscreen;
+                                        if (fullscreen)
+                                            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+                                        else
+                                            SDL_SetWindowFullscreen(window, 0);
+                                        break;
+                                    }
+                                }
                                 button |= buttonTable[event.key.keysym.scancode];
                                 if(key == SDLK_v)
                                 {
