@@ -173,7 +173,7 @@ class VM
             setCurrentSlot(value.internalAddress.slot);
             return;
         }
-        assert(false, "internal error, compiler bug?");
+        assert(false, format("internal error, compiler bug?(%s)", value));
     }
     void pushpc()
     {
