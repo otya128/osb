@@ -774,6 +774,7 @@ class Graphic2 : Graphic
         {
             glBindTexture(GL_TEXTURE_2D, this.GRP[usePage[olddisplay]].glTexture);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+            glFlush();
             df = false;
         }
         olddisplay = display;
@@ -785,6 +786,7 @@ class Graphic2 : Graphic
     {
         glBindTexture(GL_TEXTURE_2D, this.GRP[useGRP].glTexture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+        glFlush();
     }
     override void updateVM()
     {
