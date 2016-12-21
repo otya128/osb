@@ -576,6 +576,61 @@ class PetitComputer
     {
         return petitcomBackcolor;
     }
+    void updateTouch(int mousex, int mousey)
+    {
+        int ww, wh;
+        SDL_GetWindowSize(window, &ww, &wh);
+        mousex = cast(int)(mousex / scaleX);
+        mousey = cast(int)(mousey / scaleY) - (wh - currentDisplay.yoffset);
+        import std.algorithm.comparison : clamp;
+        auto old = touchPosition;
+        if (x.mode != XMode.WIIU)
+        {
+            if (mousey >= screenHeight)
+            {
+                mousey -= screenHeight;
+                mousex -= (screenWidth - screenWidthDisplay1) / 2;
+            }
+            mousex = mousex.clamp(5, 314);
+            mousey = mousey.clamp(5, 234);
+            touchPosition = Touch(old.tm + 1, mousex, mousey);
+        }
+        else
+        {
+            //!!WiiU
+            if (xscreenmode == 3)//XSCREEN 5
+            {
+                auto w = currentDisplay.rect[0].w;
+                auto h = currentDisplay.rect[0].h;
+                auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
+                auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
+                auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
+                auto gamepady = cast(int)(mousey * (480 / cast(float)h));
+                touchPosition = Touch(old.tm + 1,
+                                      x3DS.clamp(5, 314), y3DS.clamp(5, 234),
+                                      gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
+                                      mousex.clamp(8, w - 13), mousey.clamp(8, h - 9));
+            }
+            else
+            {
+                auto w = currentDisplay.rect[1].w;
+                auto h = currentDisplay.rect[1].h;
+                mousex -= currentDisplay.rect[1].x;
+                mousey -= currentDisplay.rect[1].y;
+                if (mousex >= 0 && mousey >= 0)
+                {
+                    auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
+                    auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
+                    auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
+                    auto gamepady = cast(int)(mousey * (480 / cast(float)h));
+                    touchPosition = Touch(old.tm + 1,
+                                          x3DS.clamp(5, 314), y3DS.clamp(5, 234),
+                                          gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
+                                          mousex.clamp(12, w - 13), mousey.clamp(8, h - 9));
+                }
+            }
+        }
+    }
     SDL_GLContext context;
     SDL_GLContext contextVM;
     Object renderSync = new Object();
@@ -764,58 +819,7 @@ class PetitComputer
                     int mousex, mousey;
                     if (SDL_GetMouseState(&mousex, &mousey) & SDL_BUTTON_LMASK)
                     {
-                        int ww, wh;
-                        SDL_GetWindowSize(window, &ww, &wh);
-                        mousex = cast(int)(mousex / scaleX);
-                        mousey = cast(int)(mousey / scaleY) - (wh - currentDisplay.yoffset);
-                        import std.algorithm.comparison : clamp;
-                        auto old = touchPosition;
-                        if (x.mode != XMode.WIIU)
-                        {
-                            if (mousey >= screenHeight)
-                            {
-                                mousey -= screenHeight;
-                                mousex -= (screenWidth - screenWidthDisplay1) / 2;
-                            }
-                            mousex = mousex.clamp(5, 314);
-                            mousey = mousey.clamp(5, 234);
-                            touchPosition = Touch(old.tm + 1, mousex, mousey);
-                        }
-                        else
-                        {
-                            //!!WiiU
-                            if (xscreenmode == 3)//XSCREEN 5
-                            {
-                                auto w = currentDisplay.rect[0].w;
-                                auto h = currentDisplay.rect[0].h;
-                                auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
-                                auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
-                                auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
-                                auto gamepady = cast(int)(mousey * (480 / cast(float)h));
-                                touchPosition = Touch(old.tm + 1,
-                                                      x3DS.clamp(5, 314), y3DS.clamp(5, 234),
-                                                      gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                      mousex.clamp(8, w - 13), mousey.clamp(8, h - 9));
-                            }
-                            else
-                            {
-                                auto w = currentDisplay.rect[1].w;
-                                auto h = currentDisplay.rect[1].h;
-                                mousex -= currentDisplay.rect[1].x;
-                                mousey -= currentDisplay.rect[1].y;
-                                if (mousex >= 0 && mousey >= 0)
-                                {
-                                    auto x3DS = cast(int)(mousex * (screenWidthDisplay1 / cast(float)w));
-                                    auto y3DS = cast(int)(mousey * (screenHeightDisplay1 / cast(float)h));
-                                    auto gamepadx = cast(int)(mousex * (854 / cast(float)w));
-                                    auto gamepady = cast(int)(mousey * (480 / cast(float)h));
-                                    touchPosition = Touch(old.tm + 1,
-                                                          x3DS.clamp(5, 314), y3DS.clamp(5, 234),
-                                                          gamepadx.clamp(8, 854 - 9), gamepady.clamp(8, 480 - 9),
-                                                          mousex.clamp(12, w - 13), mousey.clamp(8, h - 9));
-                                }
-                            }
-                        }
+                        updateTouch(mousex, mousey);
                     }
                     else
                     {
@@ -924,6 +928,14 @@ class PetitComputer
                                 {
                                     button &= ~controllerTable[event.jbutton.button];
                                 }
+                            }
+                            break;
+                        case SDL_FINGERDOWN:
+                            {
+                                auto f = event.tfinger;
+                                auto x = f.x * this.currentDisplay.windowSize.width;
+                                auto y = f.y * this.currentDisplay.windowSize.height;
+                                updateTouch(cast(int)x, cast(int)y);
                             }
                             break;
                         default:
