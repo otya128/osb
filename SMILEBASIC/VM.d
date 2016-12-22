@@ -1514,10 +1514,6 @@ class CallBuiltinFunction : Code
         {
             vm.stacki -= func.argments.length;// - outcount;
         }
-        if (vm.stack[vm.stacki].type == ValueType.Void)
-        {
-            vm.dumpStack();
-        }
         ////vm.stacki += outcount;
         //vm.stacki = old;
         for(int i = 0; i < result.length; i++)
