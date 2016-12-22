@@ -873,7 +873,8 @@ class PetitComputer
                                         sendKey(Key(KeyOp.PASTE));
                                     }
                                 }
-                                if(Button.START & buttonTable[event.key.keysym.scancode])
+                                //TODO:mod key support
+                                if(event.key.keysym.scancode == SDL_SCANCODE_C && (event.key.keysym.mod & 0xC0) || Button.START & buttonTable[event.key.keysym.scancode])
                                 {
                                     stop();
                                 }
