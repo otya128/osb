@@ -197,7 +197,7 @@ struct Value
     }
     string toString()
     {
-        import std.conv;
+        import std.conv, std.format;
         switch(this.type)
         {
             case ValueType.Void:
@@ -205,9 +205,17 @@ struct Value
             case ValueType.Integer:
                 return this.integerValue.to!string;
             case ValueType.String:
-                return this.stringValue.to!string;
+                return this.stringValue.array.to!string;
+            case ValueType.IntegerArray:
+                return format("integerarray[%s]", length);
+            case ValueType.DoubleArray:
+                return format("doublearray[%s]", length);
+            case ValueType.StringArray:
+                return format("doublearray[%s]", length);
+            case ValueType.InternalAddress:
+                return format("internal address slot=%d, address=0x%x", internalAddress.slot, internalAddress.address);
             default:
-                return "default";
+                return type.to!string;
         }
     }
     @property int length()
