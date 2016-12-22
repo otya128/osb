@@ -2161,3 +2161,11 @@ class SetX : Code
             vm.petitcomputer.xoff(func);
     }
 }
+
+class Pop : Code
+{
+    override void execute(VM vm)
+    {
+        vm.decSP();
+    }
+}

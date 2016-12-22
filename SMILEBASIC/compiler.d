@@ -697,8 +697,13 @@ class Compiler
                     genCode(new PopVarExpression(sc));
                 }
                 break;
-                default:
-                    throw new SyntaxError();
+            case NodeType.VoidExpression:
+                {
+                    genCode(new Pop());
+                }
+                break;
+            default:
+                throw new SyntaxError();
 
         }
     }

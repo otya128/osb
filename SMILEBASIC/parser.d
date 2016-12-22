@@ -970,18 +970,30 @@ class Parser
                         while(true)
                         {
                             token = lex.front();
-                            Expression arg = expression();
-                            if(!isLValue(arg))
+                            if (token.type == TokenType.Comma)
                             {
-                                //to support func args... OUT (no argument)
-                                if (!func.outVariable.length)
+                                func.addOut(new VoidExpression(lex.location));
+                            }
+                            else
+                            {
+                                Expression arg = expression();
+                                if (!arg)
                                 {
+                                    func.addOut(new VoidExpression(lex.location));
                                     break;
                                 }
-                                syntaxError();
-                                return null;
+                                if(!isLValue(arg))
+                                {
+                                    //to support func args... OUT (no argument)
+                                    if (!func.outVariable.length)
+                                    {
+                                        break;
+                                    }
+                                    syntaxError();
+                                    return null;
+                                }
+                                func.addOut(arg);
                             }
-                            func.addOut(arg);
                             token = lex.front();
                             if(token.type == TokenType.Comma)
                             {
