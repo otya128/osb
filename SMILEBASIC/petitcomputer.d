@@ -598,7 +598,7 @@ class PetitComputer
         else
         {
             //!!WiiU
-            if (xscreenmode == 3)//XSCREEN 5
+            if (xscreenmode == 2 || xscreenmode == 0 || xscreenmode == 3)//XSCREEN 5
             {
                 auto w = currentDisplay.rect[0].w;
                 auto h = currentDisplay.rect[0].h;
