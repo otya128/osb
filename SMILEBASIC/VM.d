@@ -173,7 +173,20 @@ class VM
             setCurrentSlot(value.internalAddress.slot);
             return;
         }
+        dumpStack(stacki + 1);
         assert(false, format("internal error, compiler bug?(%s)", value));
+    }
+
+    void dumpStack()
+    {
+        dumpStack(stacki);
+    }
+    void dumpStack(int stacki)
+    {
+        foreach (i; stack[0..stacki])
+        {
+            stderr.writeln(i);
+        }
     }
     void pushpc()
     {
@@ -1501,6 +1514,10 @@ class CallBuiltinFunction : Code
         {
             vm.stacki -= func.argments.length;// - outcount;
         }
+        if (vm.stack[vm.stacki].type == ValueType.Void)
+        {
+            vm.dumpStack();
+        }
         ////vm.stacki += outcount;
         //vm.stacki = old;
         for(int i = 0; i < result.length; i++)
@@ -1510,7 +1527,7 @@ class CallBuiltinFunction : Code
     }
     override string toString(VM vm)
     {
-        return "callbuiltin " ~ func.name.to!string;
+        return "callbuiltin argc=" ~ argcount.to!string ~ ", outargc=" ~ outcount.to!string ~ ", name=" ~ func.name.to!string;
     }
 }
 class OnBase : Code
