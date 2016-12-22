@@ -1418,7 +1418,6 @@ class BuiltinFunction
         if(args[2].isString)
         {
             VM vm = p.vm;
-            vm.pushDataIndex();
             vm.restoreData(args[2].castDString);
             int keyframe = vm.readData.castInteger;
             auto target = p.sprite.getSpriteAnimTarget(args[1].castDString);
@@ -1434,9 +1433,8 @@ class BuiltinFunction
                     animdata[j + 2] = vm.readData.castDouble;
                 j += item;
             }
-            if(args.length > 2)
+            if(args.length > 3)
                 animdata[j] = args[3].castInteger;
-            vm.popDataIndex();
         }
         else
         {
