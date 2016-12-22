@@ -422,10 +422,13 @@ class BuiltinFunction
     {
         return p.displaynum;
     }
-    static void GCLS(PetitComputer p, DefaultValue!(int, false) color)
+    static void GCLS(PetitComputer p)
     {
-        color.setDefaultValue(0);
-        p.graphic.gcls(p.graphic.useGRP, cast(int)color);
+        p.graphic.gcls(p.graphic.useGRP, 0);
+    }
+    static void GCLS(PetitComputer p, int color)
+    {
+        p.graphic.gcls(p.graphic.useGRP, color);
     }
     static void GPSET(PetitComputer p, int x, int y, DefaultValue!(int, false) color)
     {
@@ -2196,7 +2199,7 @@ class BuiltinFunction
         p.console.cls;
         SPCLR(p, DefaultValue!(int, false)(true));
         BGCLR(p, DefaultValue!(int, false)(true));
-        GCLS(p, DefaultValue!(int, false)(true));
+        GCLS(p);
     }
     static int CHKCALL(PetitComputer p, wstring func)
     {
@@ -2961,6 +2964,10 @@ template GetStartSkip(BFD)
         {
             enum SkipSkip = I - is(P[0] : PetitComputer);
         }
+        else static if(is(P[I] == Value[]))
+        {
+            enum SkipSkip = I - is(P[0] : PetitComputer);
+        }
         else
         {
             enum SkipSkip = SkipSkip!(I + 1, P);
@@ -3283,11 +3290,11 @@ template GetFunctionParamType(BFD)
             }
             static if(1 == P.length && !is(P[0] == PetitComputer))
             {
-                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")";
+                enum Array = arg.empty ? "" : "BuiltinFunctionArgument(" ~ arg ~ ")";
             }
             else static if(!is(P[0] == PetitComputer))
             {
-                enum Array = "BuiltinFunctionArgument(" ~ arg ~ ")," ~ Array!(I + 1, P[1..$]);
+                enum Array = (arg.empty ? "" : "BuiltinFunctionArgument(" ~ arg ~ ")," )~ Array!(I + 1, P[1..$]);
             }
         }
     }
