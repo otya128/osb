@@ -671,8 +671,12 @@ class PetitComputer
             buttonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
             buttonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
             buttonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
-            buttonTable[SDL_SCANCODE_SPACE] = Button.A;
-            buttonTable[SDL_SCANCODE_ESCAPE] = Button.START;
+            buttonTable[SDL_SCANCODE_RETURN] = Button.A;
+            buttonTable[SDL_SCANCODE_X] = Button.A;
+            buttonTable[SDL_SCANCODE_ESCAPE] = Button.B;
+            buttonTable[SDL_SCANCODE_B] = Button.B;
+            buttonTable[SDL_SCANCODE_A] = Button.X;
+            buttonTable[SDL_SCANCODE_S] = Button.Y;
 
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_UP] = Button.UP;
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = Button.DOWN;
@@ -1194,7 +1198,9 @@ class PetitComputer
                         for(int i = 0; !quit && maincntRender == oldmaincnt && !waitFlag && running; i++)
                         {
                             version (traceVM)
-                                writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
+                                std.stdio.stderr.writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
+                            version (dumpStackVM)
+                                vm.dumpStack();
                             running = vm.runStep();
                             debug if(trace && loc.line != vm.currentLocation.line)
                             {
