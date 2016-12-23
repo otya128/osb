@@ -2889,6 +2889,20 @@ class BuiltinFunction
             array.doubleArray.array[offset..offset + len] = value.castDouble;
         }
     }
+    static void KEY(PetitComputer p, int index, wstring key)
+    {
+        index--;
+        if (index < 0 || index >= p.functionKey.length)
+            throw new OutOfRange("KEY", 1);
+        p.functionKey[index] = key.dup;
+    }
+    static void KEY(PetitComputer p, int index, out Array!wchar key)
+    {
+        index--;
+        if (index < 0 || index >= p.functionKey.length)
+            throw new OutOfRange("KEY", 1);
+        key = new Array!wchar(cast(wchar[])p.functionKey[index]);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

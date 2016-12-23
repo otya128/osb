@@ -328,6 +328,7 @@ class PetitComputer
         {
             console.loadFontTable();
         }
+        functionKey = ["FILES", "LOAD\"", "SAVE\"", "LIST ERR", "RUN\n"];
         writeln("OK");
     }
     int currentScreenWidth;
@@ -395,6 +396,9 @@ class PetitComputer
     }
     void sendKey(Key key)
     {
+        keybuffermutex.lock();
+        scope (exit)
+            keybuffermutex.unlock();
         keybuffer[keybufferpos] = key;
         keybufferlen++;
         if(keybufferlen > keybuffer.length)
@@ -893,28 +897,29 @@ class PetitComputer
                                 {
                                     stop();
                                 }
+                                if (event.key.keysym.scancode <= SDL_SCANCODE_F5 && event.key.keysym.scancode >= SDL_SCANCODE_F1)
+                                {
+                                    foreach(wchar k; functionKey[event.key.keysym.scancode - SDL_SCANCODE_F1])
+                                    {
+                                        sendKey(k);
+                                    }
+                                }
                                 if(key == SDLK_BACKSPACE)
                                 {
-                                    keybuffermutex.lock();
                                     sendKey('\u0008');
-                                    keybuffermutex.unlock();
                                 }
                                 if(key == SDLK_RETURN)
                                 {
-                                    keybuffermutex.lock();
                                     sendKey('\u000D');
-                                    keybuffermutex.unlock();
                                 }
                             }
                             break;
                         case SDL_TEXTINPUT:
                             auto text = event.text.text[0..event.text.text.indexOf('\0')].to!wstring;
-                            keybuffermutex.lock();
                             foreach(wchar key; text)
                             {
                                 sendKey(key);
                             }
-                            keybuffermutex.unlock();
                             break;
                         case SDL_MOUSEWHEEL:
                             synchronized (renderSync)
@@ -1579,6 +1584,7 @@ class PetitComputer
     Hardware hardware = Hardware.wiiU;
     wstring versionString = "3.5.0";
     int version_ = 0x3050000;
+    wstring[5] functionKey;
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {
