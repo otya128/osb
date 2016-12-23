@@ -688,6 +688,7 @@ class PetitComputer
             controllerTable[SDL_CONTROLLER_BUTTON_Y] = Button.Y;
             controllerTable[SDL_CONTROLLER_BUTTON_LEFTSHOULDER] = Button.L;
             controllerTable[SDL_CONTROLLER_BUTTON_RIGHTSHOULDER] = Button.R;
+            controllerTable[SDL_CONTROLLER_BUTTON_START] = Button.START;
             if(!window)
             {
                 write("can't create window: ");
