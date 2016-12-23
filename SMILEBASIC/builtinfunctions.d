@@ -678,7 +678,25 @@ class BuiltinFunction
     {
         GCOPY(p, p.graphic.useGRP, x, y, x2, y2, x3, y3, cpmode);
     }
-    static void BGMPLAY(PetitComputer p, int music)
+    static void BGMPLAY(PetitComputer p, Value numberOrMML)
+    {
+        if (numberOrMML.isNumber)
+        {
+            int number = numberOrMML.castInteger;
+        }
+        else if (numberOrMML.isString)
+        {
+            wstring mml = numberOrMML.castDString;
+        }
+        else
+        {
+            throw new TypeMismatch("BGMPLAY", 1);
+        }
+    }
+    static void BGMPLAY(PetitComputer p, int track, int number)
+    {
+    }
+    static void BGMPLAY(PetitComputer p, int track, int number, int volume)
     {
     }
     static void BEEP(PetitComputer p, DefaultValue!(int, false) beep, DefaultValue!(int, false) pitch, DefaultValue!(int, false) volume, DefaultValue!(int, false) pan)
