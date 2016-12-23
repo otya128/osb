@@ -96,6 +96,15 @@ class VM
     void loadSlot(int slot, Code[] code, int len, VMVariable[wstring] globalTable, Function[wstring] functions, DataTable gdt/*GNU Debugging Tools*/,
          int[wstring] globalLabel, DebugInfo dinfo)
     {
+        //unload common function
+        if (slots[slot])
+            foreach(f ; slots[slot].functions)
+            {
+                if (f.isCommon)
+                {
+                    commonFunctions.remove(f.name);
+                }
+            }
         auto s = this.slots[slot];
         s.isUsed = true;
         s.code = code;
@@ -107,6 +116,15 @@ class VM
                 s.global[v.index] = Value(v.type);
         }
         s.functions = functions;
+        foreach(f ; functions)
+        {
+            if (f.isCommon)
+            {
+                if (f.name in commonFunctions)
+                    throw new DuplicateFunction(slot, dinfo.getLocationByAddress(f.address));
+                commonFunctions[f.name] = f;
+            }
+        }
         s.globalDataTable = gdt;
         s.globalLabel = globalLabel;
         s.debugInfo = dinfo;
@@ -2239,6 +2257,19 @@ class Use : Code
     {
         Value arg;
         vm.pop(arg);
+        int slot;
+        if (arg.isNumber)
+        {
+            slot = arg.castInteger;
+        }
+        else
+        {
+            throw new TypeMismatch();
+        }
+        import otya.smilebasic.parser;
+        auto parser = new Parser(cast(immutable)vm.petitcomputer.slot[slot].text);
+        auto compiler = parser.compiler;
+        compiler.compile(vm, slot);
     }
 }
 

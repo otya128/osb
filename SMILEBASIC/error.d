@@ -2,6 +2,8 @@ module otya.smilebasic.error;
 import std.exception;
 import std.string;
 import std.conv;
+import otya.smilebasic.token;
+
 class SmileBasicError : Exception
 {
     int errnum;
@@ -152,6 +154,14 @@ class DuplicateVariable : SmileBasicError
     {
         this.errnum = 18;
         super("Duplicate variable");
+    }
+}
+class DuplicateFunction : SmileBasicError
+{
+    this(int slot, SourceLocation loc)
+    {
+        this.errnum = 19;
+        super(slot, loc.line, "Duplicate function");
     }
 }
 class ReturnWithoutGosub : SmileBasicError

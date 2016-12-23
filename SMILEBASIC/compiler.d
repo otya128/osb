@@ -103,6 +103,7 @@ class Function
     int[wstring] label;
     bool returnExpr;
     int outArgCount;
+    bool isCommon;
     /**
     0:bp
     1:pc
@@ -110,7 +111,7 @@ class Function
     3:data index
     4:function pointer
     */
-    this(int address, wstring name, bool returnExpr, int argCount)
+    this(int address, wstring name, bool returnExpr, int argCount, bool isCommon)
     {
         this.address = address;
         this.name = name;
@@ -121,6 +122,7 @@ class Function
         {
             outArgCount = 1;
         }
+        this.isCommon = isCommon;
     }
     int getLocalVarIndex(wstring name, Compiler c)
     {
@@ -866,7 +868,7 @@ class Compiler
             throw new CantUseFromDirectMode();
         }
         auto skip = genCodeGoto();
-        Function func = new Function(cast(int)this.code.length, node.name, node.returnExpr, cast(int)node.arguments.length);
+        Function func = new Function(cast(int)this.code.length, node.name, node.returnExpr, cast(int)node.arguments.length, node.isCommon);
         Scope sc = new Scope(func);
         foreach(wstring arg; node.arguments)
         {
