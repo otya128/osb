@@ -167,4 +167,72 @@ class Projects
         contents = readText(path).to!wstring;
         return true;
     }
+
+    static Resource getResource(wstring resname)
+    {
+        switch (std.uni.toUpper(resname))
+        {
+            case "PRG":
+                return Resource.program;
+            case "GRP":
+                return Resource.graphic;
+            case "DAT":
+                return Resource.data;
+            case "TXT":
+                return Resource.text;
+            default:
+                assert(false);
+        }
+    }
+
+    static FileName parseFileName(wstring input)
+    {
+        FileName result;
+        auto s = splitResourceName(input);
+        if (s[0].length)
+        {
+            auto resname = s[0];
+            auto numind = resname.indexOfAny("1234567890");
+            if (numind != -1)
+            {
+                auto resnum = resname[numind..$].to!int;
+                resname = resname[0..numind];
+                result.resourceNumber = resnum;
+                result.hasResourceNumber = true;
+            }
+            result.resource = getResource(resname);
+        }
+        result.project = s[1];
+        result.name = s[2];
+        return result;
+    }
+    unittest
+    {
+        auto a = parseFileName("A");
+        assert(a.resource == Resource.none && !a.hasResourceNumber && a.project == "" && a.name == "A");
+        a = parseFileName("GRP:B");
+        assert(a.resource == Resource.graphic && !a.hasResourceNumber && a.project == "" && a.name == "B");
+        a = parseFileName("PRG10:CD");
+        assert(a.resource == Resource.program && a.hasResourceNumber && a.resourceNumber == 10 && a.project == "" && a.name == "CD");
+        a = parseFileName("DAT:SYS/EF");
+        assert(a.resource == Resource.data && !a.hasResourceNumber && a.project == "SYS" && a.name == "EF");
+    }
+}
+
+enum Resource
+{
+    none,
+    program,
+    graphic,
+    data,
+    text,
+}
+
+struct FileName
+{
+    Resource resource;
+    bool hasResourceNumber;
+    int resourceNumber;
+    wstring project;
+    wstring name;
 }
