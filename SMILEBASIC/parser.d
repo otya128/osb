@@ -1111,6 +1111,11 @@ class Parser
                 {
                     lex.popFront();
                     auto expr = expression();
+                    if (!expr)
+                    {
+                        syntaxError();
+                        return null;
+                    }
                     return new Use(expr, lex.location);
                 }
                 break;
@@ -1118,6 +1123,11 @@ class Parser
                 {
                     lex.popFront();
                     auto expr = expression();
+                    if (!expr)
+                    {
+                        syntaxError();
+                        return null;
+                    }
                     return new Exec(expr, lex.location);
                 }
                 break;
