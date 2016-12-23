@@ -2182,3 +2182,22 @@ class Pop : Code
         vm.decSP();
     }
 }
+
+class Exec : Code
+{
+    override void execute(VM vm)
+    {
+        Value arg;
+        vm.pop(arg);
+    }
+}
+
+class Use : Code
+{
+    override void execute(VM vm)
+    {
+        Value arg;
+        vm.pop(arg);
+    }
+}
+

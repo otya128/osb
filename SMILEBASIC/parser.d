@@ -1111,14 +1111,14 @@ class Parser
                 {
                     lex.popFront();
                     auto expr = expression();
-                    writeln("NOTIMPL:USE");
+                    return new Use(expr, lex.location);
                 }
                 break;
             case TokenType.Exec:
                 {
                     lex.popFront();
                     auto expr = expression();
-                    writeln("NOTIMPL:EXEC");
+                    return new Exec(expr, lex.location);
                 }
                 break;
             case TokenType.Swap:

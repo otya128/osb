@@ -933,6 +933,16 @@ class Compiler
     {
         genCode(new SetX(x.func, false));
     }
+    void compileExec(otya.smilebasic.node.Exec exec, Scope sc)
+    {
+        compileExpression(exec.expression, sc);
+        genCode(new otya.smilebasic.vm.Exec);
+    }
+    void compileUse(otya.smilebasic.node.Use use, Scope sc)
+    {
+        compileExpression(use.expression, sc);
+        genCode(new otya.smilebasic.vm.Use);
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -1200,6 +1210,12 @@ class Compiler
                 break;
             case NodeType.XOff:
                 compileXOff(cast(XOff)i, s);
+                break;
+            case NodeType.Exec:
+                compileExec(cast(otya.smilebasic.node.Exec)i, s);
+                break;
+            case NodeType.Use:
+                compileUse(cast(otya.smilebasic.node.Use)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

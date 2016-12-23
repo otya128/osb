@@ -48,6 +48,8 @@ enum NodeType
     VarRef,
     XOn,
     XOff,
+    Exec,
+    Use,
 }
 abstract class Node
 {
@@ -653,4 +655,23 @@ class XOff : Statement
         this.func = func;
     }
 }
-
+class Exec : Statement
+{
+    Expression expression;
+    this(Expression e, SourceLocation loc)
+    {
+        super.location = loc;
+        expression = e;
+        this.type = NodeType.Exec;
+    }
+}
+class Use : Statement
+{
+    Expression expression;
+    this(Expression e, SourceLocation loc)
+    {
+        super.location = loc;
+        expression = e;
+        this.type = NodeType.Use;
+    }
+}
