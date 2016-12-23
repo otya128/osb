@@ -178,6 +178,19 @@ struct Slot
         wchar[] progbuff2 = (cast(wchar*)progbuff.ptr)[0..progbuff.length / 2];
         return progbuff2;
     }
+    import otya.smilebasic.token;
+    wstring getLine(SourceLocation loc)
+    {
+        import std.string;
+        int i;
+        foreach (line; program)
+        {
+            i++;
+            if (i == loc.line)
+                return line;
+        }
+        return "";
+    }
 }
 struct Size
 {
@@ -1165,7 +1178,7 @@ class PetitComputer
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             auto loc = vm.currentLocation;
-                            console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                            console.print(loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1179,7 +1192,8 @@ class PetitComputer
                         {
                             console.print(t.to!string);
                             writeln(t);
-                            console.print(parser.getLine(vm.currentLocation));
+                            auto loc = vm.currentLocation;
+                            console.print(slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1232,7 +1246,7 @@ class PetitComputer
                             writeln(sbe.getErrorMessage2);
                             writeln(sbe.func);
                             loc = vm.currentLocation;
-                            console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
+                            console.print(loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1246,7 +1260,7 @@ class PetitComputer
                         {
                             console.print(t.to!string);
                             writeln(t);
-                            console.print(parser.getLine(vm.currentLocation));
+                            console.print(slot[vm.currentSlotNumber].getLine(vm.currentLocation));
                         }
                         catch(Throwable t)
                         {
