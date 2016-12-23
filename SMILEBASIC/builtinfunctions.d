@@ -2246,7 +2246,7 @@ class BuiltinFunction
     static int CHKCALL(PetitComputer p, wstring func)
     {
         func = func.toUpper;
-        return (func in p.vm.currentSlot.functions) != null || (func in otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions) != null;
+        return p.vm.chkcall(func);
     }
     static int CHKLABEL(PetitComputer p, wstring label)
     {

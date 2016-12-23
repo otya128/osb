@@ -297,6 +297,17 @@ class VM
     {
         return backTraceStack[0..traceI];
     }
+    bool chkcall(wstring func)
+    {
+        import otya.smilebasic.builtinfunctions;
+        if (func in currentSlot.functions)
+            return true;
+        if (func in BuiltinFunction.builtinFunctions)
+            return true;
+        if (func in commonFunctions)
+            return true;
+        return false;
+    }
 }
 enum CodeType
 {
