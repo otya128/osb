@@ -1406,10 +1406,6 @@ class CallFunctionCode : Code
         {
             throw new IllegalFunctionCall(name.to!string);
         }
-        if (func.isCommon)
-        {
-            vm.setCurrentSlot(func.slot.index);
-        }
         vm.pushBackTrace(name);
         //TODO:args
         auto bp = vm.stacki;
@@ -1425,6 +1421,10 @@ class CallFunctionCode : Code
             {
                 vm.stack[bp + v.index] = Value(v.type);
             }
+        }
+        if (func.isCommon)
+        {
+            vm.setCurrentSlot(func.slot.index);
         }
     }
     override string toString(VM vm)
