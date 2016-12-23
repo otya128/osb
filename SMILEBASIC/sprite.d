@@ -149,8 +149,8 @@ struct SpriteCollision
     {
         if(sp.define && sp.col.mask & mask)
         {
-            int x = (sp.linkx + sp.homex + sp.col.sx);
-            int y = (sp.linky + sp.homey + sp.col.sy);
+            int x = (sp.linkx + sp.col.sx);
+            int y = (sp.linky + sp.col.sy);
             return detection(x, y, cast(int)(sp.w * sp.scalex), cast(int)(sp.h * sp.scaley));
         }
         return false;
@@ -160,8 +160,8 @@ struct SpriteCollision
     //(x,y,w,h)と判定
     bool detection(int x, int y, int w, int h)
     {
-        int x2 = (data.linkx + data.homex + sx);
-        int y2 = (data.linky + data.homey + sy);
+        int x2 = (data.linkx + sx);
+        int y2 = (data.linky + sy);
         if(x <= x2 && y <= y2 && x + w >= x2 && y + h >= y2)
             return true;
         int w2 = cast(int)(data.w * data.scalex);
