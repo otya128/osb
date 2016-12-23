@@ -1592,12 +1592,12 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!(int, false) scale)
     {
-        scale.setDefaultValue(true);
+        scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(bool)scale);
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!int scale, int mask)
     {
-        scale.setDefaultValue(true);
+        scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(bool)scale, mask);
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, int scale)
@@ -1606,8 +1606,17 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale, int mask)
     {
-        scale.setDefaultValue(true);
+        scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, cast(bool)scale, mask);
+    }
+    static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale)
+    {
+        scale.setDefaultValue(false);
+        p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, cast(bool)scale, -1);
+    }
+    static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h)
+    {
+        p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, false, -1);
     }
     static int SPHITSP(PetitComputer p, int id)
     {
