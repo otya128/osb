@@ -10,6 +10,7 @@ class SmileBasicError : Exception
     int errline;
     int errprg;
     string message2;
+    string func;
     this(int slot, int line, string message)
     {
         super(format("%s in %d:%d", message, slot, line));

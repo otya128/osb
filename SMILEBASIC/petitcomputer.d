@@ -1230,6 +1230,7 @@ class PetitComputer
                             //print(sbe.to!string);
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
+                            writeln(sbe.func);
                             loc = vm.currentLocation;
                             console.print(loc.line, ":", loc.pos, ":", parser.getLine(loc));
                         }

@@ -1560,7 +1560,15 @@ class CallBuiltinFunction : Code
             arg = vm.stack[vm.stacki - argcount..vm.stacki];
             result = vm.stack[vm.stacki/* - argcount */+ 1..vm.stacki + 1/* - argcount */+ outcount];//雑;
         }
-        func.func(vm.petitcomputer, arg, result);
+        try
+        {
+            func.func(vm.petitcomputer, arg, result);
+        }
+        catch (SmileBasicError sbe)
+        {
+            sbe.func = func.name;
+            throw sbe;
+        }
         if(func.variadic)
         {
             vm.stacki -= argcount;
