@@ -292,6 +292,7 @@ struct SpriteData
 
     //SPCOL
     SpriteCollision col;
+    bool enableCol;
 }
 class Sprite
 {
@@ -1091,6 +1092,7 @@ class Sprite
     void spcol(int id, short sx, short sy, ushort w, ushort h, bool scale, int mask)
     {
         id = spid(id);
+        sprites[id].enableCol = true;
         sprites[id].col.data = &sprites[id];
         sprites[id].col.sx = sx;
         sprites[id].col.sy = sy;
@@ -1137,11 +1139,14 @@ class Sprite
     }
     int sphitsp2(int id, int start, int end)
     {
-        for(; start <= end; start++)
+        if (!sprites[id].enableCol)
         {
-            //自分を除外すべきか?
-            if(id == start) continue;//????
-            if(sprites[id].col.detection(sprites[start]))
+            return -1;
+        }
+        synchronized (this) for(; start <= end; start++)
+        {
+            if(id == start) continue;
+            if(sprites[start].enableCol && sprites[id].col.detection(sprites[start]))
                 return start;
         }
         return -1;
