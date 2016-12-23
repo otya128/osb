@@ -50,6 +50,11 @@ class SyntaxError : SmileBasicError
 }
 class IllegalFunctionCall : SmileBasicError
 {
+    this()
+    {
+        this.errnum = 4;
+        super("Illegal function call");
+    }
     this(string func)
     {
         this.errnum = 4;

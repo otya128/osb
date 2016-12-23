@@ -1336,6 +1336,13 @@ class Compiler
         registerSystemVariable(vm);
         return vm;
     }
+    void compile(VM vm, int slot)
+    {
+        isDirectMode = false;
+        this.vm = vm;
+        compileProgram();
+        vm.loadSlot(slot, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
+    }
 }
 
 unittest

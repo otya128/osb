@@ -2187,8 +2187,49 @@ class Exec : Code
 {
     override void execute(VM vm)
     {
+        import otya.smilebasic.project;
         Value arg;
         vm.pop(arg);
+        int slot;
+        if (arg.isString)
+        {
+            auto file = Projects.parseFileName(arg.castDString);
+            if (file.resource != Resource.program && file.resource == Resource.none)
+            {
+                throw new IllegalFunctionCall();
+            }
+            if (file.hasResourceNumber && file.resourceNumber >= 4/*?*/)
+            {
+                throw new IllegalFunctionCall();
+            }
+            if (!file.hasResourceNumber)
+            {
+                file.resourceNumber = vm.currentSlotNumber;
+            }
+            else
+            {
+                slot = file.resourceNumber;
+            }
+            wstring content;
+            if (vm.petitcomputer.project.loadFile(file.project, "TXT", file.name, content))
+                vm.petitcomputer.slot[slot].load(content);
+            else
+                throw new LoadFailed();//TODO:DIALOG?
+        }
+        else if (arg.isNumber)
+        {
+            slot = arg.castInteger;
+        }
+        else
+        {
+            throw new TypeMismatch();
+        }
+        import otya.smilebasic.parser;
+        auto parser = new Parser(cast(immutable)vm.petitcomputer.slot[slot].text);
+        auto compiler = parser.compiler;
+        compiler.compile(vm, slot);
+        vm.setCurrentSlot(slot);
+        vm.pc = 0 - 1;
     }
 }
 
