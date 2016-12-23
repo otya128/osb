@@ -1385,27 +1385,26 @@ class BuiltinFunction
     {
         p.sprite.spshow(id);
     }
-    static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y, DefaultValue!(int, false) z)
+    static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y, DefaultValue!(double, false) z)
     {
         if (x.isDefault || y.isDefault)
         {
-            double x_, y_;
-            int z_;
+            double x_, y_, z_;
             p.sprite.getspofs(id, x_, y_, z_);
             x.setDefaultValue(x_);
             y.setDefaultValue(y_);
         }
         if(z.isDefault)
         {
-            p.sprite.spofs(id, cast(int)x, cast(int)y);
+            p.sprite.spofs(id, cast(double)x, cast(double)y);
         }
         else
         {
-            p.sprite.spofs(id, cast(int)x, cast(int)y, cast(int)z);
+            p.sprite.spofs(id, cast(double)x, cast(double)y, cast(double)z);
         }
     }
     @StartOptional("z")
-    static void SPOFS(PetitComputer p, int id, out double x, out double y, out int z)
+    static void SPOFS(PetitComputer p, int id, out double x, out double y, out double z)
     {
         p.sprite.getspofs(id, x, y, z);
     }

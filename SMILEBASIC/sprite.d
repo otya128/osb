@@ -182,7 +182,7 @@ struct SpriteData
     int defno;
     double x, y;
     int homex, homey;
-    int z;/*!*/
+    double z;/*!*/
     int u, v, w, h;//個々で保持してるみたい,SPSETをして後でSPDEFをしても変化しない
     uint color;
     double[8] var = 0;
@@ -626,7 +626,7 @@ class Sprite
             foreach(i, ref s; sprites)
             {
                 //if(!s.define) continue;
-                auto zet = s.z + 256;
+                auto zet = cast(int)s.z + 256;
                 listptr[i].sprite = &s;
                 if(bucketsptr[zet])
                 {
@@ -895,7 +895,7 @@ class Sprite
             sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
         }
     }
-    void spofs(int id, double x, double y, int z)
+    void spofs(int id, double x, double y, double z)
     {
         id = spid(id);
         synchronized (this)
@@ -909,7 +909,7 @@ class Sprite
         }
         zChange = true;
     }
-    void getspofs(int id, out  double x, out double y, out int z)
+    void getspofs(int id, out  double x, out double y, out double z)
     {
         id = spid(id);
         x = sprites[id].x;
