@@ -212,3 +212,13 @@ class CantUseInProgram : SmileBasicError
     }
 }
 
+class LoadFailed : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 46;
+        super("Load failed");
+    }
+}
+
+
