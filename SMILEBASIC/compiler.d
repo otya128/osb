@@ -1337,6 +1337,7 @@ class Compiler
         this.vm = vm;
         compileProgram();
         vm.loadSlot(slot, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
+        registerSystemVariable(vm);
     }
 }
 
