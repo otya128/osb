@@ -1640,7 +1640,9 @@ class Parser
             if(!multiline && lex.front().type == TokenType.NewLine)
             {
                 //3.1現在だとエラー
-                syntaxError();
+                //syntaxError();
+                //3.3.2現在だとエラーじゃない
+                multiline = true;
             }
             if(multiline)
             {
