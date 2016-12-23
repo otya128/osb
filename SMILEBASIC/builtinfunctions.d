@@ -1435,6 +1435,8 @@ class BuiltinFunction
             }
             if(args.length > 3)
                 animdata[j] = args[3].castInteger;
+            else
+                animdata[j] = 1;//loop count
         }
         else
         {
