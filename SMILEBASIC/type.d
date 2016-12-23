@@ -17,6 +17,21 @@ enum ValueType : byte
     DoubleReference,
     StringReference,
     StringArrayReference,
+    Data,
+}
+import otya.smilebasic.compiler;
+import otya.smilebasic.vm;
+struct Data
+{
+    DataTable table;
+    int index;
+    void read(out Value value, VM vm)
+    {
+        if(index >= table.data.length)
+            throw new OutOfDATA();
+        value = table.data[index];
+        index++;
+    }
 }
 struct VMAddress
 {
@@ -40,6 +55,7 @@ struct Value
         ArrayReference!double doubleReference;
         ArrayReference!wchar stringReference;
         ArrayReference!(Array!wchar) stringArrayReference;
+        Data data;
     }
     this(int value)
     {
@@ -107,6 +123,11 @@ struct Value
     {
         this.type = ValueType.StringArrayReference;
         stringArrayReference = r;
+    }
+    this(Data data)
+    {
+        this.type = ValueType.Data;
+        this.data = data;
     }
     void castOp(ValueType type)
     {

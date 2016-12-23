@@ -73,8 +73,6 @@ class DataTable
 {
     Value[] data;
     int[wstring] label;
-    //dataIndexは関数ごとに別じゃないといけない
-    int dataIndex;
     void addData(Value data)
     {
         this.data ~= data;
@@ -82,13 +80,6 @@ class DataTable
     void addLabel(wstring label)
     {
         this.label[label] = cast(int)data.length;
-    }
-    void read(out Value value, VM vm)
-    {
-        if(dataIndex >= data.length)
-            throw new OutOfDATA();
-        value = data[dataIndex];
-        dataIndex++;
     }
 }
 class Function
@@ -1153,7 +1144,7 @@ class Compiler
                 break;
             case NodeType.Data:
                 {
-                    auto data = cast(Data)i;
+                    auto data = cast(otya.smilebasic.node.Data)i;
                     foreach(j; data.data)
                         s.data.addData(j.toSBImm);
                 }
@@ -1309,7 +1300,7 @@ class Compiler
                 }
                 else
                 {
-                    code[i] = new RestoreCode(label, s.data);
+                    code[i] = new RestoreCode(label, restore.scope_.data);
                 }
             }
         }

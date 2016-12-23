@@ -1272,9 +1272,9 @@ class Parser
         } while(token.type == TokenType.Comma);
         return on;
     }
-    Data dataStatement()
+    otya.smilebasic.node.Data dataStatement()
     {
-        Data data = new Data(lex.location);
+        otya.smilebasic.node.Data data = new otya.smilebasic.node.Data(lex.location);
         lex.popFront();
         auto token = lex.front();
         while(true)

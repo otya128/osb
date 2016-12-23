@@ -37,7 +37,7 @@ class VMSlot
         this.index = index;
     }
     bool isUsed;
-    DataTable globalDataTable;
+    otya.smilebasic.type.Data globalData;
     //2MBらしい
     //Code code[2 * 1024 * 1024 / Code.sizeof];
     Code[] code;
@@ -132,7 +132,7 @@ class VM
                 f.slot = s;
             }
         }
-        s.globalDataTable = gdt;
+        s.globalData = otya.smilebasic.type.Data(gdt, 0);
         s.globalLabel = globalLabel;
         s.debugInfo = dinfo;
     }
@@ -162,6 +162,7 @@ class VM
         this.petitcomputer = petitcomputer;
         traceI = 0;
         bp = 0;//globalを実行なのでbaseは0(グローバル変数をスタックに取るようにしない限り)(挙動的にスタックに確保していなさそう)
+        currentData = this.currentSlot.globalData;
     }
     void processBreakPoint()
     {
@@ -274,24 +275,25 @@ class VM
         }
         return "undefined variable";
     }
+    otya.smilebasic.type.Data currentData;//DATAの位置は全スロット共通
     Value readData()
     {
         Value value;
-        this.currentSlot.globalDataTable.read(value, this);
+        currentData.read(value, this);
         return value;
     }
     void restoreData(wstring label)
     {
-        this.currentSlot.globalDataTable.dataIndex = this.currentSlot.globalDataTable.label[label];
+        currentData.index = currentData.table.label[label];
     }
     int olddti;
     void pushDataIndex()
     {
-        olddti = this.currentSlot.globalDataTable.dataIndex;
+        olddti = this.currentSlot.globalData.index;
     }
     void popDataIndex()
     {
-       this.currentSlot.globalDataTable.dataIndex = olddti;
+       this.currentSlot.globalData.index = olddti;
     }
     void pushBackTrace(wstring name)
     {
@@ -1339,6 +1341,14 @@ class ReturnFunction : Code
         vm.pop(bp);
         Value hae;
         vm.pop(hae);
+        if (hae.type != ValueType.Data)
+        {
+            throw new TypeMismatch();
+        }
+        else
+        {
+            vm.currentData = hae.data;
+        }
         vm.stacki -= func.argCount;
         if(func.returnExpr)
         {
@@ -1409,7 +1419,7 @@ class CallFunctionCode : Code
         vm.pushBackTrace(name);
         //TODO:args
         auto bp = vm.stacki;
-        vm.push(Value());
+        vm.push(Value(vm.currentData));
         vm.push(Value(vm.bp));
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
@@ -1482,7 +1492,7 @@ class CallFunctionS : Code
         }
         //TODO:args
         auto bp = vm.stacki;
-        vm.push(Value());
+        vm.push(Value(vm.currentData));
         vm.push(Value(vm.bp));
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
@@ -1765,7 +1775,7 @@ class ReadCode : Code
         for(int i = 0; i < count; i++)
         {
             Value data;
-            vm.currentSlot.globalDataTable.read(data, vm);
+            vm.currentData.read(data, vm);
             vm.push(data);
         }
     }
@@ -1800,7 +1810,8 @@ class RestoreCode : Code
     }
     override void execute(VM vm)
     {
-        datatable.dataIndex = label;
+        vm.currentData.table = datatable;
+        vm.currentData.index = label;
     }
     override string toString(VM vm)
     {
@@ -1838,11 +1849,13 @@ class RestoreExprCode : Code
             throw new TypeMismatch();
         if (label.castDString in datatable.label)
         {
-            datatable.dataIndex = datatable.label[label.castDString];
+            vm.currentData.table = datatable;
+            vm.currentData.index = datatable.label[label.castDString];
         }
-        else if (label.castDString in vm.currentSlot.globalDataTable.label)
+        else if (label.castDString in vm.currentSlot.globalData.table.label)
         {
-            datatable.dataIndex = vm.currentSlot.globalDataTable.label[label.castDString];
+            vm.currentData.table = vm.currentSlot.globalData.table;
+            vm.currentData.index = vm.currentSlot.globalData.table.label[label.castDString];
         }
         else
         {
