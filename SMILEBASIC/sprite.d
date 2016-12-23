@@ -870,6 +870,16 @@ class Sprite
         synchronized (this)
             sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
     }
+    int allocSprite(int lower, int upper)
+    {
+        for (int i = lower; i <= upper; i++)
+        {
+            int id = spid(i);
+            if (!sprites[id].define)
+                return i;
+        }
+        return -1;
+    }
     int spchk(int id)
     {
         id = spid(id);
@@ -1178,5 +1188,20 @@ class Sprite
             swap(y1, y2);
         }
         clipRect[petitcom.displaynum] = SDL_Rect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
+    }
+    bool isValidSpriteId(int id)
+    {
+        if (id < 0)
+        {
+            return false;
+        }
+        if (petitcom.displaynum == 0)
+        {
+            return spmax > id;
+        }
+        else
+        {
+            return sprites.length > id + spmax;
+        }
     }
 }

@@ -1319,6 +1319,40 @@ class BuiltinFunction
         }
         p.sprite.spset(id, defno);
     }
+    static void SPSET(PetitComputer p, int lower, int upper, int defno, out int ix)
+    {
+        if (!p.sprite.isValidSpriteId(upper))
+            throw new OutOfRange("SPSET", 1);
+        if (!p.sprite.isValidSpriteId(lower))
+            throw new OutOfRange("SPSET", 2);
+        if (upper < lower)
+            throw new IllegalFunctionCall("SPSET", 2);
+        ix = p.sprite.allocSprite(lower, upper);
+        if (ix == -1)
+            return;
+        p.sprite.spset(ix, defno);
+    }
+    static void SPSET(PetitComputer p, int upper, int lower, int u, int v, out int ix)
+    {
+        SPSET(p, upper, lower, u, v, 16, 16, 0x01, ix);
+    }
+    static void SPSET(PetitComputer p, int upper, int lower, int u, int v, int w, int h, out int ix)
+    {
+        SPSET(p, upper, lower, u, v, w, h, 0x01, ix);
+    }
+    static void SPSET(PetitComputer p, int lower, int upper, int u, int v, int w, int h, int attr, out int ix)
+    {
+        if (!p.sprite.isValidSpriteId(upper))
+            throw new OutOfRange("SPSET", 1);
+        if (!p.sprite.isValidSpriteId(lower))
+            throw new OutOfRange("SPSET", 2);
+        if (upper < lower)
+            throw new IllegalFunctionCall("SPSET", 2);
+        ix = p.sprite.allocSprite(lower, upper);
+        if (ix == -1)
+            return;
+        p.sprite.spset(ix, u, v, w, h, cast(SpriteAttr)attr);
+    }
     static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
         if(!V.isDefault && !W.isDefault)
