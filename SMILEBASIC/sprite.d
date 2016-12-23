@@ -162,15 +162,15 @@ struct SpriteCollision
     {
         int x2 = (data.linkx + sx);
         int y2 = (data.linky + sy);
-        if(x <= x2 && y <= y2 && x + w >= x2 && y + h >= y2)
+        if(x <= x2 && y <= y2 && x + w > x2 && y + h > y2)
             return true;
         int w2 = cast(int)(data.w * data.scalex);
         int h2 = cast(int)(data.h * data.scaley);
-        if(x <= x2 + w2 && y <= y2 + h2 && x + w >= x2 + w2 && y + h >= y2 + h2)
+        if(x < x2 + w2 && y < y2 + h2 && x + w >= x2 + w2 && y + h >= y2 + h2)
             return true;
-        if(x <= x2 + w2 && y <= y2 && x + w >= x2  + w2 && y + h >= y2)
+        if(x < x2 + w2 && y <= y2 && x + w >= x2  + w2 && y + h >= y2)
             return true;
-        if(x <= x2 && y <= y2 + h2 && x + w >= x2 && y + h >= y2 + h2)
+        if(x <= x2 && y < y2 + h2 && x + w >= x2 && y + h >= y2 + h2)
             return true;
         return false;
     }
