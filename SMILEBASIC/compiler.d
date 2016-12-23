@@ -1170,7 +1170,7 @@ class Compiler
                         Constant cons = cast(Constant)label;
                         if(cons.value.isString)
                         {
-                            genCode(new RestoreCodeS(cons.value.stringValue));
+                            genCode(new RestoreCodeS(cons.value.stringValue, s));
                             break;
                             //文字列じゃないならば定数でも実行時エラー
                         }
@@ -1302,7 +1302,7 @@ class Compiler
             if(c.type == CodeType.RestoreCodeS)
             {
                 auto restore = cast(RestoreCodeS)c;
-                auto label = s.data.label.get(restore.label, int.min);
+                auto label = restore.scope_.data.label.get(restore.label, int.min);
                 if (label == int.min)
                 {
                     code[i] = new RestoreUndefinedLabelCode(restore.label);

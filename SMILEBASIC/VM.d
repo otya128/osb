@@ -1777,9 +1777,11 @@ class ReadCode : Code
 class RestoreCodeS : Code
 {
     wstring label;
-    this(wstring label)
+    Scope scope_;
+    this(wstring label, Scope s)
     {
         this.label = label;
+        scope_ = s;
         this.type = CodeType.RestoreCodeS;
     }
     override void execute(VM vm)
