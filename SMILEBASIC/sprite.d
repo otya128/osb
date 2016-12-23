@@ -265,6 +265,7 @@ struct SpriteData
         }
         animloop[sat] = loop;
         animloopcnt[sat] = 0;
+        animindex[sat] = 0;
         this.anim[sat] = anim;
         isAnim = true;
     }
@@ -589,7 +590,7 @@ class Sprite
     {
         if ((!visibles[0] && !visibles[1]) || (petitcom.xscreenmode == 2 && !visibles[0]))
         {
-            foreach(ref sprite; sprites)
+            synchronized (this) foreach(ref sprite; sprites)
             {
                 if(sprite.define)
                 {
@@ -680,7 +681,7 @@ class Sprite
         // glDisable(GL_TEXTURE_2D);
         version(test) glLoadIdentity();
         glLoadIdentity();
-        foreach(i, sprite; zsortedSprites)
+        synchronized (this) foreach(i, sprite; zsortedSprites)
         {
             //定義されてたら動かす
             if(sprite.define)
@@ -858,13 +859,15 @@ class Sprite
     void spset(int id, int defno)
     {
         id = spid(id);
-        sprites[id] = SpriteData(id, SPDEFTable[defno], defno);
+        synchronized (this)
+            sprites[id] = SpriteData(id, SPDEFTable[defno], defno);
     }
     void spset(int id, int u, int v, int w, int h, SpriteAttr attr)
     {
         id = spid(id);
         auto spdef = SpriteDef(u, v, w, h, 0, 0, attr);
-        sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
+        synchronized (this)
+            sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
     }
     int spchk(int id)
     {
@@ -883,21 +886,27 @@ class Sprite
     {
         //animeとめる
         id = spid(id);
-        sprites[id].anim[SpriteAnimTarget.XY] = null;
-        sprites[id].x = x;
-        sprites[id].y = y;
-        sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
-        sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+        synchronized (this)
+        {
+            sprites[id].anim[SpriteAnimTarget.XY] = null;
+            sprites[id].x = x;
+            sprites[id].y = y;
+            sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
+            sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+        }
     }
     void spofs(int id, double x, double y, int z)
     {
         id = spid(id);
-        sprites[id].anim[SpriteAnimTarget.XY] = null;
-        sprites[id].x = x;
-        sprites[id].y = y;
-        sprites[id].z = z;
-        sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
-        sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+        synchronized (this)
+        {
+            sprites[id].anim[SpriteAnimTarget.XY] = null;
+            sprites[id].x = x;
+            sprites[id].y = y;
+            sprites[id].z = z;
+            sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
+            sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+        }
         zChange = true;
     }
     void getspofs(int id, out  double x, out double y, out int z)
@@ -958,44 +967,47 @@ class Sprite
     }
     void spanim(int id, SpriteAnimTarget target, double[] data)
     {
-        id = spid(id);
-        bool relative;
-        if(SpriteAnimTarget.relative & target)
+        synchronized (this)
         {
-            relative = true;
-            target ^= SpriteAnimTarget.relative;
-        }
-        int animcount = cast(int)data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
-        SpriteAnimData[] animdata = new SpriteAnimData[animcount];
-        int j;
-        int loop = 1;
-        SpriteAnimData* old;
-        for(int i = 0; i < data.length;)
-        {
-            i = animdata[j].load(i, sprites[id], target, data, old);
-            old = &animdata[j++];
-            if(data.length - i == 1)
+            id = spid(id);
+            bool relative;
+            if(SpriteAnimTarget.relative & target)
             {
-                //loop
-                loop = cast(int)data[i];
-                break;
+                relative = true;
+                target ^= SpriteAnimTarget.relative;
             }
-        }
-        sprites[id].setAnimation(animdata, target, loop);
-        if(animdata[0].frame == 1)
-        {
-            sprites[id].animindex[target]++;
-            animation(&sprites[id], &animdata[0], target);
-            if(animcount == 1)
+            int animcount = cast(int)data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
+            SpriteAnimData[] animdata = new SpriteAnimData[animcount];
+            int j;
+            int loop = 1;
+            SpriteAnimData* old;
+            for(int i = 0; i < data.length;)
             {
-                if(loop > 1 || loop == 0)
+                i = animdata[j].load(i, sprites[id], target, data, old);
+                old = &animdata[j++];
+                if(data.length - i == 1)
                 {
-                    sprites[id].animindex[target] = 0;
-                    sprites[id].animloopcnt[target]++;
+                    //loop
+                    loop = cast(int)data[i];
+                    break;
                 }
-                else
+            }
+            sprites[id].setAnimation(animdata, target, loop);
+            if(animdata[0].frame == 1)
+            {
+                sprites[id].animindex[target]++;
+                animation(&sprites[id], &animdata[0], target);
+                if(animcount == 1)
                 {
-                    sprites[id].anim[target] = null;
+                    if(loop > 1 || loop == 0)
+                    {
+                        sprites[id].animindex[target] = 0;
+                        sprites[id].animloopcnt[target]++;
+                    }
+                    else
+                    {
+                        sprites[id].anim[target] = null;
+                    }
                 }
             }
         }
@@ -1003,11 +1015,12 @@ class Sprite
     void spclr(int id)
     {
         id = spid(id);
-        sprites[id].clear;
+        synchronized (this)
+            sprites[id].clear;
     }
     void spclr()
     {
-        for(int i = 0; i < sprites.length; i++)
+        synchronized (this) for(int i = 0; i < sprites.length; i++)
         {
             sprites[i].clear;
         }
@@ -1015,14 +1028,20 @@ class Sprite
     void sphome(int i, int hx, int hy)
     {
         i = spid(i);
-        sprites[i].homex = hx;
-        sprites[i].homey = hy;
+        synchronized (this)
+        {
+            sprites[i].homex = hx;
+            sprites[i].homey = hy;
+        }
     }
     void spscale(int i, double x, double y)
     {
         i = spid(i);
-        sprites[i].scalex = x;
-        sprites[i].scaley = y;
+        synchronized (this)
+        {
+            sprites[i].scalex = x;
+            sprites[i].scaley = y;
+        }
     }
     void sprot(int i, double rot)
     {
@@ -1067,7 +1086,7 @@ class Sprite
     void spcol(int id, bool scale, int mask)
     {
         id = spid(id);
-        spcol(id, 0, 0, cast(ushort)sprites[id].w, cast(ushort)sprites[id].h, scale, mask);
+        synchronized (this) spcol(id, 0, 0, cast(ushort)sprites[id].w, cast(ushort)sprites[id].h, scale, mask);
     }
     void spcol(int id, short sx, short sy, ushort w, ushort h, bool scale, int mask)
     {
