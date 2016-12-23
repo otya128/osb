@@ -213,6 +213,8 @@ struct Value
             case ValueType.StringArray:
                 return format("doublearray[%s]", length);
             case ValueType.InternalAddress:
+                return format("internal address address=0x%x", integerValue);
+            case ValueType.InternalSlotAddress:
                 return format("internal address slot=%d, address=0x%x", internalAddress.slot, internalAddress.address);
             default:
                 return type.to!string;

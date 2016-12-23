@@ -104,6 +104,8 @@ class Function
     bool returnExpr;
     int outArgCount;
     bool isCommon;
+    VMSlot slot;/*common function*/
+    bool isDead;/*common function*/
     /**
     0:bp
     1:pc

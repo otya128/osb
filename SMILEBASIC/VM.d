@@ -31,6 +31,11 @@ struct VMVariable
 }
 class VMSlot
 {
+    int index;
+    this(int index)
+    {
+        this.index = index;
+    }
     bool isUsed;
     DataTable globalDataTable;
     //2MBらしい
@@ -64,7 +69,7 @@ class VM
         this.backTraceStack = new Trace[16384];
         for(int i = 0; i < slots.length; i++)
         {
-            slots[i] = new VMSlot();
+            slots[i] = new VMSlot(i);
         }
     }
     int currentSlotNumber()
@@ -102,6 +107,7 @@ class VM
             {
                 if (f.isCommon)
                 {
+                    f.isDead = true;
                     commonFunctions.remove(f.name);
                 }
             }
@@ -123,6 +129,7 @@ class VM
                 if (f.name in commonFunctions)
                     throw new DuplicateFunction(slot, dinfo.getLocationByAddress(f.address));
                 commonFunctions[f.name] = f;
+                f.slot = s;
             }
         }
         s.globalDataTable = gdt;
@@ -209,8 +216,9 @@ class VM
     void pushpc()
     {
         Value value;
-        value.type = ValueType.InternalAddress;
-        value.integerValue = pc;
+        value.type = ValueType.InternalSlotAddress;
+        value.internalAddress.address = pc;
+        value.internalAddress.slot = cast(byte)currentSlotNumber;
         push(value);
     }
     void push(ref Value value)
@@ -1375,6 +1383,8 @@ class CallFunctionCode : Code
     {
         func = vm.currentSlot.functions.get(name, null);
         if (!func)
+            func = vm.commonFunctions.get(name, null);
+        if (!func)
             throw new SyntaxError(name);
     }
     override void execute(VM vm)
@@ -1384,6 +1394,10 @@ class CallFunctionCode : Code
             //楽だし実行時に解決させる
             resolve(vm);
         }
+        if (func.isDead)
+        {
+            resolve(vm);
+        }
         if(func.argCount != this.argCount)
         {
             throw new IllegalFunctionCall(name.to!string);
@@ -1391,6 +1405,10 @@ class CallFunctionCode : Code
         if(func.outArgCount != this.outArgCount)
         {
             throw new IllegalFunctionCall(name.to!string);
+        }
+        if (func.isCommon)
+        {
+            vm.setCurrentSlot(func.slot.index);
         }
         vm.pushBackTrace(name);
         //TODO:args
@@ -1477,6 +1495,10 @@ class CallFunctionS : Code
                 vm.stack[bp + v.index] = Value(v.type);
             }
         }
+        if (func.isCommon)
+        {
+            vm.setCurrentSlot(func.slot.index);
+        }
     }
     override void execute(VM vm)
     {
@@ -1488,6 +1510,10 @@ class CallFunctionS : Code
         }
         auto name = vname.castDString.toUpper;
         Function func = vm.currentSlot.functions.get(name, null);
+        if (!func)
+        {
+            func = vm.commonFunctions.get(name, null);
+        }
         if(!func)
         {
             auto bfuncs = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(name, null);
