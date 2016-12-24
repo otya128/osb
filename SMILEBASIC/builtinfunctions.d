@@ -1226,12 +1226,16 @@ class BuiltinFunction
     {
         if (len >= str.length)
         {
-            return str[0..$];
+            return str;
         }
         return str[0..len];
     }
     static wstring RIGHT(wstring str, int len)
     {
+        if (len >= str.length)
+        {
+            return str;
+        }
         return str[$ - len..$];
     }
     static wstring SUBST(wstring str, int i, Value alen, DefaultValue!(Value,false) areplace)
