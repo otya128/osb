@@ -1583,7 +1583,10 @@ class Parser
             then = ifStatements();
         }
         token = lex.front();
-        lex.popFront();
+        if (multiline || token.type != TokenType.NewLine)
+        {
+            lex.popFront();
+        }
         import std.typecons;
         Tuple!(Statements, Expression)[] elseif = new Tuple!(Statements, Expression)[0];
         while(token.type == TokenType.Elseif)
@@ -1643,7 +1646,10 @@ class Parser
             {
                 else_ = ifStatements();
             }
-            lex.popFront();
+            if (multiline || lex.front.type != TokenType.NewLine)
+            {
+                lex.popFront();
+            }
         }
         auto if_ = new If(expr, then, else_, elseif, lex.location);
         return if_;
