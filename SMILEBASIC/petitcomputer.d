@@ -708,6 +708,8 @@ class PetitComputer
             buttonTable[SDL_SCANCODE_B] = Button.B;
             buttonTable[SDL_SCANCODE_A] = Button.X;
             buttonTable[SDL_SCANCODE_S] = Button.Y;
+            buttonTable[SDL_SCANCODE_Q] = Button.L;
+            buttonTable[SDL_SCANCODE_W] = Button.R;
 
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_UP] = Button.UP;
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = Button.DOWN;
