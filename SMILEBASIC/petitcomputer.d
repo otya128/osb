@@ -1180,7 +1180,7 @@ class PetitComputer
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             auto loc = vm.currentLocation;
-                            console.print(loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1193,9 +1193,10 @@ class PetitComputer
                         try
                         {
                             console.print(t.to!string);
+                            console.print("\n");
                             writeln(t);
                             auto loc = vm.currentLocation;
-                            console.print(slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1248,7 +1249,7 @@ class PetitComputer
                             writeln(sbe.getErrorMessage2);
                             writeln(sbe.func);
                             loc = vm.currentLocation;
-                            console.print(loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1261,8 +1262,9 @@ class PetitComputer
                         try
                         {
                             console.print(t.to!string);
+                            console.print("\n");
                             writeln(t);
-                            console.print(slot[vm.currentSlotNumber].getLine(vm.currentLocation));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(vm.currentLocation));
                         }
                         catch(Throwable t)
                         {

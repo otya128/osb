@@ -1224,6 +1224,10 @@ class BuiltinFunction
     //INSTRSUSBTLEFT
     static wstring LEFT(wstring str, int len)
     {
+        if (len >= str.length)
+        {
+            return str[0..$];
+        }
         return str[0..len];
     }
     static wstring RIGHT(wstring str, int len)
