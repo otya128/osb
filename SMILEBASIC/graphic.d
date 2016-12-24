@@ -1072,7 +1072,7 @@ class Graphic2 : Graphic
         {
             sx = wa.x - x;
             w2 -= sx;
-            if (sx >=  w)
+            if (sx >= w)
             {
                 return true;
             }
@@ -1094,7 +1094,7 @@ class Graphic2 : Graphic
                 return true;
             }
         }
-        if (wa.h < h2)
+        if (wa.h + wa.y < y + sy + h2)
         {
             h2 = h2 - ((y + sy + h2) - (wa.h + wa.y));
             if (h < 1)
@@ -1238,9 +1238,9 @@ class Graphic2 : Graphic
         int sx, sy;
         if (clipXYWH(writeArea[petitcom.displaynum], x, y, w, h, sx, sy, w, h))
             return;
-        for (int iy = sy; iy < h; iy++)
+        for (int iy = sy; iy < sy + h; iy++)
         {
-            for (int ix = sx; ix < w; ix++)
+            for (int ix = sx; ix < sx + w; ix++)
             {
                 auto c = cast(int)array[iy * arrayW + ix];
                 if (flag)
@@ -1270,9 +1270,9 @@ class Graphic2 : Graphic
         int sx, sy;
         if (clipXYWH(writeArea[petitcom.displaynum], x, y, w, h, sx, sy, w, h))
             return;
-        for (int iy = sy; iy < h; iy++)
+        for (int iy = sy; iy < sy + h; iy++)
         {
-            for (int ix = sx; ix < w; ix++)
+            for (int ix = sx; ix < sx + w; ix++)
             {
                 auto c = cast(int)palette[cast(int)array[iy * arrayW + ix]];
                 c = convertColor(c);
