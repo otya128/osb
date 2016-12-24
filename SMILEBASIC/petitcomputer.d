@@ -879,7 +879,8 @@ class PetitComputer
                             synchronized (buttonLock)
                             {
                                 auto key = event.key.keysym.sym;
-                                button &= ~buttonTable[event.key.keysym.scancode];
+                                if (controllers.length == 0)
+                                    button &= ~buttonTable[event.key.keysym.scancode];
                             }
                             break;
                         case SDL_KEYDOWN:
@@ -898,7 +899,8 @@ class PetitComputer
                                         break;
                                     }
                                 }
-                                button |= buttonTable[event.key.keysym.scancode];
+                                if (controllers.length == 0)
+                                    button |= buttonTable[event.key.keysym.scancode];
                                 if(key == SDLK_v)
                                 {
                                     auto mod = event.key.keysym.mod;
