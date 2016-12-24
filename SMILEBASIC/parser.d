@@ -951,6 +951,8 @@ class Parser
                             func.addArg(new VoidExpression(lex.location));
                             lex.popFront();
                             token = lex.front();
+                            if (token.type != TokenType.Comma)
+                                func.addArg(new VoidExpression(lex.location));
                         }
                         else
                         {
