@@ -1138,6 +1138,7 @@ class PushArray : Code
                 index[i] = cast(int)v.doubleValue;
                 continue;
             }
+            vm.dumpStack(vm.stacki + 1);
             throw new TypeMismatch();
         }
         Value array;

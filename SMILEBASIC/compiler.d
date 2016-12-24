@@ -486,7 +486,7 @@ class Compiler
     }
     void compileExpression(Expression exp, Scope sc)
     {
-        if(!exp)
+        if(!exp || exp.type == NodeType.VoidExpression)
         {
             genCodeImm(Value(ValueType.Void));
             return;
