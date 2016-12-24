@@ -2364,7 +2364,7 @@ class BuiltinFunction
         }
         foreach (i, j; l)
         {
-            array[i] = Value(cast(int)j);
+            array[cast(int)i] = Value(j);
         }
     }
     static void ACLS(PetitComputer p)
