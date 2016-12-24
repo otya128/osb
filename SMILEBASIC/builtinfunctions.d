@@ -2297,40 +2297,75 @@ class BuiltinFunction
     }
     //FILES TYPE$
     //((TXT|DAT):)?\w+/?
-    static void FILES(PetitComputer p, DefaultValue!(wstring, false) name)
+    static void FILES(PetitComputer p)
+    {
+        FILES(p, Value(cast(wchar[])p.currentProject));
+    }
+    static void FILES(PetitComputer p, Value nameOrArray)
     {
         import otya.smilebasic.project;
-        if(name.isDefault)
+        if(nameOrArray.isString)
         {
-            name.setDefaultValue(p.currentProject);
+            auto t = Projects.splitResourceName(nameOrArray.castDString);
+            auto res = t[0];
+            if(t[1].length && t[2].length)
+            {
+                throw new IllegalFunctionCall("FILES");
+            }
+            if(t[2].length && nameOrArray.castDString.indexOf("/") != -1)
+            {
+                //"TXT:A":OK
+                //"TXT:A/":OK
+                //"TXT:/A":X
+                //"TXT:A/A":X
+                throw new IllegalFunctionCall("FILES");
+            }
+            auto project = t[1].length ? t[1] : t[2];
+            //project:.->hidden project
+            //project:/->project list
+            auto l = p.project.getFileList(project, res);
+            p.console.print(res, "\t", project, "\n");
+            foreach(i; l)
+            {
+                p.console.print(i, "\n");
+            }
         }
-        auto t = Projects.splitResourceName(name.value);
+        else if (nameOrArray.type == ValueType.StringArray)
+        {
+            FILES(p, p.currentProject, nameOrArray);
+        }
+        else
+        {
+            throw new TypeMismatch("FILES"/*, 1*/);
+        }
+    }
+    static void FILES(PetitComputer p, wstring name, Value array)
+    {
+        import otya.smilebasic.project;
+        if (array.type != ValueType.StringArray)
+        {
+            throw new TypeMismatch("FILES"/*, 1*/);
+        }
+        auto t = Projects.splitResourceName(name);
         auto res = t[0];
         if(t[1].length && t[2].length)
         {
             throw new IllegalFunctionCall("FILES");
         }
-        if(t[2].length && name.value.indexOf("/") != -1)
+        if(t[2].length && name.indexOf("/") != -1)
         {
-            //"TXT:A":OK
-            //"TXT:A/":OK
-            //"TXT:/A":X
-            //"TXT:A/A":X
             throw new IllegalFunctionCall("FILES");
         }
         auto project = t[1].length ? t[1] : t[2];
-        //project:.->hidden project
-        //project:/->project list
         auto l = p.project.getFileList(project, res);
-        p.console.print(res, "\t", project, "\n");
-        foreach(i; l)
+        if (l.length > array.length)
         {
-            p.console.print(i, "\n");
+            array.length = l.length;
         }
-    }
-    static void FILES(PetitComputer p, wstring name, Value[] array)
-    {
-        writeln("NOTIMPL");
+        foreach (i, j; l)
+        {
+            array[i] = Value(j);
+        }
     }
     static void ACLS(PetitComputer p)
     {
