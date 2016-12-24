@@ -235,14 +235,20 @@ class BuiltinFunction
         return std.math.PI;
     }
     //static ABS = function double(double x) => abs(this.result == ValueType.Double ? 1 : 0);
-    static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, DefaultValue!(int, false) z)
+    static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, int z)
     {
         x.setDefaultValue(p.console.CSRX);
         y.setDefaultValue(p.console.CSRY);
-        z.setDefaultValue(p.console.CSRZ);
         p.console.CSRX = cast(int)x;
         p.console.CSRY = cast(int)y;
         p.console.CSRZ = cast(int)z;
+    }
+    static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y)
+    {
+        x.setDefaultValue(p.console.CSRX);
+        y.setDefaultValue(p.console.CSRY);
+        p.console.CSRX = cast(int)x;
+        p.console.CSRY = cast(int)y;
     }
     static void COLOR(PetitComputer p, DefaultValue!int fore, DefaultValue!(int, false) back)
     {
