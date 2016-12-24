@@ -67,6 +67,7 @@ class Scope
     {
         this();
         this.func = func;
+        func.scope_ = this;
     }
 }
 class DataTable
@@ -94,6 +95,7 @@ class Function
     int[wstring] label;
     bool returnExpr;
     int outArgCount;
+    Scope scope_;
     bool isCommon;
     VMSlot slot;/*common function*/
     bool isDead;/*common function*/

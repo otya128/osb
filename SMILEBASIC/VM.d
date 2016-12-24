@@ -1421,6 +1421,8 @@ class CallFunctionCode : Code
         //TODO:args
         auto bp = vm.stacki;
         vm.push(Value(vm.currentData));
+        vm.currentData.index = 0;
+        vm.currentData.table = func.scope_.data;
         vm.push(Value(vm.bp));
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
@@ -1494,6 +1496,8 @@ class CallFunctionS : Code
         //TODO:args
         auto bp = vm.stacki;
         vm.push(Value(vm.currentData));
+        vm.currentData.index = 0;
+        vm.currentData.table = func.scope_.data;
         vm.push(Value(vm.bp));
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
