@@ -289,6 +289,7 @@ struct SpriteData
     //SPLINKの親は子より小さい管理番号でしかなれないのでsprite->child->nextのX座標を加算すればなんとかなる
     //->挙動的に違う
     int linkx, linky;
+    double linkz = 0;
 
     //SPCOL
     SpriteCollision col;
@@ -590,7 +591,7 @@ class Sprite
             import std.range;
             import std.algorithm;
             zChange = false;
-            synchronized (this) sort!("a.z > b.z", SwapStrategy.stable)(zsortedSprites);
+            synchronized (this) sort!("a.linkz > b.linkz", SwapStrategy.stable)(zsortedSprites);
         }
         float disw, dish, disw2, dish2;
         disw = petitcom.currentDisplay.rect[0].w / 2;
@@ -661,18 +662,24 @@ class Sprite
                         continue;
                 }
                 int x, y;
+                double spritez;
                 if(sprite.parent)
                 {
                     x += cast(int)(sprite.x + sprite.parent.linkx);
                     y += cast(int)(sprite.y + sprite.parent.linky);
+                    spritez = sprite.z + sprite.parent.linkz;
                 }
                 else
                 {
                     x = cast(int)sprite.x;// - cast(int)(sprite.homex * sprite.scalex);
                     y = cast(int)sprite.y;// - cast(int)(sprite.homey * sprite.scaley);
+                    spritez = sprite.z;
                 }
                 sprite.linkx = x;
                 sprite.linky = y;
+                if (sprite.linkz != spritez)
+                    zChange = true;
+                sprite.linkz = spritez;
                 auto homex2 = ((sprite.w / 2f ) - sprite.homex);
                 auto homey2 = ((sprite.h / 2f ) - sprite.homey);
                 int w = sprite.w;
@@ -851,8 +858,9 @@ class Sprite
             sprites[id].z = z;
             sprites[id].linkx = cast(int)(x + (sprites[id].parent ? sprites[id].parent.linkx : 0));
             sprites[id].linky = cast(int)(y + (sprites[id].parent ? sprites[id].parent.linky : 0));
+            sprites[id].linkz = sprites[id].parent ? z + sprites[id].parent.linkz : z;
+            zChange = true;
         }
-        zChange = true;
     }
     void getspofs(int id, out  double x, out double y, out double z)
     {
@@ -1009,7 +1017,14 @@ class Sprite
         //SPLINK 2,0
         //SPLINK 2,1した時の挙動謎
         //最後にSPSETした親が優先される->子が親を保持？
-        sprites[child].parent = &sprites[parent];
+        synchronized (this)
+        {
+            sprites[child].parent = &sprites[parent];
+            sprites[child].linkx = cast(int)(sprites[child].x + (sprites[child].parent ? sprites[child].parent.linkx : 0));
+            sprites[child].linky = cast(int)(sprites[child].y + (sprites[child].parent ? sprites[child].parent.linky : 0));
+            sprites[child].linkz = sprites[child].z + sprites[parent].linkz;
+            zChange = true;
+        }
     }
     //再帰的にUNLINKされるのか？
     void spunlink(int id)
