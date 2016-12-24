@@ -927,10 +927,8 @@ class GotoFalse : Code
 }
 class GotoExpr : Code
 {
-    Scope sc;
-    this(Scope sc)
+    this()
     {
-        this.sc = sc;
     }
     override void execute(VM vm)
     {
@@ -939,9 +937,9 @@ class GotoExpr : Code
         if(label.isString)
         {
             int pc;
-            if (sc && sc.func)
+            if (vm.currentFunction)
             {
-                pc = sc.func.label.get(label.castDString, int.min);
+                pc = vm.currentFunction.label.get(label.castDString, int.min);
             }
             else
             {

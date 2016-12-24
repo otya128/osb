@@ -1007,7 +1007,7 @@ class Compiler
                     if(!gotou.label)
                     {
                         compileExpression(gotou.labelexpr, s);
-                        genCode(new GotoExpr(s));
+                        genCode(new GotoExpr());
                     }
                     else
                     {
