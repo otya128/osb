@@ -1513,7 +1513,26 @@ class BuiltinFunction
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
     }
-    @StartOptional("W")
+    static void SPDEF(PetitComputer p, int id, out int U, out int V, out int A)
+    {
+        int dummy;
+        p.sprite.getspdef(id, U, V, dummy, dummy, dummy, dummy, A);
+    }
+    static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H)
+    {
+        int dummy;
+        p.sprite.getspdef(id, U, V, W, H, dummy, dummy, dummy);
+    }
+    static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int A)
+    {
+        int dummy;
+        p.sprite.getspdef(id, U, V, W, H, dummy, dummy, A);
+    }
+    static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int HX, out int HY)
+    {
+        int dummy;
+        p.sprite.getspdef(id, U, V, W, H, HX, HY, dummy);
+    }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int HX, out int HY, out int A)
     {
         p.sprite.getspdef(id, U, V, W, H, HX, HY, A);
