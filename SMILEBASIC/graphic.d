@@ -897,7 +897,7 @@ class Graphic2 : Graphic
         {
             for (int x = sx; x <= ex; x++)
             {
-                if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+                if (x >= wa.x && y >= wa.y && x <= cx2 && y <= cy2)
                     buffer[y * height + x] = color;
             }
         }
@@ -907,7 +907,7 @@ class Graphic2 : Graphic
         {
             for (int y = sy; y <= ey; y++)
             {
-                if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+                if (x >= wa.x && y >= wa.y && x <= cx2 && y <= cy2)
                     buffer[y * width + x] = color;
             }
         }
