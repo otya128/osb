@@ -1564,25 +1564,39 @@ class BuiltinFunction
             int U = va_args[1].castInteger;
             int V = va_args[2].castInteger;
             int W = 16, H = 16, HX = 0, HY = 0, ATTR = 1;
-            if(va_args.length > 3)
+            if (va_args.length == 4)
+            {
+                ATTR = va_args[3].castInteger;
+            }
+            else if (va_args.length == 5)
             {
                 W = va_args[3].castInteger;
-            }
-            if(va_args.length > 4)
-            {
                 H = va_args[4].castInteger;
             }
-            if(va_args.length > 5)
+            else if (va_args.length == 6)
             {
-                HX = va_args[5].castInteger;
+                W = va_args[3].castInteger;
+                H = va_args[4].castInteger;
+                ATTR = va_args[5].castInteger;
             }
-            if(va_args.length > 6)
+            else if (va_args.length == 7)
             {
+                W = va_args[3].castInteger;
+                H = va_args[4].castInteger;
+                HX = va_args[5].castInteger;
                 HY = va_args[6].castInteger;
             }
-            if(va_args.length > 7)
+            else if (va_args.length == 8)
             {
+                W = va_args[3].castInteger;
+                H = va_args[4].castInteger;
+                HX = va_args[5].castInteger;
+                HY = va_args[6].castInteger;
                 ATTR = va_args[7].castInteger;
+            }
+            else
+            {
+                throw new IllegalFunctionCall("SPDEF");
             }
             p.sprite.SPDEFTable[defno] = SpriteDef(U, V, W, H, HX, HY, cast(SpriteAttr)ATTR);
         }
