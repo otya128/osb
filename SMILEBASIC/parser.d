@@ -945,21 +945,10 @@ class Parser
                     while(true)
                     {
                         token = lex.front();
+                        auto expr = expression();
+                        if(expr || oldcomma || lex.front.type == TokenType.Comma)//if(expr)
+                            func.addArg(expr);
 
-                        if(token.type == TokenType.Comma)
-                        {
-                            func.addArg(new VoidExpression(lex.location));
-                            lex.popFront();
-                            token = lex.front();
-                            if (token.type != TokenType.Comma)
-                                func.addArg(new VoidExpression(lex.location));
-                        }
-                        else
-                        {
-                            auto expr = expression();
-                            if(expr || oldcomma || lex.front.type == TokenType.Comma)//if(expr)
-                                func.addArg(expr);
-                        }
                         if(lex.front().type == TokenType.Out) break;
                         if(lex.front().type != TokenType.Comma) break;
                         oldcomma = true;
