@@ -1531,7 +1531,7 @@ class PetitComputer
         {
             return "";
         }
-        auto result = keybuffer[(keybufferpos - keybufferlen)];
+        auto result = keybuffer[(keybufferpos - keybufferlen) % keybuffer.length];
         keybufferlen--;
         return result.key.to!wstring;
     }
