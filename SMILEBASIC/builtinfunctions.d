@@ -1849,7 +1849,7 @@ class BuiltinFunction
                 {
                     case 'S', 's':
                         {
-                            auto val = args[j].castString;
+                            auto val = args[j].castDString;
                             spec.width = d1;
                             spec.flDash = left;
                             spec.flZero = zero;
