@@ -1522,6 +1522,9 @@ class PetitComputer
     }
     wstring inkey()
     {
+        keybuffermutex.lock();
+        scope (exit)
+            keybuffermutex.unlock();
         if (!keybufferlen)
         {
             return "";
