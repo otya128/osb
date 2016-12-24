@@ -2360,11 +2360,11 @@ class BuiltinFunction
         auto l = p.project.getFileList(project, res);
         if (l.length > array.length)
         {
-            array.length = l.length;
+            array.length = cast(int)l.length;
         }
         foreach (i, j; l)
         {
-            array[i] = Value(j);
+            array[i] = Value(cast(int)j);
         }
     }
     static void ACLS(PetitComputer p)
