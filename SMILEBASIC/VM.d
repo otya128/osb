@@ -319,6 +319,22 @@ class VM
             return true;
         return false;
     }
+    bool chklabel(wstring label)
+    {
+        if (label in currentSlot.globalLabel)
+            return true;
+        if (currentFunction && label in currentFunction.label)
+            return true;
+        return false;
+    }
+    bool chkvar(wstring var)
+    {
+        if (var in currentSlot.globalTable)
+            return true;
+        if (currentFunction && var in currentFunction.variable)
+            return true;
+        return false;
+    }
 }
 enum CodeType
 {

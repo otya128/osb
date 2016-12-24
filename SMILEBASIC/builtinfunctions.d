@@ -2382,7 +2382,12 @@ class BuiltinFunction
     static int CHKLABEL(PetitComputer p, wstring label)
     {
         label = label.toUpper;
-        return (label in p.vm.currentSlot.globalLabel) != null;
+        return p.vm.chklabel(label);
+    }
+    static int CHKVAR(PetitComputer p, wstring var)
+    {
+        var = var.toUpper;
+        return p.vm.chkvar(var);
     }
     static wstring INKEY(PetitComputer p)
     {
