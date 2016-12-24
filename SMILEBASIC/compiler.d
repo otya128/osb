@@ -85,7 +85,7 @@ class DataTable
 }
 class Function
 {
-    static const frameSize = 3;
+    static const frameSize = 4;
     int address;
     wstring name;
     int argCount;

@@ -18,6 +18,7 @@ enum ValueType : byte
     StringReference,
     StringArrayReference,
     Data,
+    Function,
 }
 import otya.smilebasic.compiler;
 import otya.smilebasic.vm;
@@ -56,6 +57,7 @@ struct Value
         ArrayReference!wchar stringReference;
         ArrayReference!(Array!wchar) stringArrayReference;
         Data data;
+        Function func;
     }
     this(int value)
     {
@@ -128,6 +130,11 @@ struct Value
     {
         this.type = ValueType.Data;
         this.data = data;
+    }
+    this(Function func)
+    {
+        this.type = ValueType.Function;
+        this.func = func;
     }
     void castOp(ValueType type)
     {

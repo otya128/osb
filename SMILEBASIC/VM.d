@@ -276,6 +276,7 @@ class VM
         return "undefined variable";
     }
     otya.smilebasic.type.Data currentData;//DATAの位置は全スロット共通
+    Function currentFunction;
     Value readData()
     {
         Value value;
@@ -1342,6 +1343,8 @@ class ReturnFunction : Code
         vm.pop(bp);
         Value hae;
         vm.pop(hae);
+        Value cfunc;
+        vm.pop(cfunc);
         if (hae.type != ValueType.Data)
         {
             throw new TypeMismatch();
@@ -1349,6 +1352,14 @@ class ReturnFunction : Code
         else
         {
             vm.currentData = hae.data;
+        }
+        if (cfunc.type != ValueType.Function)
+        {
+            throw new TypeMismatch();
+        }
+        else
+        {
+            vm.currentFunction = cfunc.func;
         }
         vm.stacki -= func.argCount;
         if(func.returnExpr)
@@ -1420,6 +1431,8 @@ class CallFunctionCode : Code
         vm.pushBackTrace(name);
         //TODO:args
         auto bp = vm.stacki;
+        vm.push(Value(vm.currentFunction));
+        vm.currentFunction = func;
         vm.push(Value(vm.currentData));
         vm.currentData.index = 0;
         vm.currentData.table = func.scope_.data;
@@ -1495,6 +1508,8 @@ class CallFunctionS : Code
         }
         //TODO:args
         auto bp = vm.stacki;
+        vm.push(Value(vm.currentFunction));
+        vm.currentFunction = func;
         vm.push(Value(vm.currentData));
         vm.currentData.index = 0;
         vm.currentData.table = func.scope_.data;
