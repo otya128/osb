@@ -758,6 +758,33 @@ class BuiltinFunction
         formattedRead(v, "%d/%d/%d", &Y, &M, &D);
         W = cast(int)DateTime(Y, M, D).dayOfWeek;
     }
+    static void TMREAD(out int H, out int M, out int S)
+    {
+        import std.datetime;
+        auto currentTime = Clock.currTime();
+        H = currentTime.hour;
+        M = currentTime.minute;
+        S = currentTime.second;
+    }
+    static void TMREAD(wstring time, out int H, out int M, out int S)
+    {
+        import std.datetime;
+        import std.format;
+        try
+        {
+            formattedRead(time, "%d:%d:%d", &H, &M, &S);
+        }
+        catch
+        {
+            throw new IllegalFunctionCall("TMREAD", 1);
+        }
+        if (!time.empty)
+        {
+            throw new IllegalFunctionCall("TMREAD", 1);
+        }
+        if (H < 0 || M < 0 || S < 0 || H > 99 || M > 99 || S > 99)
+            throw new IllegalFunctionCall("TMREAD", 1);
+    }
     static int LEN(Value ary)
     {
         return ary.length;
