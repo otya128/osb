@@ -387,14 +387,6 @@ class Sprite
         }
         initUVTable;
         this.petitcom = petitcom;
-        list = new SpriteBucket[512];
-        for(int i = 0; i < 512; i++)
-        {
-            list[i] = new SpriteBucket();
-        }
-        buckets = new SpriteBucket[1024 + 256];
-        listptr = list.ptr;
-        bucketsptr = buckets.ptr;
     }
     void animation(SpriteData* sprite, SpriteAnimData* data, SpriteAnimTarget target)
     {
@@ -576,16 +568,6 @@ class Sprite
     import std.algorithm;
     SpriteData*[] zsortedSprites;
     bool zChange;
-    class SpriteBucket
-    {
-        SpriteData* sprite;
-        SpriteBucket next;
-        SpriteBucket last;
-    }
-    SpriteBucket[] list;
-    SpriteBucket[] buckets;
-    SpriteBucket* listptr;
-    SpriteBucket* bucketsptr;
     int[2] sppage;
     void render()
     {
@@ -608,55 +590,7 @@ class Sprite
             import std.range;
             import std.algorithm;
             zChange = false;
-            /*//TimSortImpl!(binaryFun!("a.z < b.z"), Range).sort(zsortedSprites, null);
-            try
-            {
-                sort!("a.z > b.z", SwapStrategy.stable)(zsortedSprites);
-            }
-            catch(Throwable t)
-            {
-            }//*/
-            //バケットソートっぽい奴
-            //基本的にほぼソートされてるので挿入ソートのほうが早そう
-            //std.algorithmソートだと例外出る
-            //m = 256+1024
-            //n = 512
-            import std.stdio;
-            //writeln("=============START==========");
-            //writeln("sort");
-            foreach(i, ref s; sprites)
-            {
-                //if(!s.define) continue;
-                auto zet = cast(int)s.z + 256;
-                listptr[i].sprite = &s;
-                if(bucketsptr[zet])
-                {
-                    //listptr[i].next = bucketsptr[zet].last;
-                    bucketsptr[zet].last.next = listptr[i];
-                    bucketsptr[zet].last = listptr[i];
-                    listptr[i].next = null;
-                }
-                else
-                {
-                    bucketsptr[zet] = listptr[i].last = listptr[i];
-                    listptr[i].next = null;
-                }
-            }
-            int j;
-            foreach_reverse(i, b; buckets)
-            {
-                if(b)
-                {
-                    while(b)
-                    {
-                        //writefln("z:%d, id:%d", b.sprite.z, b.sprite.id);
-                        zsortedSprites[j] = b.sprite;
-                        j++;
-                        b = b.next;
-                    }
-                    bucketsptr[i] = null;
-                }
-            }
+            synchronized (this) sort!("a.z > b.z", SwapStrategy.stable)(zsortedSprites);
         }
         float disw, dish, disw2, dish2;
         disw = petitcom.currentDisplay.rect[0].w / 2;
