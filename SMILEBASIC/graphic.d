@@ -322,6 +322,7 @@ class Graphic
         }
     }
     abstract void gcopy(int srcpage, int x, int y, int x2, int y2, int x3, int y3, int cpmode);
+    abstract void gtri(int x1, int y1, int x2, int y2, int x3, int y3, int color);
     int[2] gprios = [511, 511];
 
     @property ref gprio()
@@ -1294,5 +1295,143 @@ class Graphic2 : Graphic
         int w = x2 - x1 + 1, h = y2 - y1 + 1;
         gsaveTempl(srcpage, x1, y1, w, h, tempbuffer, 0);
         gloadTempl(x3, y3, w, h, tempbuffer, 0, cpmode);
+    }
+    override void gtri(int x1, int y1, int x2, int y2, int x3, int y3, int color)
+    {
+        import std.algorithm, std.typecons, std.math;
+        df = true;
+        Tuple!(int, "x", int, "y") drawSize = tuple(511, 511);
+        void pset(int x, int y)
+        {
+            auto wa = writeArea[petitcom.displaynum];
+            int cx2 = wa.x + wa.w;
+            int cy2 = wa.y + wa.h;
+            if (x >= wa.x && y >= wa.y && x < cx2 && y < cy2)
+            {
+                buffer[y * width + x] = color;
+            }
+        }
+        //====http://fussy.web.fc2.com/algo/polygon3_misc.htm====
+        /*
+        TriFill_XDraw : 三角形描画スキャンライン描画
+
+        DrawingArea_IF& draw : 描画領域
+        GPixelOp& pset : 点描画に使う関数オブジェクト
+        pair<double, double> &l, &r : スキャンラインの両端座標の X 成分と増分の pair
+        int& sy : 描画開始 Y 座標(描画終了時に次の Y 座標を返す)
+        int ey : 描画終了 Y 座標
+        */
+        void TriFill_XDraw(ref Tuple!(double, double) l, ref Tuple!(double, double) r, ref int sy, int ey )
+        {
+            for ( ; sy < ey ; ++sy ) {
+                int sx = cast(int)round( l[0]); // 描画開始 X 座標
+                int ex = cast(int)round( r[0]); // 描画終了 X 座標
+
+                // X 座標のクリッピング
+                if ( sx < 0 ) sx = 0;
+                if ( ex >= drawSize.x ) ex = drawSize.x - 1;
+
+                // スキャンライン描画
+                for ( ; sx <= ex ; ++sx )
+                    pset(sx, sy);
+
+                // X 座標の更新
+                l[0] += l[1];
+                r[0] += r[1];
+            }
+        }
+
+        /*
+        TriFill_Main : 三角形描画用 メイン・ルーチン
+
+        DrawingArea_IF& draw : 描画領域
+        GPixelOp& pset : 点描画に使う関数オブジェクト
+        Coord<int> &top, &middle, &bottom : 三角形の頂角の座標(上側・中央・下側の順)
+        */
+        void TriFill_Main(const ref Tuple!(int, "x", int, "y") top, const ref Tuple!(int, "x", int, "y") middle, const ref Tuple!(int, "x", int, "y") bottom )
+        {
+            // 上側の頂点からの描画開始 X 座標(頂角が描画領域外の場合、異なる座標になる)
+            double top_mid_x = top.x; // top - middle
+            double top_btm_x = top.x; // top - bottom
+
+            // 上側に水平な辺がある場合は中央の頂点で初期化する
+            if ( top.y == middle.y )
+                top_mid_x = middle.x;
+
+            int sy = top.y;    // 描画開始 Y 座標
+            int my = middle.y; // 中央の頂点の Y 座標
+            int ey = bottom.y; // 描画終了 Y 座標
+
+            // クリッピング
+
+            // 上側の頂点が領域外の場合
+            if ( top.y < 0 ) {
+                sy = 0;
+                // 上側から中央への辺をクリッピング
+                if ( middle.y >= 0 ) {
+                    if ( top.y != middle.y )
+                        top_mid_x = cast(double)( middle.x - top.x ) * cast(double)middle.y / cast(double)( top.y - middle.y ) + cast(double)middle.x;
+                } else {
+                    if ( middle.y != bottom.y )
+                        top_mid_x = cast(double)( bottom.x - middle.x ) * cast(double)bottom.y / cast(double)( middle.y - bottom.y ) + cast(double)bottom.x;
+                }
+                // 上側から下側への辺をクリッピング
+                if ( top.y != bottom.y )
+                    top_btm_x = cast(double)( bottom.x - top.x ) * cast(double)bottom.y / cast(double)( top.y - bottom.y ) + cast(double)bottom.x;
+            }
+
+            // 下側の頂点が領域外の場合は描画終了 Y 座標を描画領域内にする
+            if ( bottom.y >= drawSize.y )
+                ey = drawSize.y - 1;
+
+            // X 座標に対する増分
+            double top_mid_a = ( middle.y != top.y ) ?
+                cast(double)( middle.x - top.x ) / cast(double)( middle.y - top.y ) : 0;       // top - middle
+            double mid_btm_a = ( middle.y != bottom.y ) ?
+                cast(double)( middle.x - bottom.x ) / cast(double)( middle.y - bottom.y ) : 0; // middle - bottom
+            double top_btm_a = ( top.y != bottom.y ) ?
+                cast(double)( top.x - bottom.x ) / cast(double)( top.y - bottom.y ) : 0;       // top - bottom
+
+            // 描画開始 X 座標とその増分の pair
+            Tuple!(double, double) top_mid = tuple( top_mid_x, top_mid_a ); // top - middle
+            Tuple!(double, double) top_btm = tuple( top_btm_x, top_btm_a ); // top - bottom
+
+            // 中央の頂点が右向きか左向きかを判定して、各辺が左側・右側ののいずれかを決定する
+            // 中央の頂点を通る水平線が、上側・下側を通る直線と交わる点の X 座標
+            int splitLine_x = ( top.y != bottom.y ) ?
+                ( top.x - bottom.x ) * ( middle.y - top.y ) / ( top.y - bottom.y ) + top.x :
+            bottom.x; // 中央・下側の Y 座標が等しい場合、下側の X 座標
+            Tuple!(double, double)* l = ( middle.x < splitLine_x ) ? &top_mid : &top_btm; // 左側
+            Tuple!(double, double)* r = ( middle.x < splitLine_x ) ? &top_btm : &top_mid; // 右側
+
+            // 描画開始
+            TriFill_XDraw(*l, *r, sy, my );
+            top_mid[1] = mid_btm_a;
+            TriFill_XDraw(*l, *r, sy, ey + 1 );
+        }
+
+        /*
+        TriFill : 三角形描画用ルーチン 前処理
+
+        DrawingArea_IF& draw : 描画領域
+        GPixelOp& pset : 点描画に使う関数オブジェクト
+        Coord<int> c1, c2, c3 : 三角形の頂点
+        */
+        void TriFill(Tuple!(int, "x", int, "y") c1, Tuple!(int, "x", int, "y") c2, Tuple!(int, "x", int, "y") c3 )
+        {
+            // Y 座標で昇順にソート
+            if ( c1.y > c2.y ) swap( c1, c2 );
+            if ( c1.y > c3.y ) swap( c1, c3 );
+            if ( c2.y > c3.y ) swap( c2, c3 );
+
+            // ポリゴンが描画領域外なら処理しない
+            if ( c1.y >= drawSize.y ) return;
+            if ( c3.y < 0 ) return;
+
+            // 描画ルーチン メインへ
+            TriFill_Main(c1, c2, c3 );
+        }
+        //====http://fussy.web.fc2.com/algo/polygon3_misc.htm====
+        TriFill(Tuple!(int, "x", int, "y")(x1, y1), Tuple!(int, "x", int, "y")(x2, y2), Tuple!(int, "x", int, "y")(x3, y3));
     }
 }
