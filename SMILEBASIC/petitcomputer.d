@@ -1626,8 +1626,9 @@ class PetitComputer
             return currentDisplay.rect[1];
         }
         auto rect = currentDisplay.rect[0];
-        rect.y += rect.h;
+        rect.y = 0;
         currentDisplay.windowSize.height += rect.h;
+        currentDisplay.yoffset = currentDisplay.windowSize.height;
         updateWindowSize();
         return rect;
     }
@@ -1639,6 +1640,7 @@ class PetitComputer
         }
         auto rect = currentDisplay.rect[0];
         currentDisplay.windowSize.height -= rect.h;
+        currentDisplay.yoffset = currentDisplay.windowSize.height;
         updateWindowSize();
     }
     //プチコン内部表現はRGB5_A1

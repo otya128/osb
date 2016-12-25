@@ -3051,6 +3051,13 @@ class BuiltinFunction
             throw new OutOfRange("KEY", 1);
         key = new Array!wchar(cast(wchar[])p.functionKey[index]);
     }
+    import otya.smilebasic.dialog;
+    import otya.smilebasic.project;
+    static void DIALOG(PetitComputer p, wstring text)
+    {
+        auto dialog = new Dialog(p);
+        p.project.result = cast(DialogResult)dialog.show(text);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
