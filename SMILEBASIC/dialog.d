@@ -51,6 +51,10 @@ class DialogButton
         this.height = background.surface.h;
         this.result = result;
     }
+    bool colDetect(int x, int y)
+    {
+        return x >= this.x && y >= this.y && this.x + this.width > x && this.y + this.height > y;
+    }
 }
 
 class DialogResources
@@ -107,19 +111,25 @@ class Dialog : DialogBase
     }
     void renderButton(DialogButton button)
     {
+        int mx, my;
+        if (button.isPressed)
+        {
+            mx += 2;
+            my += 2;
+        }
         glDepthMask(GL_FALSE);
         glEnable(GL_TEXTURE_2D);
         glColor3ub(255, 255, 255);
         glBindTexture(GL_TEXTURE_2D, button.background.glTexture);
         glBegin(GL_QUADS);
         glTexCoord2i(0, 0);
-        glVertex2i(button.x, button.y);
+        glVertex2i(button.x + mx, button.y + my);
         glTexCoord2i(1, 0);
-        glVertex2i(button.x + button.width, button.y);
+        glVertex2i(button.x + button.width + mx, button.y + my);
         glTexCoord2i(1, 1);
-        glVertex2i(button.x + button.width, button.y + button.height);
+        glVertex2i(button.x + button.width + mx, button.y + button.height + my);
         glTexCoord2i(0, 1);
-        glVertex2i(button.x, button.y + button.height);
+        glVertex2i(button.x + mx, button.y + button.height + my);
         glEnd();
         glDisable(GL_TEXTURE_2D);
         glDepthMask(GL_TRUE);
@@ -133,6 +143,7 @@ class Dialog : DialogBase
             renderButton(b);
         }
     }
+
 
     int show(wstring text)
     {
@@ -154,9 +165,24 @@ class Dialog : DialogBase
                              DialogResult.CANCEL
                              )
         ];
-        while (true)
+        bool isPressed;
+        while (!isPressed)
         {
             auto to = petitcom.touchPosition();
+            auto x = to.display1X;
+            auto y = to.display1Y;
+            foreach (b; buttons)
+            {
+                if (to.tm == 1 && b.colDetect(x, y))
+                {
+                    b.isPressed = true;
+                }
+                else if (b.isPressed && to.tm < 1)
+                {
+                    result = b.result;
+                    isPressed = true;
+                }
+            }
             SDL_Delay(16);
         }
         petitcom.hideTouchScreen();

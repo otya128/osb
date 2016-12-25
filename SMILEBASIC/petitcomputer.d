@@ -638,7 +638,7 @@ class PetitComputer
             }
             mousex = mousex.clamp(5, 314);
             mousey = mousey.clamp(5, 234);
-            touchPosition = Touch(old.tm + 1, mousex, mousey);
+            touchPosition = Touch(old.tm + 1, mousex, mousey, 0, 0, mousex, mousey);
         }
         else
         {
@@ -1637,8 +1637,16 @@ class PetitComputer
         {
             return currentDisplay.rect[1];
         }
-        auto rect = currentDisplay.rect[0];
-        rect.y += rect.h;
+        SDL_Rect rect;
+        if (xscreenmode == 0)
+        {
+            rect = SDL_Rect((screenWidth - screenWidthDisplay1) / 2, screenHeight, screenWidthDisplay1, screenHeightDisplay1);
+        }
+        else
+        {
+            rect = currentDisplay.rect[0];
+            rect.y += rect.h;
+        }
         currentDisplay.windowSize.height += rect.h;
         currentDisplay.yoffset = currentDisplay.windowSize.height;
         updateWindowSize();
