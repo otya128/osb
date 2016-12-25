@@ -44,20 +44,49 @@ class Dialog : DialogBase
         this.petitcom = petitcom;
     }
     private int result;
+    private SDL_Rect area;
 
+    void renderBackground()
+    {
+        int w = 16, h = 16;
+        glDepthMask(GL_FALSE);
+        glDisable(GL_TEXTURE_2D);
+        glColor3ub(248, 248, 248);
+        glBegin(GL_QUADS);
+        glVertex2i(0, 0);
+        glVertex2i(area.w, 0);
+        glVertex2i(area.w, area.h);
+        glVertex2i(0, area.h);
+        glEnd();
+        glColor3ub(192, 192, 192);
+        glBegin(GL_LINES);
+        for (int y = 0; y < area.h; y += h)
+        {
+            glVertex2i(0, y);
+            glVertex2i(area.w, y);
+        }
+        for (int x = 0; x < area.w; x += w)
+        {
+            glVertex2i(x, 0);
+            glVertex2i(x, area.h);
+        }
+        glEnd();
+        glDepthMask(GL_TRUE);
+    }
     override void render()
     {
-        
+        petitcom.chScreen2(area.x, area.y, area.w, area.h);
+        renderBackground();
     }
 
     int show(wstring text)
     {
         petitcom.dialog = this;
-        auto area = petitcom.showTouchScreen();
+        area = petitcom.showTouchScreen();
         while (true)
         {
             auto to = petitcom.touchPosition();
-            
+            SDL_Delay(16);
         }
         petitcom.hideTouchScreen();
         return result;

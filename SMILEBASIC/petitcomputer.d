@@ -1626,7 +1626,7 @@ class PetitComputer
             return currentDisplay.rect[1];
         }
         auto rect = currentDisplay.rect[0];
-        rect.y = 0;
+        rect.y += rect.h;
         currentDisplay.windowSize.height += rect.h;
         currentDisplay.yoffset = currentDisplay.windowSize.height;
         updateWindowSize();
