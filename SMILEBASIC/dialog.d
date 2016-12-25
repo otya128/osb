@@ -1,5 +1,6 @@
 module otya.smilebasic.dialog;
 import otya.smilebasic.petitcomputer;
+import otya.smilebasic.project;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl;
@@ -35,6 +36,36 @@ enum ButtonResult
     touch = 140,
 }
 
+class DialogButton
+{
+    int x, y, width, height;
+    GraphicPage background;
+    DialogResult result;
+    bool isPressed;
+    this(GraphicPage background, int x, int y, DialogResult result)
+    {
+        this.background = background;
+        this.x = x;
+        this.y = y;
+        this.width = background.surface.w;
+        this.height = background.surface.h;
+        this.result = result;
+    }
+}
+
+class DialogResources
+{
+    public GraphicPage button1;
+    public GraphicPage button2;
+    public this(SDL_Renderer* renderer, GLenum textureScaleMode)
+    {
+        button1 = new GraphicPage("dialogresource/yes.png");
+        button1.createTexture(renderer, textureScaleMode);
+        button2 = new GraphicPage("dialogresource/no.png");
+        button2.createTexture(renderer, textureScaleMode);
+    }
+}
+
 
 class Dialog : DialogBase
 {
@@ -45,6 +76,7 @@ class Dialog : DialogBase
     }
     private int result;
     private SDL_Rect area;
+    DialogButton[] buttons;
 
     void renderBackground()
     {
@@ -73,16 +105,55 @@ class Dialog : DialogBase
         glEnd();
         glDepthMask(GL_TRUE);
     }
+    void renderButton(DialogButton button)
+    {
+        glDepthMask(GL_FALSE);
+        glEnable(GL_TEXTURE_2D);
+        glColor3ub(255, 255, 255);
+        glBindTexture(GL_TEXTURE_2D, button.background.glTexture);
+        glBegin(GL_QUADS);
+        glTexCoord2i(0, 0);
+        glVertex2i(button.x, button.y);
+        glTexCoord2i(1, 0);
+        glVertex2i(button.x + button.width, button.y);
+        glTexCoord2i(1, 1);
+        glVertex2i(button.x + button.width, button.y + button.height);
+        glTexCoord2i(0, 1);
+        glVertex2i(button.x, button.y + button.height);
+        glEnd();
+        glDisable(GL_TEXTURE_2D);
+        glDepthMask(GL_TRUE);
+    }
     override void render()
     {
         petitcom.chScreen2(area.x, area.y, area.w, area.h);
         renderBackground();
+        foreach (b; buttons)
+        {
+            renderButton(b);
+        }
     }
 
     int show(wstring text)
     {
         petitcom.dialog = this;
         area = petitcom.showTouchScreen();
+        int buttonMarginWidth = 12;
+        int buttonMarginHeight = 12;
+        buttons = [
+            new DialogButton(
+                             petitcom.dialogResource.button1,
+                             area.w - buttonMarginWidth - petitcom.dialogResource.button1.surface.w,
+                             area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
+                             DialogResult.SUCCESS
+                             ),
+            new DialogButton(
+                             petitcom.dialogResource.button2,
+                             buttonMarginWidth,
+                             area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
+                             DialogResult.CANCEL
+                             )
+        ];
         while (true)
         {
             auto to = petitcom.touchPosition();

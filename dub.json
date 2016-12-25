@@ -9,5 +9,5 @@
 	"buildRequirements": ["allowWarnings"],
 	"targetPath": "out",
 	"workingDirectory": "out",
-	"copyFiles": ["SMILEBASIC/spdef.csv"]
+	"copyFiles": ["SMILEBASIC/spdef.csv", "SMILEBASIC/dialogresource"]
 }

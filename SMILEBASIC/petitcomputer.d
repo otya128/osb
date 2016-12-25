@@ -46,6 +46,16 @@ class GraphicPage
 {
     static GLenum textureScaleMode = GL_NEAREST;
     SDL_Surface* surface;
+    this(string filename)
+    {
+        SDL_RWops* stream = SDL_RWFromFile(toStringz(filename), toStringz("rb"));
+        auto src = IMG_Load_RW(stream, 0);
+        scope(exit)
+        {
+            SDL_RWclose(stream);
+        }
+        this(src);
+    }
     this(SDL_Surface* s)
     {
         surface = s;
@@ -779,6 +789,7 @@ class PetitComputer
             DerelictGL3.reload();
             console.GRPF.createBuffer();
             graphic.initGraphicPages();
+            dialogResource = new DialogResources(renderer, textureScaleMode);
             //3graphic.initGLGraphicPages();
             //glEnable(GL_BLEND);
             //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1619,6 +1630,7 @@ class PetitComputer
     wstring[5] functionKey;
 
     DialogBase dialog;
+    DialogResources dialogResource;
     SDL_Rect showTouchScreen()
     {
         if (currentDisplay.rect.length != 1)
