@@ -19,6 +19,7 @@ import otya.smilebasic.parser;
 import otya.smilebasic.project;
 import otya.smilebasic.console;
 import otya.smilebasic.graphic;
+import otya.smilebasic.dialog;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -540,7 +541,12 @@ class PetitComputer
                 this.sprite.spclip;
             }
         }
+        updateWindowSize();
+    }
 
+    //do not call in synchronized(renderSync)
+    void updateWindowSize()
+    {
         SDL_SetWindowSize(window, cast(int)(currentDisplay.windowSize.width * scaleX), cast(int)(currentDisplay.windowSize.height * scaleY));
     }
 
@@ -813,6 +819,10 @@ class PetitComputer
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
+                    if (dialog)
+                    {
+                        dialog.render();
+                    }
                     console.render();
 
                     graphic.render();
@@ -1607,6 +1617,30 @@ class PetitComputer
     wstring versionString = "3.5.0";
     int version_ = 0x3050000;
     wstring[5] functionKey;
+
+    DialogBase dialog;
+    SDL_Rect showTouchScreen()
+    {
+        if (currentDisplay.rect.length != 1)
+        {
+            return currentDisplay.rect[1];
+        }
+        auto rect = currentDisplay.rect[0];
+        rect.y += rect.h;
+        currentDisplay.windowSize.height += rect.h;
+        updateWindowSize();
+        return rect;
+    }
+    void hideTouchScreen()
+    {
+        if (currentDisplay.rect.length != 1)
+        {
+            return;
+        }
+        auto rect = currentDisplay.rect[0];
+        currentDisplay.windowSize.height -= rect.h;
+        updateWindowSize();
+    }
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {
