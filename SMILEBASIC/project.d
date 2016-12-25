@@ -17,6 +17,7 @@ enum DialogResult
 
 class Projects
 {
+    wstring currentProject;
     wstring rootPath;
     wstring projectPath;
     string projectPathU8;

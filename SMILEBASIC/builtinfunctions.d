@@ -2223,7 +2223,7 @@ class BuiltinFunction
         }
         if(projectname == "")
         {
-            projectname = p.currentProject;
+            projectname = p.project.currentProject;
         }
         if(resname == "TXT")
         {
@@ -2256,7 +2256,7 @@ class BuiltinFunction
         }
         if(projectname == "")
         {
-            projectname = p.currentProject;
+            projectname = p.project.currentProject;
         }
         if(resname == "" || resname.indexOf("PRG") == 0)
         {
@@ -2294,20 +2294,20 @@ class BuiltinFunction
             {
                 throw new IllegalFunctionCall("PROJECT");
             }
-            p.currentProject = name;
+            p.project.currentProject = name;
             return;
         }
         throw new CantUseInProgram("PROJECT");
     }
     static void PROJECT(PetitComputer p, out Array!wchar name)
     {
-        name = new Array!wchar(cast(wchar[])p.currentProject.dup);
+        name = new Array!wchar(cast(wchar[])p.project.currentProject.dup);
     }
     //FILES TYPE$
     //((TXT|DAT):)?\w+/?
     static void FILES(PetitComputer p)
     {
-        FILES(p, Value(cast(wchar[])p.currentProject));
+        FILES(p, Value(cast(wchar[])p.project.currentProject));
     }
     static void FILES(PetitComputer p, Value nameOrArray)
     {
@@ -2340,7 +2340,7 @@ class BuiltinFunction
         }
         else if (nameOrArray.type == ValueType.StringArray)
         {
-            FILES(p, p.currentProject, nameOrArray);
+            FILES(p, p.project.currentProject, nameOrArray);
         }
         else
         {

@@ -296,10 +296,8 @@ class PetitComputer
     }
     int[2] bgpage;
     Projects project;
-    wstring currentProject;
     void init()
     {
-        currentProject = "";
         project = new Projects(".");
         //   DerelictGL.load();
         if(!exists(resourcePath))
@@ -1035,7 +1033,7 @@ class PetitComputer
     }
     void printPrompt()
     {
-        if(currentProject.length) console.print("[", currentProject, "]");
+        if(project.currentProject.length) console.print("[", project.currentProject, "]");
         console.print("OK\n");
     }
     Console console;
