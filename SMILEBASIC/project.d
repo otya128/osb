@@ -168,6 +168,36 @@ class Projects
         return true;
     }
 
+    wstring convertProjectName(wstring proj)
+    {
+        if (proj.empty)
+        {
+            return "[DEFAULT]";//TODO:current project!!
+        }
+        return proj;
+    }
+
+    bool chkfile(wstring path)
+    {
+        auto file = parseFileName(path);
+        if (!Projects.isValidFileName(file.name))
+        {
+            throw new IllegalFunctionCall("CHKFILE", 1);
+        }
+        if (!Projects.isValidProjectName(file.project))
+        {
+            throw new IllegalFunctionCall("CHKFILE", 1);
+        }
+        if (file.resource == Resource.illegal)
+        {
+            throw new IllegalFunctionCall("CHKFILE", 1);
+        }
+        bool isText = file.resource == Resource.none || file.resource == Resource.program || file.resource == Resource.text;
+        auto proj = convertProjectName(file.project);
+        auto p = buildPath(projectPath, proj, isText ? "TXT"w : "DAT"w, file.name).to!string;
+        return p.exists;
+    }
+
     static Resource getResource(wstring resname)
     {
         switch (std.uni.toUpper(resname))
@@ -181,7 +211,7 @@ class Projects
             case "TXT":
                 return Resource.text;
             default:
-                assert(false);
+                return Resource.illegal;
         }
     }
 
@@ -226,6 +256,7 @@ enum Resource
     graphic,
     data,
     text,
+    illegal,
 }
 
 struct FileName

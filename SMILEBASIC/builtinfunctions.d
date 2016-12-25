@@ -2375,6 +2375,10 @@ class BuiltinFunction
             array[cast(int)i] = Value(j);
         }
     }
+    static int CHKFILE(PetitComputer p, wstring file)
+    {
+        return p.project.chkfile(file);
+    }
     static void ACLS(PetitComputer p)
     {
         p.console.cls;
