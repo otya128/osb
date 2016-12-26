@@ -211,6 +211,8 @@ class Dialog : DialogBase
     int show(wstring text, SelectionType selType = SelectionType.ok, wstring caption = "■DIALOG", int timeout = 0)
     {
         area = petitcom.showTouchScreen();
+        scope (exit)
+            petitcom.hideTouchScreen();
         wchar[257] buffer;
         if (text.length > 256)
         {
@@ -265,6 +267,8 @@ class Dialog : DialogBase
             buttons = [button1];
         }
         petitcom.dialog = this;
+        scope (exit)
+            petitcom.dialog = null;
         bool isPressed;
         while (!isPressed)
         {
@@ -285,8 +289,6 @@ class Dialog : DialogBase
             }
             SDL_Delay(16);
         }
-        petitcom.dialog = null;
-        petitcom.hideTouchScreen();
         return result;
     }
 }
