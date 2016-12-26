@@ -838,10 +838,6 @@ class PetitComputer
                     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     version(test) glLoadIdentity();
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
-                    if (dialog)
-                    {
-                        dialog.render();
-                    }
                     console.render();
 
                     graphic.render();
@@ -878,6 +874,10 @@ class PetitComputer
                     sprite.render();//Zソートすべき->やった->プチコンの挙動的に安定ソートか非安定ソートか
                     glDepthMask(GL_TRUE);
                     glDisable(GL_BLEND);
+                    if (dialog)
+                    {
+                        dialog.render();
+                    }
                     SDL_GL_SwapWindow(window);
                     auto renderticks = (SDL_GetTicks() - profile);
                     if(renderprofile) writeln(renderticks);
