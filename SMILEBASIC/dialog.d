@@ -270,8 +270,23 @@ class Dialog : DialogBase
         scope (exit)
             petitcom.dialog = null;
         bool isPressed;
+        int timeoutframe;
+        if (timeout > 0)
+        {
+            timeoutframe = timeout * 60;
+        }
+        else if (timeout < 0)
+        {
+            timeoutframe = -timeout;
+        }
+        auto startmaincnt = petitcom.maincnt;
         while (!isPressed)
         {
+            petitcom.maincnt++;
+            if (petitcom.maincnt - startmaincnt == timeoutframe)
+            {
+                break;
+            }
             auto to = petitcom.touchPosition();
             auto x = to.display1X;
             auto y = to.display1Y;
