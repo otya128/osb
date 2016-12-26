@@ -13,6 +13,13 @@ class DialogBase
     abstract void render();
 }
 
+enum ButtonType
+{
+    abxyButton = 1,
+    dpad = 2,
+    lrButton = 4,
+    touchPanel = 8,
+}
 enum SelectionType
 {
     ok,
@@ -210,6 +217,10 @@ class Dialog : DialogBase
 
     int show(wstring text, SelectionType selType = SelectionType.ok, wstring caption = "■DIALOG", int timeout = 0)
     {
+        if (selType >= cast(ptrdiff_t)petitcom.dialogResource.buttonCaptions.length || -selType >= 15)
+        {
+            throw new OutOfRange("DIALOG", 2);
+        }
         area = petitcom.showTouchScreen();
         scope (exit)
             petitcom.hideTouchScreen();
@@ -228,43 +239,47 @@ class Dialog : DialogBase
         message = messageText.texture;
         int buttonMarginWidth = 12;
         int buttonMarginHeight = 12;
-        
-        int buttonCount;
-        auto cs = petitcom.dialogResource.buttonCaptions[cast(size_t)selType];
 
-        auto button1text = Text(petitcom, cs[0], SDL_Color(0, 0, 0, 255));
-        auto button1 = 
-            new DialogButton(
-                             petitcom.dialogResource.button1,
-                             button1text.texture,
-                             area.w - buttonMarginWidth - petitcom.dialogResource.button1.surface.w,
-                             area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
-                             DialogResult.SUCCESS,
-                             22,
-                             1
-                             );
+        Text button1text;
+        DialogButton button1;
         Text button2text;
         DialogButton button2;
-        if (cs.length > 1)
+        if (selType >= 0)
         {
-            ubyte sr, sg, sb, sa;
-            SDL_GetRGBA((cast(uint*)petitcom.dialogResource.button2.surface.pixels)[0], petitcom.dialogResource.button2.surface.format, &sr, &sg, &sb, &sa);
-            button2text = Text(petitcom, cs[1], SDL_Color(sr, sg, sb, 255));
-            button2 = 
+            auto cs = petitcom.dialogResource.buttonCaptions[cast(size_t)selType];
+
+            button1text = Text(petitcom, cs[0], SDL_Color(0, 0, 0, 255));
+            button1 = 
                 new DialogButton(
-                                 petitcom.dialogResource.button2,
-                                 button2text.texture,
-                                 buttonMarginWidth,
+                                 petitcom.dialogResource.button1,
+                                 button1text.texture,
+                                 area.w - buttonMarginWidth - petitcom.dialogResource.button1.surface.w,
                                  area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
-                                 DialogResult.CANCEL,
+                                 DialogResult.SUCCESS,
                                  22,
                                  1
                                  );
-            buttons = [button1, button2];
-        }
-        else
-        {
-            buttons = [button1];
+            if (cs.length > 1)
+            {
+                ubyte sr, sg, sb, sa;
+                SDL_GetRGBA((cast(uint*)petitcom.dialogResource.button2.surface.pixels)[0], petitcom.dialogResource.button2.surface.format, &sr, &sg, &sb, &sa);
+                button2text = Text(petitcom, cs[1], SDL_Color(sr, sg, sb, 255));
+                button2 = 
+                    new DialogButton(
+                                     petitcom.dialogResource.button2,
+                                     button2text.texture,
+                                     buttonMarginWidth,
+                                     area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
+                                     DialogResult.CANCEL,
+                                     22,
+                                     1
+                                     );
+                buttons = [button1, button2];
+            }
+            else
+            {
+                buttons = [button1];
+            }
         }
         petitcom.dialog = this;
         scope (exit)
@@ -280,8 +295,12 @@ class Dialog : DialogBase
             timeoutframe = -timeout;
         }
         auto startmaincnt = petitcom.maincnt;
+        auto oldbutton = petitcom.button;
         while (!isPressed)
         {
+            auto pbutton = petitcom.button;
+            auto button = pbutton ^ oldbutton & pbutton;
+            oldbutton = pbutton;
             petitcom.maincnt++;
             if (petitcom.maincnt - startmaincnt == timeoutframe)
             {
@@ -290,16 +309,90 @@ class Dialog : DialogBase
             auto to = petitcom.touchPosition();
             auto x = to.display1X;
             auto y = to.display1Y;
-            foreach (b; buttons)
+            if (selType >= 0)
             {
-                if (to.tm == 1 && b.colDetect(x, y))
+                foreach (b; buttons)
                 {
-                    b.isPressed = true;
+                    if (to.tm == 1 && b.colDetect(x, y))
+                    {
+                        b.isPressed = true;
+                    }
+                    else if (b.isPressed && to.tm < 1)
+                    {
+                        result = b.result;
+                        isPressed = true;
+                    }
                 }
-                else if (b.isPressed && to.tm < 1)
+            }
+            else
+            {
+                auto buttonType = -selType;
+                if (buttonType & ButtonType.abxyButton)
                 {
-                    result = b.result;
-                    isPressed = true;
+                    if (button & Button.A)
+                    {
+                        result = ButtonResult.a;
+                        break;
+                    }
+                    if (button & Button.B)
+                    {
+                        result = ButtonResult.b;
+                        break;
+                    }
+                    if (button & Button.X)
+                    {
+                        result = ButtonResult.x;
+                        break;
+                    }
+                    if (button & Button.Y)
+                    {
+                        result = ButtonResult.y;
+                        break;
+                    }
+                }
+                if (buttonType & ButtonType.dpad)
+                {
+                    if (button & Button.UP)
+                    {
+                        result = ButtonResult.up;
+                        break;
+                    }
+                    if (button & Button.DOWN)
+                    {
+                        result = ButtonResult.down;
+                        break;
+                    }
+                    if (button & Button.LEFT)
+                    {
+                        result = ButtonResult.left;
+                        break;
+                    }
+                    if (button & Button.RIGHT)
+                    {
+                        result = ButtonResult.right;
+                        break;
+                    }
+                }
+                if (buttonType & ButtonType.lrButton)
+                {
+                    if (button & Button.L)
+                    {
+                        result = ButtonResult.l;
+                        break;
+                    }
+                    if (button & Button.R)
+                    {
+                        result = ButtonResult.r;
+                        break;
+                    }
+                }
+                if (buttonType & ButtonType.touchPanel)
+                {
+                    if (to.tm == 1)
+                    {
+                        result = ButtonResult.touch;
+                        break;
+                    }
                 }
             }
             SDL_Delay(16);
