@@ -3,6 +3,7 @@ import otya.smilebasic.petitcomputer;
 import otya.smilebasic.project;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
+import derelict.sdl2.ttf;
 import derelict.opengl3.gl;
 import derelict.opengl3.gl3;
 
@@ -39,17 +40,24 @@ enum ButtonResult
 class DialogButton
 {
     int x, y, width, height;
+    SDL_Rect foregroundRect;
     GraphicPage background;
+    GraphicPage foreground;
     DialogResult result;
     bool isPressed;
-    this(GraphicPage background, int x, int y, DialogResult result)
+    this(GraphicPage background, GraphicPage foreground, int x, int y, DialogResult result, int fx, int fy)
     {
         this.background = background;
+        this.foreground = foreground;
         this.x = x;
         this.y = y;
         this.width = background.surface.w;
         this.height = background.surface.h;
         this.result = result;
+        foregroundRect.x = fx;
+        foregroundRect.y = fy;
+        foregroundRect.w = foreground.surface.w;
+        foregroundRect.h = foreground.surface.h;
     }
     bool colDetect(int x, int y)
     {
@@ -61,15 +69,33 @@ class DialogResources
 {
     public GraphicPage button1;
     public GraphicPage button2;
+    public TTF_Font* font;
     public this(SDL_Renderer* renderer, GLenum textureScaleMode)
     {
         button1 = new GraphicPage("dialogresource/yes.png");
         button1.createTexture(renderer, textureScaleMode);
         button2 = new GraphicPage("dialogresource/no.png");
         button2.createTexture(renderer, textureScaleMode);
+        font = TTF_OpenFont("dialogresource/mplus-1c-regular.ttf", 14);
     }
 }
 
+struct Text
+{
+    GraphicPage texture;
+    this(PetitComputer petitcom, wstring text, SDL_Color color)
+    {
+        text ~= '\0';
+        auto surface = petitcom.dialogResource.font.TTF_RenderUNICODE_Blended((cast(ushort[])text).ptr, color);
+        texture = new GraphicPage(surface);
+        texture.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+    }
+    ~this()
+    {
+        texture.deleteGL();
+        texture.deleteSDL();
+    }
+}
 
 class Dialog : DialogBase
 {
@@ -109,6 +135,19 @@ class Dialog : DialogBase
         glEnd();
         glDepthMask(GL_TRUE);
     }
+    void renderQuad(SDL_Rect rect)
+    {
+        glBegin(GL_QUADS);
+        glTexCoord2i(0, 0);
+        glVertex2i(rect.x, rect.y);
+        glTexCoord2i(1, 0);
+        glVertex2i(rect.x + rect.w, rect.y);
+        glTexCoord2i(1, 1);
+        glVertex2i(rect.x + rect.w, rect.y + rect.h);
+        glTexCoord2i(0, 1);
+        glVertex2i(rect.x, rect.y + rect.h);
+        glEnd();
+    }
     void renderButton(DialogButton button)
     {
         int mx, my;
@@ -119,18 +158,16 @@ class Dialog : DialogBase
         }
         glDepthMask(GL_FALSE);
         glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
         glColor3ub(255, 255, 255);
         glBindTexture(GL_TEXTURE_2D, button.background.glTexture);
-        glBegin(GL_QUADS);
-        glTexCoord2i(0, 0);
-        glVertex2i(button.x + mx, button.y + my);
-        glTexCoord2i(1, 0);
-        glVertex2i(button.x + button.width + mx, button.y + my);
-        glTexCoord2i(1, 1);
-        glVertex2i(button.x + button.width + mx, button.y + button.height + my);
-        glTexCoord2i(0, 1);
-        glVertex2i(button.x + mx, button.y + button.height + my);
-        glEnd();
+        renderQuad(SDL_Rect(button.x + mx, button.y + my, button.width, button.height));
+        if (button.foreground)
+        {
+            glBindTexture(GL_TEXTURE_2D, button.foreground.glTexture);
+            renderQuad(SDL_Rect(button.x + button.foregroundRect.x + mx, button.y + button.foregroundRect.y + my, button.foregroundRect.w, button.foregroundRect.h));
+        }
+        glDisable(GL_BLEND);
         glDisable(GL_TEXTURE_2D);
         glDepthMask(GL_TRUE);
     }
@@ -145,24 +182,36 @@ class Dialog : DialogBase
     }
 
 
+
     int show(wstring text)
     {
         petitcom.dialog = this;
         area = petitcom.showTouchScreen();
         int buttonMarginWidth = 12;
         int buttonMarginHeight = 12;
+        
+        auto button1text = Text(petitcom, "はい", SDL_Color(0, 0, 0, 255));
+        ubyte sr, sg, sb, sa;
+        SDL_GetRGBA((cast(uint*)petitcom.dialogResource.button2.surface.pixels)[0], petitcom.dialogResource.button2.surface.format, &sr, &sg, &sb, &sa);
+        auto button2text = Text(petitcom, "いいえ", SDL_Color(sr, sg, sb, 255));
         buttons = [
             new DialogButton(
                              petitcom.dialogResource.button1,
+                             button1text.texture,
                              area.w - buttonMarginWidth - petitcom.dialogResource.button1.surface.w,
                              area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
-                             DialogResult.SUCCESS
+                             DialogResult.SUCCESS,
+                             22,
+                             1
                              ),
             new DialogButton(
                              petitcom.dialogResource.button2,
+                             button2text.texture,
                              buttonMarginWidth,
                              area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
-                             DialogResult.CANCEL
+                             DialogResult.CANCEL,
+                             22,
+                             1
                              )
         ];
         bool isPressed;

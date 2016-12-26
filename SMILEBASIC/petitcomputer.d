@@ -151,6 +151,11 @@ class GraphicPage
         glDeleteTextures(1, &glTexture);
         buffer = render = glTexture = 0;
     }
+    void deleteSDL()
+    {
+        SDL_FreeSurface(surface);
+        surface = null;
+    }
 
 }
 
@@ -684,8 +689,11 @@ class PetitComputer
     {
         try
         {
+            import derelict.sdl2.ttf;
             DerelictSDL2.load();
             DerelictSDL2Image.load();
+            DerelictSDL2ttf.load();
+            TTF_Init();
             sprite.sppage[] = 4;
             bgpage[] = 5;
             SDL_Init(SDL_INIT_VIDEO);
