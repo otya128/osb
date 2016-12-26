@@ -103,8 +103,11 @@ struct Text
     this(PetitComputer petitcom, wchar* text, SDL_Color color, uint width)
     {
         auto surface = petitcom.dialogResource.font.TTF_RenderUNICODE_Blended_Wrapped((cast(ushort*)text), color, width);
-        texture = new GraphicPage(surface);
-        texture.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+        if (surface)
+        {
+            texture = new GraphicPage(surface);
+            texture.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+        }
     }
     ~this()
     {
@@ -192,6 +195,8 @@ class Dialog : DialogBase
     }
     void renderContent()
     {
+        if (!message)
+            return;
         glDepthMask(GL_FALSE);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
