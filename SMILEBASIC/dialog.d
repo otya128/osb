@@ -90,6 +90,12 @@ struct Text
         texture = new GraphicPage(surface);
         texture.createTexture(petitcom.renderer, petitcom.textureScaleMode);
     }
+    this(PetitComputer petitcom, wchar* text, SDL_Color color, uint width)
+    {
+        auto surface = petitcom.dialogResource.font.TTF_RenderUNICODE_Blended_Wrapped((cast(ushort*)text), color, width);
+        texture = new GraphicPage(surface);
+        texture.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+    }
     ~this()
     {
         texture.deleteGL();
@@ -171,6 +177,18 @@ class Dialog : DialogBase
         glDisable(GL_TEXTURE_2D);
         glDepthMask(GL_TRUE);
     }
+    void renderContent()
+    {
+        glDepthMask(GL_FALSE);
+        glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glColor3ub(255, 255, 255);
+        glBindTexture(GL_TEXTURE_2D, message.glTexture);
+        renderQuad(SDL_Rect(12, 24, message.surface.w, message.surface.h));
+        glDisable(GL_BLEND);
+        glDisable(GL_TEXTURE_2D);
+        glDepthMask(GL_TRUE);
+    }
     override void render()
     {
         petitcom.chScreen2(area.x, area.y, area.w, area.h);
@@ -179,14 +197,27 @@ class Dialog : DialogBase
         {
             renderButton(b);
         }
+        renderContent();
     }
 
-
+    GraphicPage message;
 
     int show(wstring text)
     {
-        petitcom.dialog = this;
         area = petitcom.showTouchScreen();
+        wchar[257] buffer;
+        if (text.length > 256)
+        {
+            buffer[0..256] = text[0..256];
+            buffer[256] = '\0';
+        }
+        else
+        {
+            buffer[0..text.length] = text[];
+            buffer[text.length] = '\0';
+        }
+        Text messageText =  Text(petitcom, buffer.ptr, SDL_Color(0, 0, 0, 255), area.w - 24);
+        message = messageText.texture;
         int buttonMarginWidth = 12;
         int buttonMarginHeight = 12;
         
@@ -214,6 +245,7 @@ class Dialog : DialogBase
                              1
                              )
         ];
+        petitcom.dialog = this;
         bool isPressed;
         while (!isPressed)
         {
@@ -234,6 +266,7 @@ class Dialog : DialogBase
             }
             SDL_Delay(16);
         }
+        petitcom.dialog = null;
         petitcom.hideTouchScreen();
         return result;
     }
