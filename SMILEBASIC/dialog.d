@@ -1,6 +1,7 @@
 module otya.smilebasic.dialog;
 import otya.smilebasic.petitcomputer;
 import otya.smilebasic.project;
+import otya.smilebasic.error;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.sdl2.ttf;
@@ -70,6 +71,7 @@ class DialogResources
     public GraphicPage button1;
     public GraphicPage button2;
     public TTF_Font* font;
+    wstring[][] buttonCaptions;
     public this(SDL_Renderer* renderer, GLenum textureScaleMode)
     {
         button1 = new GraphicPage("dialogresource/yes.png");
@@ -77,6 +79,7 @@ class DialogResources
         button2 = new GraphicPage("dialogresource/no.png");
         button2.createTexture(renderer, textureScaleMode);
         font = TTF_OpenFont("dialogresource/mplus-1c-regular.ttf", 14);
+        buttonCaptions = [["了解"], ["はい", "いいえ"], ["次へ", "戻る"], ["中止", "決定"], ["中止", "実行"]];
     }
 }
 
@@ -98,8 +101,11 @@ struct Text
     }
     ~this()
     {
-        texture.deleteGL();
-        texture.deleteSDL();
+        if (texture)
+        {
+            texture.deleteGL();
+            texture.deleteSDL();
+        }
     }
 }
 
@@ -202,7 +208,7 @@ class Dialog : DialogBase
 
     GraphicPage message;
 
-    int show(wstring text)
+    int show(wstring text, SelectionType selType = SelectionType.ok, wstring caption = "■DIALOG", int timeout = 0)
     {
         area = petitcom.showTouchScreen();
         wchar[257] buffer;
@@ -221,11 +227,11 @@ class Dialog : DialogBase
         int buttonMarginWidth = 12;
         int buttonMarginHeight = 12;
         
-        auto button1text = Text(petitcom, "はい", SDL_Color(0, 0, 0, 255));
-        ubyte sr, sg, sb, sa;
-        SDL_GetRGBA((cast(uint*)petitcom.dialogResource.button2.surface.pixels)[0], petitcom.dialogResource.button2.surface.format, &sr, &sg, &sb, &sa);
-        auto button2text = Text(petitcom, "いいえ", SDL_Color(sr, sg, sb, 255));
-        buttons = [
+        int buttonCount;
+        auto cs = petitcom.dialogResource.buttonCaptions[cast(size_t)selType];
+
+        auto button1text = Text(petitcom, cs[0], SDL_Color(0, 0, 0, 255));
+        auto button1 = 
             new DialogButton(
                              petitcom.dialogResource.button1,
                              button1text.texture,
@@ -234,17 +240,30 @@ class Dialog : DialogBase
                              DialogResult.SUCCESS,
                              22,
                              1
-                             ),
-            new DialogButton(
-                             petitcom.dialogResource.button2,
-                             button2text.texture,
-                             buttonMarginWidth,
-                             area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
-                             DialogResult.CANCEL,
-                             22,
-                             1
-                             )
-        ];
+                             );
+        Text button2text;
+        DialogButton button2;
+        if (cs.length > 1)
+        {
+            ubyte sr, sg, sb, sa;
+            SDL_GetRGBA((cast(uint*)petitcom.dialogResource.button2.surface.pixels)[0], petitcom.dialogResource.button2.surface.format, &sr, &sg, &sb, &sa);
+            button2text = Text(petitcom, cs[1], SDL_Color(sr, sg, sb, 255));
+            button2 = 
+                new DialogButton(
+                                 petitcom.dialogResource.button2,
+                                 button2text.texture,
+                                 buttonMarginWidth,
+                                 area.h - buttonMarginHeight - petitcom.dialogResource.button1.surface.h,
+                                 DialogResult.CANCEL,
+                                 22,
+                                 1
+                                 );
+            buttons = [button1, button2];
+        }
+        else
+        {
+            buttons = [button1];
+        }
         petitcom.dialog = this;
         bool isPressed;
         while (!isPressed)

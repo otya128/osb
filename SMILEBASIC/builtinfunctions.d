@@ -3058,6 +3058,27 @@ class BuiltinFunction
         auto dialog = new Dialog(p);
         p.project.result = cast(DialogResult)dialog.show(text);
     }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType)
+    {
+        selType.setDefaultValue(0);
+        auto dialog = new Dialog(p);
+        p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType);
+    }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType, DefaultValue!wstring cap)
+    {
+        selType.setDefaultValue(0);
+        cap.setDefaultValue("■DIALOG");
+        auto dialog = new Dialog(p);
+        p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType, cast(wstring)cap);
+    }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType, DefaultValue!wstring cap, DefaultValue!int timeout)
+    {
+        selType.setDefaultValue(0);
+        cap.setDefaultValue("■DIALOG");
+        timeout.setDefaultValue(0);
+        auto dialog = new Dialog(p);
+        p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType, cast(wstring)cap, cast(int)timeout);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
