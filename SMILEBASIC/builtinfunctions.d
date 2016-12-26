@@ -3053,6 +3053,32 @@ class BuiltinFunction
     }
     import otya.smilebasic.dialog;
     import otya.smilebasic.project;
+    static void DIALOG(PetitComputer p, wstring text, out int result)
+    {
+        auto dialog = new Dialog(p);
+        result = p.project.result = cast(DialogResult)dialog.show(text);
+    }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType, out int result)
+    {
+        selType.setDefaultValue(0);
+        auto dialog = new Dialog(p);
+        result = p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType);
+    }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType, DefaultValue!wstring cap, out int result)
+    {
+        selType.setDefaultValue(0);
+        cap.setDefaultValue("■DIALOG");
+        auto dialog = new Dialog(p);
+        result = p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType, cast(wstring)cap);
+    }
+    static void DIALOG(PetitComputer p, wstring text, DefaultValue!int selType, DefaultValue!wstring cap, DefaultValue!int timeout, out int result)
+    {
+        selType.setDefaultValue(0);
+        cap.setDefaultValue("■DIALOG");
+        timeout.setDefaultValue(0);
+        auto dialog = new Dialog(p);
+        result = p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType, cast(wstring)cap, cast(int)timeout);
+    }
     static void DIALOG(PetitComputer p, wstring text)
     {
         auto dialog = new Dialog(p);

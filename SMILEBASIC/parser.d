@@ -1894,13 +1894,6 @@ class Parser
                         token = lex.front();
 
                         if(token.type == TokenType.RParen) break;
-                        if(token.type == TokenType.Comma)
-                        {
-                            func.addArg(new VoidExpression(lex.location));
-                            lex.popFront();
-                            token = lex.front();
-                        }
-                        else
                             func.addArg(expression());
                         if(lex.front().type == TokenType.RParen) break;
                     }
