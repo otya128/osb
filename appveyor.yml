@@ -34,7 +34,7 @@ after_build:
         $SDL2ttfVersion = '2.0.14'
         Invoke-WebRequest "https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2ttfVersion-win32-x86.zip" -OutFile C:\projects\SDL2ttf.zip
         7z x -oC:\Projects\SDL2ttf C:\projects\SDL2ttf.zip > $null
-  - 7z a c:\projects\otyasmilebasic\otyasmilebasic.zip c:\projects\dmd2\windows\bin\libcurl.dll c:\projects\otyaSMILEBASIC\LICE* c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\* C:\projects\SDL2\*.dll C:\Projects\SDL2Image\*.dll C:\Projects\SDL2Image\LICE* C:\Projects\SDL2ttf\*.dll C:\Projects\SDL2ttf\LICE*
+  - 7z a c:\projects\otyasmilebasic\otyasmilebasic.zip c:\projects\dmd2\windows\bin\libcurl.dll c:\projects\otyaSMILEBASIC\LICE* c:\projects\otyaSMILEBASIC\README* c:\projects\otyaSMILEBASIC\out\* C:\projects\SDL2\*.dll C:\Projects\SDL2Image\*.dll C:\Projects\SDL2Image\LICE* C:\Projects\SDL2ttf\libfreetype-6.dll C:\Projects\SDL2ttf\SDL2_ttf.dll C:\Projects\SDL2ttf\LICENSE.freetype.txt
 
 test_script:
   - cd c:\projects\otyaSMILEBASIC
