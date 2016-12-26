@@ -301,7 +301,7 @@ class Dialog : DialogBase
         }
         auto startmaincnt = petitcom.maincnt;
         auto oldbutton = petitcom.button;
-        while (!isPressed)
+        while (!isPressed && petitcom.running && !petitcom.quit)
         {
             auto pbutton = petitcom.button;
             auto button = pbutton ^ oldbutton & pbutton;
