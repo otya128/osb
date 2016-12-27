@@ -3158,6 +3158,22 @@ class BuiltinFunction
         auto dialog = new Dialog(p);
         p.project.result = cast(DialogResult)dialog.show(text, cast(SelectionType)selType, cast(wstring)cap, cast(int)timeout);
     }
+    static void PRGEDIT(PetitComputer p, int slot)
+    {
+        PRGEDIT(p, slot, 1);
+    }
+    static void PRGEDIT(PetitComputer p, int slot, int line)
+    {
+        if (slot < 0 || p.program.slotSize <= slot)
+            throw new OutOfRange("PRGEDIT", 1);
+        if (line < -1 || line == 0)
+            throw new OutOfRange("PRGEDIT"/*, 2*/);
+        p.program.edit(slot, line);
+    }
+    static wstring PRGGET(PetitComputer p)
+    {
+        return p.program.get();
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

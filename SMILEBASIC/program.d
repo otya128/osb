@@ -1,9 +1,11 @@
 module otya.smilebasic.program;
+import std.range;
 import std.container;
 
 struct Slot
 {
     DList!wstring program;
+    DList!wstring.Range range;
     void load(wstring data)
     {
         import std.algorithm;
@@ -12,6 +14,11 @@ struct Slot
         {
             program.insertBack(l ~ '\n');
         }
+        if (program.back == "\n")
+        {
+            program.removeBack();
+        }
+        range = program[];
     }
     wchar[] text()
     {
@@ -40,16 +47,55 @@ struct Slot
         }
         return "";
     }
+    void currentLine(int line)
+    {
+        if (line == -1)
+        {
+            //range = DList!wstring.Range(program._last);
+            range = program[];
+            while (!range.empty)
+            {
+                auto old = range.save;
+                range.popFront();
+                if (range.empty)
+                {
+                    range = old;
+                    break;
+                }
+            }
+            return;
+        }
+        range = program[];
+        range.popFrontN(line - 1);
+    }
+    wstring get()
+    {
+        if (range.empty)
+        {
+            return "";
+        }
+        auto a = range.front;
+        range.popFront();
+        return a;
+    }
 }
 
 class Program
 {
     Slot[] slot;
     int currentSlot;
-    int currentLine = 1;
     int slotSize = 4;
     this()
     {
         slot = new Slot[5];
+    }
+    void edit(int slot, int line)
+    {
+        this.currentSlot = slot;
+        this.slot[slot].currentLine = line;
+    }
+    wstring get()
+    {
+        return this.slot[currentSlot].get;
     }
 }
