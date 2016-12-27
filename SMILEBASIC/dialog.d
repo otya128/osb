@@ -210,12 +210,14 @@ class Dialog : DialogBase
     override void render()
     {
         petitcom.chScreen2(area.x, area.y, area.w, area.h);
+        glDisable(GL_DEPTH_TEST);
         renderBackground();
         foreach (b; buttons)
         {
             renderButton(b);
         }
         renderContent();
+        glEnable(GL_DEPTH_TEST);
     }
 
     GraphicPage message;
