@@ -1,5 +1,7 @@
 module otya.smilebasic.project;
 import otya.smilebasic.error;
+import otya.smilebasic.data;
+import otya.smilebasic.type;
 import std.path;
 import std.file;
 import std.string;
@@ -22,6 +24,13 @@ class Projects
     wstring projectPath;
     string projectPathU8;
     DialogResult result = DialogResult.FAILURE;//Default value
+    wstring saveConfirm = 
+r"ファイルを書き込みます。
+
+          名前: %s
+
+よろしいですか？
+";
     this(wstring root)
     {
         rootPath = root;
@@ -167,6 +176,60 @@ class Projects
         result = DialogResult.SUCCESS;
         contents = readText(path).to!wstring;
         return true;
+    }
+
+    void saveTextFile(FileName file, wstring content)
+    {
+        wstring project;
+        result = DialogResult.FAILURE;
+        if (file.project.empty)
+            project = convertProjectName(currentProject);
+        else
+        {
+            project = file.project;
+            if (!isValidProjectName(project))
+                throw new IllegalFunctionCall("SAVE");
+        }
+        if (!isValidFilename(file.name))
+            throw new IllegalFunctionCall("SAVE");
+        auto path = buildPath(projectPath, project, "TXT"w, file.name).to!string;
+        write(path, content);
+        result = DialogResult.SUCCESS;
+    }
+
+    void saveDataFile(T)(FileName file, Array!T content)
+    if (is(T == int) || is(T == double))
+    {
+        wstring project;
+        result = DialogResult.FAILURE;
+        if (file.project.empty)
+            project = convertProjectName(currentProject);
+        else
+        {
+            project = file.project;
+            if (!isValidProjectName(project))
+                throw new IllegalFunctionCall("SAVE");
+        }
+        if (!isValidFilename(file.name))
+            throw new IllegalFunctionCall("SAVE");
+        auto path = buildPath(projectPath, project, "DAT"w, file.name).to!string;
+        DataHeader[1] harray;
+        DataHeader* head = harray.ptr;
+        static if (is(T == int))
+        {
+            head.type = DataType.int_;
+        }
+        else
+        {
+            head.type = DataType.double_;
+        }
+        head.dim[] = content.dim[];
+        head.dimension = cast(byte)content.dimCount;
+        import std.stdio;
+        File f = File(path, "wb");
+        f.rawWrite(harray);
+        f.rawWrite(content.array);
+        result = DialogResult.SUCCESS;
     }
 
     wstring convertProjectName(wstring proj)

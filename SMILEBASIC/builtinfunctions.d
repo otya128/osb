@@ -2285,6 +2285,31 @@ class BuiltinFunction
         flag.setDefaultValue(0);
         throw new IllegalFunctionCall("NOTIMPL:LOAD");
     }
+    static void SAVE(PetitComputer p, wstring name, Value data)
+    {
+        auto file = Projects.parseFileName(name);
+        if (file.resource != Resource.data && file.resource != Resource.text)
+        {
+            throw new IllegalFunctionCall("SAVE"/*, 1*/);
+        }
+        if (file.resource == Resource.text && data.isString)
+        {
+            p.project.saveTextFile(file, data.castDString);
+        }
+        else if (file.resource == Resource.data && data.isNumberArray)
+        {
+            if (data.type == ValueType.IntegerArray)
+                p.project.saveDataFile(file, data.integerArray);
+            else if (data.type == ValueType.DoubleArray)
+                p.project.saveDataFile(file, data.doubleArray);
+            else
+                throw new TypeMismatch("SAVE", 2);
+        }
+        else
+        {
+            throw new TypeMismatch("SAVE", 2);
+        }
+    }
     static void PROJECT(PetitComputer p, wstring name)
     {
         //DirectMode only

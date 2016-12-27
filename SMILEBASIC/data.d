@@ -9,11 +9,8 @@ enum DataType : byte
 
 align(1) struct DataHeader
 {
-    char[8] magic;//PCBN0001
+    char[8] magic = "PCBN0001";//PCBN0001
     DataType type;
     byte dimension;
-    int dim1;
-    int dim2;
-    int dim3;
-    int dim4;
+    int[4] dim;
 }
