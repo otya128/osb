@@ -193,7 +193,7 @@ r"ファイルを書き込みます。
         if (!isValidFilename(file.name))
             throw new IllegalFunctionCall("SAVE");
         auto path = buildPath(projectPath, project, "TXT"w, file.name).to!string;
-        write(path, content);
+        write(path, content.to!string/*UTF8*/);
         result = DialogResult.SUCCESS;
     }
 
