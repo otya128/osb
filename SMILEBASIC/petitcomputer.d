@@ -20,6 +20,7 @@ import otya.smilebasic.project;
 import otya.smilebasic.console;
 import otya.smilebasic.graphic;
 import otya.smilebasic.dialog;
+import otya.smilebasic.program;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -1067,7 +1068,6 @@ class PetitComputer
     }
     Console console;
     Object buttonLock;
-    Slot[] slot;
     bool isRunningDirectMode = false;
     GLenum textureScaleMode;
     int maincnt;
@@ -1082,7 +1082,7 @@ class PetitComputer
             textureScaleMode = GL_NEAREST;
         }
         buttonLock = new Object();
-        slot = new Slot[5];
+        program = new Program();
         keybuffer = new Key[128];
         init();
         graphic = new Graphic2(this);
@@ -1109,7 +1109,7 @@ class PetitComputer
         int oldpc;
         void runSlot(int lot)
         {
-            parser = new Parser(cast(wstring)slot[lot].text);
+            parser = new Parser(cast(wstring)program.slot[lot].text);
             try
             {
                 vm = parser.compile();
@@ -1133,7 +1133,7 @@ class PetitComputer
             nodirectmode = true;
         if (nodirectmode)
         {
-            slot[0].load(readText(inputfile).to!wstring);
+            program.slot[0].load(readText(inputfile).to!wstring);
             runSlot(0);
         }
         else
@@ -1209,7 +1209,7 @@ class PetitComputer
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             auto loc = vm.currentLocation;
-                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1225,7 +1225,7 @@ class PetitComputer
                             console.print("\n");
                             writeln(t);
                             auto loc = vm.currentLocation;
-                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1278,7 +1278,7 @@ class PetitComputer
                             writeln(sbe.getErrorMessage2);
                             writeln(sbe.func);
                             loc = vm.currentLocation;
-                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(loc));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
@@ -1293,7 +1293,7 @@ class PetitComputer
                             console.print(t.to!string);
                             console.print("\n");
                             writeln(t);
-                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", slot[vm.currentSlotNumber].getLine(vm.currentLocation));
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(vm.currentLocation));
                         }
                         catch(Throwable t)
                         {
@@ -1672,8 +1672,8 @@ class PetitComputer
         updateWindowSize();
     }
 
-    int currentSlot;
-    int slotSize = 4;
+    Program program;
+
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

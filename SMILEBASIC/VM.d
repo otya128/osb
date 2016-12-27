@@ -2334,7 +2334,7 @@ class Exec : Code
             }
             wstring content;
             if (vm.petitcomputer.project.loadFile(file.project, "TXT", file.name, content))
-                vm.petitcomputer.slot[slot].load(content);
+                vm.petitcomputer.program.slot[slot].load(content);
             else
                 throw new LoadFailed();//TODO:DIALOG?
         }
@@ -2347,7 +2347,7 @@ class Exec : Code
             throw new TypeMismatch();
         }
         import otya.smilebasic.parser;
-        auto parser = new Parser(cast(immutable)vm.petitcomputer.slot[slot].text);
+        auto parser = new Parser(cast(immutable)vm.petitcomputer.program.slot[slot].text);
         auto compiler = parser.compiler;
         VMAddress retaddr;
         if (slot != vm.currentSlotNumber)
@@ -2381,7 +2381,7 @@ class Use : Code
             throw new TypeMismatch();
         }
         import otya.smilebasic.parser;
-        auto parser = new Parser(cast(immutable)vm.petitcomputer.slot[slot].text);
+        auto parser = new Parser(cast(immutable)vm.petitcomputer.program.slot[slot].text);
         auto compiler = parser.compiler;
         compiler.compile(vm, slot);
     }

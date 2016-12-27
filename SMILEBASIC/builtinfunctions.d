@@ -2269,7 +2269,7 @@ class BuiltinFunction
         }
         if(resname == "" || resname.indexOf("PRG") == 0)
         {
-            int lot = p.currentSlot;
+            int lot = p.program.currentSlot;
             if(resname != "" && resname != "PRG")
             {
                 auto num = resname[3..$];
@@ -2280,7 +2280,7 @@ class BuiltinFunction
                 //not exist
                 return;
             }
-            p.slot[lot].load(txt);
+            p.program.slot[lot].load(txt);
             return;
         }
         if(resname.indexOf("GRP") == 0)
@@ -2301,16 +2301,16 @@ class BuiltinFunction
         {
             throw new IllegalFunctionCall("SAVE"/*, 1*/);
         }
-        auto slot = p.currentSlot;
+        auto slot = p.program.currentSlot;
         if (file.hasResourceNumber)
         {
             slot = file.resourceNumber;
         }
-        if (slot >= p.slotSize)
+        if (slot >= p.program.slotSize)
         {
             throw new IllegalFunctionCall("SAVE"/*, 1*/);
         }
-        auto str = cast(immutable)p.slot[slot].text;
+        auto str = cast(immutable)p.program.slot[slot].text;
         p.project.saveTextFile(file, str);
     }
     static void SAVE(PetitComputer p, wstring name, Value data)
