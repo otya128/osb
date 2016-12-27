@@ -49,6 +49,8 @@ class VMSlot
     int[wstring] globalLabel;
     DebugInfo debugInfo;
     Value[wstring] directModeVariable;
+    bool hasExecReturnAddress;
+    VMAddress execReturnAddress;
 }
 class VM
 {
@@ -112,6 +114,7 @@ class VM
                 }
             }
         auto s = this.slots[slot];
+        s.hasExecReturnAddress = false;
         s.isUsed = true;
         s.code = code;
         s.global = new Value[len];
@@ -260,7 +263,14 @@ class VM
     }
     void end()
     {
-        pc = cast(int)currentSlot.code.length;
+        if (currentSlot.hasExecReturnAddress)
+        {
+            currentSlot.hasExecReturnAddress = false;
+            pc = currentSlot.execReturnAddress.address;
+            setCurrentSlot(currentSlot.execReturnAddress.slot);
+        }
+        else
+            pc = cast(int)currentSlot.code.length;
     }
     void dump()
     {
@@ -2306,7 +2316,7 @@ class Exec : Code
         if (arg.isString)
         {
             auto file = Projects.parseFileName(arg.castDString);
-            if (file.resource != Resource.program && file.resource == Resource.none)
+            if (file.resource != Resource.program && file.resource != Resource.none)
             {
                 throw new IllegalFunctionCall();
             }
@@ -2339,7 +2349,17 @@ class Exec : Code
         import otya.smilebasic.parser;
         auto parser = new Parser(cast(immutable)vm.petitcomputer.slot[slot].text);
         auto compiler = parser.compiler;
+        VMAddress retaddr;
+        if (slot != vm.currentSlotNumber)
+        {
+            retaddr = VMAddress(cast(byte)vm.currentSlotNumber, vm.pc);
+        }
         compiler.compile(vm, slot);
+        if (slot != vm.currentSlotNumber)
+        {
+            vm.slots[slot].execReturnAddress = retaddr;
+            vm.slots[slot].hasExecReturnAddress = true;
+        }
         vm.setCurrentSlot(slot);
         vm.pc = 0 - 1;
     }
