@@ -737,6 +737,15 @@ class BuiltinFunction
         }
         return PetitComputer.RGB(cast(ubyte)R, cast(ubyte)G, cast(ubyte)B);
     }
+    static pure nothrow void RGBREAD(int color, out int R, out int G, out int B)
+    {
+        int _;
+        PetitComputer.RGBRead(color, R, G, B, _);
+    }
+    static pure nothrow void RGBREAD(int color, out int A, out int R, out int G, out int B)
+    {
+        PetitComputer.RGBRead(color, R, G, B, A);
+    }
     static int RND(int max)
     {
         import std.random;
