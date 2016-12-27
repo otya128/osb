@@ -86,7 +86,7 @@ class DialogResources
         button2 = new GraphicPage("dialogresource/no.png");
         button2.createTexture(renderer, textureScaleMode);
         font = TTF_OpenFont("dialogresource/mplus-1c-regular.ttf", 14);
-        buttonCaptions = [["了解"], ["はい", "いいえ"], ["次へ", "戻る"], ["中止", "決定"], ["中止", "実行"], ["次へ"]];
+        buttonCaptions = [["了解"], ["はい", "いいえ"], ["次へ", "戻る"], ["決定", "中止"], ["実行", "中止"], ["次へ"]];
     }
 }
 
