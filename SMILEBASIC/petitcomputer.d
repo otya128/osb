@@ -1671,6 +1671,9 @@ class PetitComputer
         currentDisplay.yoffset = currentDisplay.windowSize.height;
         updateWindowSize();
     }
+
+    int currentSlot;
+    int slotSize = 4;
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

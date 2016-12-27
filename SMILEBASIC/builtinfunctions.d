@@ -2269,7 +2269,7 @@ class BuiltinFunction
         }
         if(resname == "" || resname.indexOf("PRG") == 0)
         {
-            int lot;
+            int lot = p.currentSlot;
             if(resname != "" && resname != "PRG")
             {
                 auto num = resname[3..$];
@@ -2293,6 +2293,25 @@ class BuiltinFunction
     {
         flag.setDefaultValue(0);
         throw new IllegalFunctionCall("NOTIMPL:LOAD");
+    }
+    static void SAVE(PetitComputer p, wstring name)
+    {
+        auto file = Projects.parseFileName(name);
+        if (file.resource != Resource.program && file.resource != Resource.none)
+        {
+            throw new IllegalFunctionCall("SAVE"/*, 1*/);
+        }
+        auto slot = p.currentSlot;
+        if (file.hasResourceNumber)
+        {
+            slot = file.resourceNumber;
+        }
+        if (slot >= p.slotSize)
+        {
+            throw new IllegalFunctionCall("SAVE"/*, 1*/);
+        }
+        auto str = cast(immutable)p.slot[slot].text;
+        p.project.saveTextFile(file, str);
     }
     static void SAVE(PetitComputer p, wstring name, Value data)
     {
