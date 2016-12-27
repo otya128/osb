@@ -2,9 +2,9 @@ module otya.smilebasic.data;
 
 enum DataType : byte
 {
-    ushort_,
-    int_,
-    double_
+    ushort_ = 3,
+    int_ = 4,
+    double_ = 5
 }
 
 align(1) struct DataHeader
