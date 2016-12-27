@@ -191,6 +191,14 @@ class SubscriptOutOfRange : SmileBasicError
         super("Subscript out of range(" ~ func ~ ":" ~ arg.to!string ~ ")");
     }
 }
+class UsePRGEDITBeforeAnyPRGFunction : SmileBasicError
+{
+    this(string func)
+    {
+        this.errnum = 38;
+        super("Use PRGEDIT before any PRG function(" ~ func ~ ")");
+    }
+}
 class StringTooLong : SmileBasicError
 {
     this()

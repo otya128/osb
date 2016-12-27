@@ -1,6 +1,8 @@
 module otya.smilebasic.program;
+import otya.smilebasic.error;
 import std.range;
 import std.container;
+import std.algorithm;
 import std.algorithm;
 
 struct Slot
@@ -112,6 +114,7 @@ struct Slot
 class Program
 {
     Slot[] slot;
+    bool PRGEDITused;
     int currentSlot;
     int slotSize = 4;
     this()
@@ -124,15 +127,20 @@ class Program
     }
     void edit(int slot, int line)
     {
+        PRGEDITused = true;
         this.currentSlot = slot;
         this.slot[slot].currentLine = line;
     }
     wstring get()
     {
+        if (!PRGEDITused)
+            throw new UsePRGEDITBeforeAnyPRGFunction("PRGGET$");
         return this.slot[currentSlot].get;
     }
     void set(wstring v)
     {
+        if (!PRGEDITused)
+            throw new UsePRGEDITBeforeAnyPRGFunction("PRGSET");
         this.slot[currentSlot].set = v;
     }
 }
