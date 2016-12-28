@@ -3178,6 +3178,10 @@ class BuiltinFunction
     {
         p.program.set(x.dup);
     }
+    static void PRGINS(PetitComputer p, wstring line, int isBack)
+    {
+        p.program.insert(line, cast(bool)isBack);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

@@ -5,13 +5,130 @@ import std.container;
 import std.algorithm;
 import std.algorithm;
 
+unittest
+{
+    Slot slot;
+    slot.init();
+    slot.currentLine = 1;
+    assert(slot.get() == "\n");
+    slot.currentLine = 1;
+    slot.set("1");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "1\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 2;
+    slot.set("2");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "1\n");
+    assert(slot.get() == "2\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    slot.set("A");
+    assert(slot.get() == "2\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "2\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 2;
+    slot.set("I\nJ");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    //PRGINS
+    slot.currentLine = 1;
+    slot.insert("3", false);
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    slot.currentLine = 1;
+    slot.insert("4", true);
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    slot.currentLine = 2;
+    slot.insert("5", false);
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    slot.currentLine = 2;
+    slot.insert("6", true);
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+}
+
 struct Slot
 {
     DList!wstring program;
     DList!wstring.Range range;
-    this(T)(T)
+    void init()
     {
-        program = make!(DList!wstring);
+        program = make!(DList!wstring)(["\n"w]);
         range = program[];
     }
 
@@ -93,7 +210,16 @@ struct Slot
         {
             if (!range.empty && i == 0)
             {
-                range.put(l ~ "\n");
+                auto b = range.save;
+                b.popFront();
+                if (b.empty)
+                {
+                    program.insertBefore(range, l ~ "\n");
+                }
+                else
+                {
+                    range.put(l ~ "\n");
+                }
             }
             else
             {
@@ -109,6 +235,32 @@ struct Slot
             i++;
         }
     }
+    void insert(wstring line, bool isBack)
+    {
+        typeof(range) backup;
+        if (isBack)
+        {
+            backup = range.save;
+            range.popFront();
+        }
+        foreach(l; splitter(line, "\n"))
+        {
+            if (isBack)
+            {
+                //backup = range.save;
+                program.insertBefore(range, l ~ "\n");
+            }
+            else
+            {
+                program.insertBefore(range, l ~ "\n");
+            }
+        }
+        if (isBack)
+        {
+            range = backup;
+            range.popFront();
+        }
+    }
 }
 
 class Program
@@ -122,7 +274,7 @@ class Program
         slot = new Slot[5];
         foreach(ref s; slot)
         {
-            s = Slot(slot);
+            s.init();
         }
     }
     void edit(int slot, int line)
@@ -142,5 +294,11 @@ class Program
         if (!PRGEDITused)
             throw new UsePRGEDITBeforeAnyPRGFunction("PRGSET");
         this.slot[currentSlot].set = v;
+    }
+    void insert(wstring line, bool isBack)
+    {
+        if (!PRGEDITused)
+            throw new UsePRGEDITBeforeAnyPRGFunction("PRGINS");
+        this.slot[currentSlot].insert(line, isBack);
     }
 }
