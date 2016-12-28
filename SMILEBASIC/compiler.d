@@ -1259,13 +1259,22 @@ class Compiler
             if(c.type == CodeType.GosubS)
             {
                 auto label = cast(GosubS)c;
+                int addr;
                 if(label.sc.func)
                 {
-                    code[i] = new GosubAddr(label.sc.func.label[label.label]);
+                    addr = label.sc.func.label.get(label.label, int.min);
                 }
                 else
                 {
-                    code[i] = new GosubAddr(globalLabel[label.label]);
+                    addr = globalLabel.get(label.label, int.min);
+                }
+                if (addr == int.min)
+                {
+                    code[i] = new GosubUndefinedLabel(label.label);
+                }
+                else
+                {
+                    code[i] = new GosubAddr(addr);
                 }
             }
             if(c.type == CodeType.OnS)
@@ -1276,7 +1285,7 @@ class Compiler
                 {
                     if(label.sc.func)
                     {
-                        addresses[index] =label.sc.func.label.get(l, int.min);
+                        addresses[index] = label.sc.func.label.get(l, int.min);
                     }
                     else
                     {

@@ -2387,3 +2387,15 @@ class Use : Code
     }
 }
 
+class GosubUndefinedLabel : Code
+{
+    wstring label;
+    this(wstring label)
+    {
+        this.label = label;
+    }
+    override void execute(VM vm)
+    {
+        throw new UndefinedLabel(label);
+    }
+}
