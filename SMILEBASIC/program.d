@@ -120,6 +120,45 @@ unittest
     assert(slot.get() == "\n");
     assert(slot.get() == "");
 
+    //PRGDEL
+    slot.currentLine = 1;
+    slot.delete_(1);
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 2;
+    slot.delete_(2);
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "I\n");
+    assert(slot.get() == "J\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    slot.delete_(-1);
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
 }
 
 struct Slot
@@ -261,6 +300,18 @@ struct Slot
             range.popFront();
         }
     }
+    void delete_(int count)
+    {
+        if (count < 0)
+        {
+            init();
+            range.popFront();
+        }
+        else
+        {
+            range = program.linearRemove(range.take(count));
+        }
+    }
 }
 
 class Program
@@ -300,5 +351,11 @@ class Program
         if (!PRGEDITused)
             throw new UsePRGEDITBeforeAnyPRGFunction("PRGINS");
         this.slot[currentSlot].insert(line, isBack);
+    }
+    void delete_(int count)
+    {
+        if (!PRGEDITused)
+            throw new UsePRGEDITBeforeAnyPRGFunction("PRGDEL");
+        this.slot[currentSlot].delete_(count);
     }
 }

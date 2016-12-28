@@ -3182,6 +3182,18 @@ class BuiltinFunction
     {
         p.program.insert(line, cast(bool)isBack);
     }
+    static void PRGDEL(PetitComputer p)
+    {
+        PRGDEL(p, 1);
+    }
+    static void PRGDEL(PetitComputer p, int count)
+    {
+        if (count == 0)
+        {
+            throw new OutOfRange("PRGDEL", 1);
+        }
+        p.program.delete_(count);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
