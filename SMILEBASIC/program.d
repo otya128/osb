@@ -204,6 +204,64 @@ unittest
     assert(slot.get() == "A\n");
     assert(slot.get() == "");
 
+    slot.delete_(-1);
+    slot.set("1");
+    slot.set("2");
+    slot.set("3");
+    slot.set("4");
+    slot.set("5");
+    slot.set("6");
+    slot.set("7");
+    slot.currentLine = 1;
+    slot.currentLine = 1;
+    slot.get();
+    slot.insert("A", false);
+    slot.get();
+    slot.get();
+    slot.insert("B", true);
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "5\n");
+    slot.insert("C", false);
+    slot.get();
+    slot.currentLine = 1;
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "1\n");
+    assert(slot.get() == "2\n");
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "C\n");
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "7\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+    assert(slot.get() == "");
+    assert(slot.get() == "");
+    assert(slot.get() == "");
+    slot.insert("D", true);
+    slot.insert("E", false);
+    slot.insert("F", false);
+    slot.insert("G", false);
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "1\n");
+    assert(slot.get() == "2\n");
+    assert(slot.get() == "3\n");
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "4\n");
+    assert(slot.get() == "C\n");
+    assert(slot.get() == "5\n");
+    assert(slot.get() == "6\n");
+    assert(slot.get() == "7\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "E\n");
+    assert(slot.get() == "F\n");
+    assert(slot.get() == "G\n");
+    assert(slot.get() == "D\n");
+    assert(slot.get() == "");
+
 }
 
 enum SizeType
@@ -282,11 +340,12 @@ struct Slot
                     break;
                 }
             }
+            range2 = range.save;
             return;
         }
         range = program[];
-        range2 = range.save;
         range.popFrontN(line - 1);
+        range2 = range.save;
     }
     wstring get()
     {
@@ -346,6 +405,7 @@ struct Slot
         if (isBack)
         {
             backup = range.save;
+            range = range2;
             range.popFront();
         }
         foreach(l; splitter(line, "\n"))
@@ -353,26 +413,55 @@ struct Slot
             if (isBack)
             {
                 //backup = range.save;
+                if (range.empty)
+                {
+                    program.insertBack(l ~ "\n");
+                    continue;
+                }
                 program.insertBefore(range, l ~ "\n");
             }
             else
             {
-                program.insertBefore(range, l ~ "\n");
+                if (range2.empty)
+                {
+                    program.insertBack(l ~ "\n");
+                    continue;
+                }
+                program.insertBefore(range2, l ~ "\n");
             }
         }
         if (isBack)
         {
+            if (range.empty)
+            {
+                currentLine = -1;
+                return;
+            }
             range = backup;
-            range.popFront();
+            if (range == range2)
+            {
+                range.popFront();
+            }
+            else
+            {
+                if (!range.empty)
+                {
+                    range2 = range.save;
+                }
+            }
+            return;
         }
-        range2 = range.save;
+        if (!range.empty)
+            range2 = range.save;
     }
     void delete_(int count)
     {
         if (count < 0)
         {
             init();
+            range2 = range.save;
             range.popFront();
+            return;
         }
         else
         {
