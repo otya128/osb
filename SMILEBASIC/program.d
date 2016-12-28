@@ -3,7 +3,6 @@ import otya.smilebasic.error;
 import std.range;
 import std.container;
 import std.algorithm;
-import std.algorithm;
 
 unittest
 {
@@ -161,6 +160,13 @@ unittest
     assert(slot.get() == "");
 }
 
+enum SizeType
+{
+    Line = 0,
+    Char = 1,
+    FreeChar = 2,
+}
+
 struct Slot
 {
     DList!wstring program;
@@ -312,6 +318,21 @@ struct Slot
             range = program.linearRemove(range.take(count));
         }
     }
+    int memorySize = 1048476;//WiiU..?
+    int size(SizeType type)
+    {
+        switch(type)
+        {
+            case SizeType.Line:
+                return program[].walkLength;
+            case SizeType.Char:
+                return program[].map!(x => x.length).sum;
+            case SizeType.FreeChar:
+                return (memorySize - program[].map!(x => x.length).sum).max(0);
+            default:
+                throw new OutOfRange("PRGSIZE", 2);
+        }
+    }
 }
 
 class Program
@@ -357,5 +378,9 @@ class Program
         if (!PRGEDITused)
             throw new UsePRGEDITBeforeAnyPRGFunction("PRGDEL");
         this.slot[currentSlot].delete_(count);
+    }
+    int size(int slot, SizeType st)
+    {
+        return this.slot[slot].size(st);
     }
 }

@@ -3198,6 +3198,19 @@ class BuiltinFunction
         }
         p.program.delete_(count);
     }
+    static int PRGSIZE(PetitComputer p)
+    {
+        return PRGSIZE(p, p.vm.currentSlotNumber, 0);
+    }
+    static int PRGSIZE(PetitComputer p, int slot)
+    {
+        return PRGSIZE(p, slot, 0);
+    }
+    static int PRGSIZE(PetitComputer p, int slot, int type)
+    {
+        import otya.smilebasic.program;
+        return p.program.size(slot, cast(SizeType)type);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
