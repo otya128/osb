@@ -3178,6 +3178,10 @@ class BuiltinFunction
     {
         p.program.set(x.dup);
     }
+    static void PRGINS(PetitComputer p, wstring line)
+    {
+        p.program.insert(line, false);
+    }
     static void PRGINS(PetitComputer p, wstring line, int isBack)
     {
         p.program.insert(line, cast(bool)isBack);
