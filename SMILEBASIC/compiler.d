@@ -226,6 +226,7 @@ class Compiler
         addSystemVariable("RESULT", new Result());
         addSystemVariable("HARDWARE", new Hardware());
         addSystemVariable("MILLISEC", new MilliSecond());
+        addSystemVariable("PRGSLOT", new ProgramSlot());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {

@@ -518,7 +518,7 @@ class Program
 {
     Slot[] slot;
     bool PRGEDITused;
-    int currentSlot;
+    int currentSlot = -1/*PRGSLOT default value*/;
     int slotSize = 4;
     this()
     {

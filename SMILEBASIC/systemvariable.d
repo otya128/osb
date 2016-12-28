@@ -131,3 +131,11 @@ class MilliSecond : SystemVariable
             return Value(cast(int)SDL_GetTicks());
         }
 }
+class ProgramSlot : SystemVariable
+{
+    @property
+        override Value value()
+        {
+            return Value(vm.petitcomputer.program.currentSlot);
+        }
+}
