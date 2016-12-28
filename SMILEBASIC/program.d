@@ -158,6 +158,52 @@ unittest
     slot.currentLine = 1;
     assert(slot.get() == "\n");
     assert(slot.get() == "");
+
+    slot.set("A");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    slot.delete_(1);
+    slot.delete_(1);
+    slot.delete_(1);
+    slot.delete_(1);
+    slot.currentLine = 1;
+    slot.set("A");
+    slot.set("B");
+    slot.currentLine = 1;
+    slot.set("A");
+    slot.set("B");
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "\n");
+    assert(slot.get() == "");
+
+    assert(slot.size(SizeType.Line) == 3);
+    slot.delete_(-1);
+    assert(slot.size(SizeType.Line) == 0);
+
+    slot.currentLine = 1;
+    slot.set("A");
+    slot.set("B");
+    slot.delete_(1);
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "");
+    slot.currentLine = -1;
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "");
+    slot.currentLine = 1;
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "B\n");
+    assert(slot.get() == "");
+    slot.currentLine = 2;
+    slot.delete_(1);
+    assert(slot.get() == "A\n");
+    assert(slot.get() == "");
+
 }
 
 enum SizeType
@@ -171,6 +217,7 @@ struct Slot
 {
     private DList!wstring program;
     private DList!wstring.Range range;
+    private DList!wstring.Range range2;
     wstring name;
     void init()
     {
@@ -238,6 +285,7 @@ struct Slot
             return;
         }
         range = program[];
+        range2 = range.save;
         range.popFrontN(line - 1);
     }
     wstring get()
@@ -247,6 +295,7 @@ struct Slot
             return "";
         }
         auto a = range.front;
+        range2 = range.save;
         range.popFront();
         return a;
     }
@@ -265,6 +314,7 @@ struct Slot
                 }
                 else
                 {
+                    range2 = range.save;
                     range.put(l ~ "\n");
                 }
             }
@@ -272,7 +322,15 @@ struct Slot
             {
                 if (range.empty)
                 {
-                    program.insertAfter(range, l ~ "\n");
+                    if (!range2.empty)
+                    {
+                        range = range2;
+                        program.insertBefore(range, l ~ "\n");
+                        range2 = range.save;
+                        range.popFront();
+                        continue;
+                    }
+                    program.insertBefore(range, l ~ "\n");
                 }
                 else
                 {
@@ -307,6 +365,7 @@ struct Slot
             range = backup;
             range.popFront();
         }
+        range2 = range.save;
     }
     void delete_(int count)
     {
@@ -317,8 +376,32 @@ struct Slot
         }
         else
         {
-            range = program.linearRemove(range.take(count));
+            if (range.empty)
+            {
+                for (int i = 0; i < count;i++)
+                {
+                    program.removeBack();
+                }
+            }
+            else
+            {
+                range = program.linearRemove(range.take(count));
+            }
+            if (range.empty)
+            {
+                range = program[];
+                if (range.empty)
+                {
+                    program.insertAfter(range, "\n"w);
+                    range = program[];
+                }
+                else
+                {
+                    currentLine = -1;
+                }
+            }
         }
+        range2 = range.save;
     }
     int memorySize = 1048476;//WiiU..?
     int size(SizeType type)
@@ -326,7 +409,12 @@ struct Slot
         switch(type)
         {
             case SizeType.Line:
-                return cast(int)program[].walkLength;
+                {
+                    auto a = cast(int)program[].walkLength;
+                    if (a == 1 && program.front.length == 1 && program.front[0] == '\n'/*?*/)
+                        return 0;
+                    return a;
+                }
             case SizeType.Char:
                 return cast(int)program[].map!(x => x.length).sum;
             case SizeType.FreeChar:
