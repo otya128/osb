@@ -169,16 +169,18 @@ enum SizeType
 
 struct Slot
 {
-    DList!wstring program;
-    DList!wstring.Range range;
+    private DList!wstring program;
+    private DList!wstring.Range range;
+    wstring name;
     void init()
     {
         program = make!(DList!wstring)(["\n"w]);
         range = program[];
     }
 
-    void load(wstring data)
+    void load(wstring filename, wstring data)
     {
+        name = filename;
         program.clear();
         foreach(l; splitter(data, "\n"))
         {
@@ -324,11 +326,11 @@ struct Slot
         switch(type)
         {
             case SizeType.Line:
-                return program[].walkLength;
+                return cast(int)program[].walkLength;
             case SizeType.Char:
-                return program[].map!(x => x.length).sum;
+                return cast(int)program[].map!(x => x.length).sum;
             case SizeType.FreeChar:
-                return (memorySize - program[].map!(x => x.length).sum).max(0);
+                return cast(int)(memorySize - program[].map!(x => x.length).sum).max(0);
             default:
                 throw new OutOfRange("PRGSIZE", 2);
         }
@@ -382,5 +384,9 @@ class Program
     int size(int slot, SizeType st)
     {
         return this.slot[slot].size(st);
+    }
+    wstring name(int slot)
+    {
+        return this.slot[slot].name;
     }
 }

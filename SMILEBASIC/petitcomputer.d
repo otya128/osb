@@ -1093,7 +1093,7 @@ class PetitComputer
             nodirectmode = true;
         if (nodirectmode)
         {
-            program.slot[0].load(readText(inputfile).to!wstring);
+            program.slot[0].load(inputfile.to!wstring, readText(inputfile).to!wstring);
             runSlot(0);
         }
         else

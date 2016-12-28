@@ -2280,7 +2280,7 @@ class BuiltinFunction
                 //not exist
                 return;
             }
-            p.program.slot[lot].load(txt);
+            p.program.slot[lot].load(filename, txt);
             return;
         }
         if(resname.indexOf("GRP") == 0)
@@ -3210,6 +3210,14 @@ class BuiltinFunction
     {
         import otya.smilebasic.program;
         return p.program.size(slot, cast(SizeType)type);
+    }
+    static wstring PRGNAME(PetitComputer p)
+    {
+        return p.program.name(p.vm.currentSlotNumber);
+    }
+    static wstring PRGNAME(PetitComputer p, int slot)
+    {
+        return p.program.name(slot);
     }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;

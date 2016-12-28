@@ -2334,7 +2334,7 @@ class Exec : Code
             }
             wstring content;
             if (vm.petitcomputer.project.loadFile(file.project, "TXT", file.name, content))
-                vm.petitcomputer.program.slot[slot].load(content);
+                vm.petitcomputer.program.slot[slot].load(file.name, content);
             else
                 throw new LoadFailed();//TODO:DIALOG?
         }
