@@ -2269,7 +2269,7 @@ class BuiltinFunction
         }
         if(resname == "" || resname.indexOf("PRG") == 0)
         {
-            int lot = p.program.currentSlot;
+            int lot = 0/*always 0...?*/;
             if(resname != "" && resname != "PRG")
             {
                 auto num = resname[3..$];
@@ -2301,7 +2301,7 @@ class BuiltinFunction
         {
             throw new IllegalFunctionCall("SAVE"/*, 1*/);
         }
-        auto slot = p.program.currentSlot;
+        auto slot = 0/*always 0...?*/;
         if (file.hasResourceNumber)
         {
             slot = file.resourceNumber;
