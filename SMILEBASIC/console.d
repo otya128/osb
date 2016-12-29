@@ -401,7 +401,15 @@ class Console
     }
     //0<=TABSTEP<=16
     int TABSTEP = 4;
-    ConsoleAttribute attr;
+    ConsoleAttribute[2] attrs;
+    ConsoleAttribute attr()
+    {
+        return attrs[petitcom.displaynum];
+    }
+    void attr(ConsoleAttribute ca)
+    {
+        attrs[petitcom.displaynum] = ca;
+    }
     int tab;
     void printString(wstring text)
     {
