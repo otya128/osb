@@ -38,6 +38,14 @@ class SmileBasicError : Exception
         return message2;
     }
 }
+class InternalError : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 1;
+        super("Internal Error");
+    }
+}
 class SyntaxError : SmileBasicError
 {
     this()
@@ -201,6 +209,14 @@ class SubscriptOutOfRange : SmileBasicError
     {
         this.errnum = 31;
         super("Subscript out of range(" ~ func ~ ":" ~ arg.to!string ~ ")");
+    }
+}
+class IllegalSymbolString : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 34;
+        super("Illegal symbol string");
     }
 }
 class UsePRGEDITBeforeAnyPRGFunction : SmileBasicError

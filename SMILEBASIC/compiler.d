@@ -1032,7 +1032,7 @@ class Compiler
                     else
                     {
                         compileExpression(gosub.labelexpr, s);
-                        genCode(new GosubExpr(s));
+                        genCode(new GosubExpr());
                     }
                 }
                 break;

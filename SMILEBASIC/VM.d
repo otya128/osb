@@ -372,7 +372,21 @@ class VM
     }
     bool chklabel(wstring label)
     {
-        if (label in currentSlot.globalLabel)
+        auto name = parse(label);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!checkSlotNumber(name.slot))
+            {
+                return false;
+            }
+            slot = slots[name.slot];
+        }
+        else
+        {
+            slot = currentSlot;
+        }
+        if (label in slot.globalLabel)
             return true;
         if (currentFunction && label in currentFunction.label)
             return true;
@@ -982,23 +996,36 @@ class GotoFalse : Code
 }
 class GotoExpr : Code
 {
-    this()
-    {
-    }
     override void execute(VM vm)
     {
         Value label;
         vm.pop(label);
         if(label.isString)
         {
+            if (label.castDString.length == 0)
+                throw new InternalError();
             int pc;
-            if (vm.currentFunction)
+            auto name = VM.parse(label.castDString);
+            if (name.name[0] != '@')
             {
-                pc = vm.currentFunction.label.get(label.castDString, int.min);
+                throw new IllegalSymbolString();
+            }
+            if (name.name.length == 0 || name.hasSlot)
+            {
+                if (!vm.checkSlotNumber(name.slot))
+                {
+                    throw new IllegalSymbolString();
+                }
+                vm.setCurrentSlot(name.slot);
+            }
+            if (!name.hasSlot && vm.currentFunction)
+            {
+                vm.setCurrentSlot(vm.currentFunction.slot.index);
+                pc = vm.currentFunction.label.get(name.name, int.min);
             }
             else
             {
-                pc = vm.currentSlot.globalLabel.get(label.castDString, int.min);
+                pc = vm.currentSlot.globalLabel.get(name.name, int.min);
             }
             if (pc == int.min)
             {
@@ -1048,27 +1075,38 @@ class GosubS : Code
 }
 class GosubExpr : Code
 {
-    Scope sc;
-    this(Scope sc)
-    {
-        this.sc = sc;
-    }
     override void execute(VM vm)
     {
         Value label;
         vm.pop(label);
         if(label.isString)
         {
+            if (label.castDString.length == 0)
+                throw new InternalError();
+            int pc;
+            auto name = VM.parse(label.castDString);
+            if (name.name.length == 0 || name.name[0] != '@')
+            {
+                throw new IllegalSymbolString();
+            }
             vm.pushBackTrace(label.castDString);
             vm.pushpc;
-            int pc;
-            if (sc && sc.func)
+            if (name.hasSlot)
             {
-                pc = sc.func.label.get(label.castDString, int.min);
+                if (!vm.checkSlotNumber(name.slot))
+                {
+                    throw new IllegalSymbolString();
+                }
+                vm.setCurrentSlot(name.slot);
+            }
+            if (!name.hasSlot && vm.currentFunction)
+            {
+                vm.setCurrentSlot(vm.currentFunction.slot.index);
+                pc = vm.currentFunction.label.get(name.name, int.min);
             }
             else
             {
-                pc = vm.currentSlot.globalLabel.get(label.castDString, int.min);
+                pc = vm.currentSlot.globalLabel.get(name.name, int.min);
             }
             if (pc == int.min)
             {
