@@ -1413,7 +1413,6 @@ class Parser
             token = lex.front();
             if(token.type != TokenType.Iden)
             {
-                //TODO:VAR("A")の実装
                 syntaxError();
                 return null;
             }
@@ -1432,6 +1431,11 @@ class Parser
             if(token.type == TokenType.Comma)
             {
                 lex.popFront();
+                //VAR A,B,=>error出ない
+                if(lex.front.type != TokenType.Iden)
+                {
+                    break;
+                }
             }
             else
             {
