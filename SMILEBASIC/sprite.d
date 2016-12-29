@@ -973,9 +973,20 @@ class Sprite
     }
     void spclr()
     {
-        synchronized (this) for(int i = 0; i < sprites.length; i++)
+        auto id = spid(0);
+        if(spmax <= id)
         {
-            sprites[i].clear;
+            synchronized (this) for(int i = id; i < sprites.length; i++)
+            {
+                sprites[i].clear;
+            }
+        }
+        else
+        {
+            synchronized (this) for(int i = 0; i < spmax; i++)
+            {
+                sprites[i].clear;
+            }
         }
     }
     void allclear()
