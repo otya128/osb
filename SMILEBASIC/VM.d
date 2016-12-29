@@ -51,6 +51,14 @@ class VMSlot
     Value[wstring] directModeVariable;
     bool hasExecReturnAddress;
     VMAddress execReturnAddress;
+    struct ExecData
+    {
+        int sp;
+        int bp;
+        otya.smilebasic.type.Data currentData;
+        Function currentFunction;
+    }
+    ExecData execData;
 }
 class VM
 {
@@ -264,10 +272,14 @@ class VM
     }
     void end()
     {
-        if (currentSlot.hasExecReturnAddress)
+        if ((!petitcomputer || !petitcomputer.isRunningDirectMode) && currentSlot.hasExecReturnAddress)
         {
             currentSlot.hasExecReturnAddress = false;
             pc = currentSlot.execReturnAddress.address;
+            stacki = currentSlot.execData.sp;
+            bp = currentSlot.execData.bp;
+            currentFunction = currentSlot.execData.currentFunction;
+            currentData = currentSlot.execData.currentData;
             setCurrentSlot(currentSlot.execReturnAddress.slot);
         }
         else
@@ -2453,6 +2465,13 @@ class Exec : Code
         {
             vm.slots[slot].execReturnAddress = retaddr;
             vm.slots[slot].hasExecReturnAddress = true;
+            //BACKTRACEが不可解な動きをしている
+            //関数からEXECで他スロットを呼び出し戻ってくると他スロットの存在しない行がBACKTRACEに出てくる
+            //さらにその関数からRETURNするとそれらは消える
+            vm.slots[slot].execData.sp = vm.stacki;
+            vm.slots[slot].execData.bp = vm.bp;
+            vm.slots[slot].execData.currentFunction = vm.currentFunction;
+            vm.slots[slot].execData.currentData = vm.currentData;
         }
         vm.setCurrentSlot(slot);
         vm.pc = 0 - 1;
