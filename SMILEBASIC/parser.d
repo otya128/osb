@@ -1212,7 +1212,7 @@ class Parser
             }
             Input input = new Input(null, true, lex.location);
             input.addVariable(message);
-            do
+            while(token.type == TokenType.Comma)
             {
                 lex.popFront();
                 auto expr = expression();
@@ -1222,7 +1222,7 @@ class Parser
                 }
                 input.addVariable(expr);
                 token = lex.front();
-            } while(token.type == TokenType.Comma);
+            }
 
             return input;
         }
