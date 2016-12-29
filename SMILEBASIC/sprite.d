@@ -978,6 +978,13 @@ class Sprite
             sprites[i].clear;
         }
     }
+    void allclear()
+    {
+        synchronized (this) for(int i = 0; i < sprites.length; i++)
+        {
+            sprites[i].clear;
+        }
+    }
     void sphome(int i, int hx, int hy)
     {
         i = spid(i);

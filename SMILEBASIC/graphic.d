@@ -114,8 +114,8 @@ class Graphic
     }
 
     bool[2] visibles = [true, true];
-    protected int[2] showPage = [0, 1];
-    protected int[2] usePage = [0, 1];
+    int[2] showPage = [0, 1];
+    int[2] usePage = [0, 1];
     bool visible()
     {
         return visibles[petitcom.displaynum];
@@ -323,7 +323,7 @@ class Graphic
     }
     abstract void gcopy(int srcpage, int x, int y, int x2, int y2, int x3, int y3, int cpmode);
     abstract void gtri(int x1, int y1, int x2, int y2, int x3, int y3, int color);
-    int[2] gprios = [511, 511];
+    int[2] gprios = [512, 512];
 
     @property ref gprio()
     {

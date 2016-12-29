@@ -135,6 +135,15 @@ class BG
     }
     void screen(int w, int h)
     {
+        rot = 0;
+        scalex = 0;
+        scaley = 0;
+        homex = 0;
+        homey = 0;
+        chipWidth = 16;
+        chipHeight = 16;
+        offsetx = offsety = offsetz = 0;
+        //BGCLIP is not initialized
         this.width = w;
         this.height = h;
         this.clear();

@@ -1634,6 +1634,51 @@ class PetitComputer
 
     Program program;
 
+    void acls(bool gclsAndSpriteImageBGImageInit, bool spdef, bool fontdef)
+    {
+        xscreen(0, 512, 4);
+        backcolor = 0;
+        console.width(8);
+        console.foreColors[] = 15;
+        console.backColors[] = 0;
+        console.CSRXs[] = 0;
+        console.CSRYs[] = 0;
+        console.CSRZs[] = 0;
+        console.attrs[] = ConsoleAttribute.TROT0;
+        if (gclsAndSpriteImageBGImageInit)
+        {
+            //TODO:sprite,bg
+            for (int i = 0; i <= 3; i++)
+            {
+                this.graphic.useGRP = i;
+                graphic.gcls(0, 0);
+            }
+        }
+        this.graphic.usePage = [0, 1];
+        this.graphic.showPage = [0, 1];
+        this.graphic.gprios = [512, 512];/*reference:GPRIO 1024*/
+        this.graphic.visibles = [1, 1];
+        this.sprite.sppage = [4, 4];
+        this.sprite.allclear();
+        this.sprite.visibles = [true, true];
+        this.bgpage = [5, 5];
+        this.BGvisibles = [true, true];
+        foreach (b; bg)
+        {
+            b.screen(25, 15);
+            b.clip();
+        }
+        if (spdef)
+        {
+            this.sprite.spdef();
+        }
+        if (fontdef)
+        {
+            //TODO
+        }
+
+    }
+
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

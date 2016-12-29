@@ -2465,10 +2465,11 @@ class BuiltinFunction
     }
     static void ACLS(PetitComputer p)
     {
-        p.console.cls;
-        SPCLR(p, DefaultValue!(int, false)(true));
-        BGCLR(p, DefaultValue!(int, false)(true));
-        GCLS(p);
+        p.acls(true, true, true);
+    }
+    static void ACLS(PetitComputer p, int gr, int sp, int fn)
+    {
+        p.acls(cast(bool)gr, cast(bool)sp, cast(bool)fn);
     }
     static int CHKCALL(PetitComputer p, wstring func)
     {
