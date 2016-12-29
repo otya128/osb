@@ -55,6 +55,7 @@ class VMSlot
 class VM
 {
     VMSlot[5] slots;
+    int slotSize = 4;
     Function[wstring] commonFunctions;
     int slot;
     VMSlot currentSlot;
@@ -132,8 +133,8 @@ class VM
                 if (f.name in commonFunctions)
                     throw new DuplicateFunction(slot, dinfo.getLocationByAddress(f.address));
                 commonFunctions[f.name] = f;
-                f.slot = s;
             }
+            f.slot = s;
         }
         s.globalData = otya.smilebasic.type.Data(gdt, 0);
         s.globalLabel = globalLabel;
@@ -318,14 +319,54 @@ class VM
     {
         return backTraceStack[0..traceI];
     }
+    struct Name
+    {
+        bool hasSlot;
+        int slot;
+        wstring name;
+    }
+    static Name parse(wstring input)
+    {
+        import std.array;
+        int index = input.indexOf(':');
+        if (index == -1)
+        {
+            return Name(false, -1, input);
+        }
+        if (!input[0].isNumber)
+        {
+            return Name(false, -1, input);
+        }
+        auto slot = .parse!int(input);
+        if (input[0] != ':')
+        {
+            return Name(false, -1, input);
+        }
+        input.popFront();
+        return Name(true, slot, input);
+    }
     bool chkcall(wstring func)
     {
         import otya.smilebasic.builtinfunctions;
-        if (func in currentSlot.functions)
+        auto name = parse(func);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!checkSlotNumber(name.slot))
+            {
+                return false;
+            }
+            slot = slots[name.slot];
+        }
+        else
+        {
+            slot = currentSlot;
+        }
+        if (name.name in slot.functions)
             return true;
-        if (func in BuiltinFunction.builtinFunctions)
+        if (name.name in BuiltinFunction.builtinFunctions)
             return true;
-        if (func in commonFunctions)
+        if (name.name in commonFunctions)
             return true;
         return false;
     }
@@ -344,6 +385,10 @@ class VM
         if (currentFunction && var in currentFunction.variable)
             return true;
         return false;
+    }
+    bool checkSlotNumber(int slot)
+    {
+        return slot >= 0 && slot < slotSize;
     }
 }
 enum CodeType
@@ -1538,7 +1583,7 @@ class CallFunctionS : Code
         vm.currentData.index = 0;
         vm.currentData.table = func.scope_.data;
         vm.push(Value(vm.bp));
-        vm.pushpc;//vm.push(Value(vm.pc));
+        vm.pushpc;
         vm.bp = bp;
         vm.pc = func.address - 1;
         vm.stacki += func.variableIndex - 1;
@@ -1549,10 +1594,7 @@ class CallFunctionS : Code
                 vm.stack[bp + v.index] = Value(v.type);
             }
         }
-        if (func.isCommon)
-        {
-            vm.setCurrentSlot(func.slot.index);
-        }
+        vm.setCurrentSlot(func.slot.index);
     }
     override void execute(VM vm)
     {
@@ -1562,25 +1604,39 @@ class CallFunctionS : Code
         {
             throw new TypeMismatch();
         }
-        auto name = vname.castDString.toUpper;
-        Function func = vm.currentSlot.functions.get(name, null);
+        auto name = VM.parse(vname.castDString.toUpper);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!vm.checkSlotNumber(name.slot))
+                throw new UndefinedFunction(name.name);
+            slot = vm.slots[name.slot];
+        }
+        else
+        {
+            slot = vm.currentSlot;
+        }
+        Function func = slot.functions.get(name.name, null);
+        //CHKCALL("0:CHR$")=>TRUE
+        //CHKCALL("0:COMMONDEF")=>TRUE
+        //CHKCALL("1:COMMONDEF")=>TRUE
         if (!func)
         {
-            func = vm.commonFunctions.get(name, null);
+            func = vm.commonFunctions.get(name.name, null);
         }
         if(!func)
         {
-            auto bfuncs = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(name, null);
+            auto bfuncs = otya.smilebasic.builtinfunctions.BuiltinFunction.builtinFunctions.get(name.name, null);
             if (!bfuncs)
             {
-                throw new SyntaxError(name);
+                throw new UndefinedFunction(name.name);
             }
 
             auto bfunc = bfuncs.overloadResolution(argCount, outArgCount);
             callBuintinFunc(bfunc, vm);
             return;
         }
-        vm.pushBackTrace(name);
+        vm.pushBackTrace(name.name);
         callFunc(func, vm);
     }
     override string toString(VM vm)

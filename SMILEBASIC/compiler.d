@@ -97,7 +97,7 @@ class Function
     int outArgCount;
     Scope scope_;
     bool isCommon;
-    VMSlot slot;/*common function*/
+    VMSlot slot;
     bool isDead;/*common function*/
     /**
     0:bp

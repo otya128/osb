@@ -149,6 +149,18 @@ class UndefinedVariable : SmileBasicError
         super("Undefined variable");
     }
 }
+class UndefinedFunction : SmileBasicError
+{
+    this()
+    {
+        this.errnum = 16;
+        super("Undefined function");
+    }
+    this(wstring name)
+    {
+        this();
+    }
+}
 class DuplicateVariable : SmileBasicError
 {
     this()
