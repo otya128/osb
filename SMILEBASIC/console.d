@@ -165,6 +165,7 @@ class Console
         CSRZs = 0;
         foreColors = 15;//#T_WHITE
         backColors = 0;
+        attrs = ConsoleAttribute.TROT0;
         resizeConsole();
     }
     void width(int w)

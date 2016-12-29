@@ -1636,15 +1636,10 @@ class PetitComputer
 
     void acls(bool gclsAndSpriteImageBGImageInit, bool spdef, bool fontdef)
     {
+        console.initConsole();
         xscreen(0, 512, 4);
+        console.cls();
         backcolor = 0;
-        console.width(8);
-        console.foreColors[] = 15;
-        console.backColors[] = 0;
-        console.CSRXs[] = 0;
-        console.CSRYs[] = 0;
-        console.CSRZs[] = 0;
-        console.attrs[] = ConsoleAttribute.TROT0;
         if (gclsAndSpriteImageBGImageInit)
         {
             //TODO:sprite,bg
