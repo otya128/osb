@@ -2551,3 +2551,13 @@ class GosubUndefinedLabel : Code
         throw new UndefinedLabel(label);
     }
 }
+
+class Linput : Code
+{
+    override void execute(VM vm)
+    {
+        Value guide;
+        vm.pop(guide);
+        vm.push(Value(vm.petitcomputer.input(guide.castDString, false)));
+    }
+}

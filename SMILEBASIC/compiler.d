@@ -941,6 +941,15 @@ class Compiler
         compileExpression(use.expression, sc);
         genCode(new otya.smilebasic.vm.Use);
     }
+    void compileLinput(otya.smilebasic.node.Linput linput, Scope sc)
+    {
+        if (linput.hasGuide)
+            compileExpression(linput.guide, sc);
+        else
+            genCodeImm(Value(""));
+        genCode(new otya.smilebasic.vm.Linput);
+        compilePopVar(linput.expression, sc);
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -1214,6 +1223,9 @@ class Compiler
                 break;
             case NodeType.Use:
                 compileUse(cast(otya.smilebasic.node.Use)i, s);
+                break;
+            case NodeType.Linput:
+                compileLinput(cast(otya.smilebasic.node.Linput)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

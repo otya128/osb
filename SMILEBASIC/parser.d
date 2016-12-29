@@ -82,6 +82,7 @@ class Lexical
         reserved["REPEAT"] = TokenType.Repeat;
         reserved["UNTIL"] = TokenType.Until;
         reserved["SWAP"] = TokenType.Swap;
+        reserved["LINPUT"] = TokenType.Linput;
         reserved.rehash();
     }
     this(wstring input)
@@ -1124,12 +1125,46 @@ class Parser
                 break;
             case TokenType.Swap:
                 return swapStatement();
+            case TokenType.Linput:
+                return linputStatement();
             default:
                 syntaxError();
                 break;
         }
         lex.popFront();
         return node;
+    }
+    Linput linputStatement()
+    {
+        auto location = lex.location;
+        lex.popFront();
+        Expression message = expression();
+        if(!message)
+        {
+            syntaxError();
+            return null;
+        }
+        auto token = lex.front();
+        if (token.type == TokenType.Semicolon)
+        {
+            lex.popFront();
+            Expression var = expression();
+            if (!isLValue(var))
+            {
+                syntaxError();
+                return null;
+            }
+            return new Linput(message, var, location);
+        }
+        else
+        {
+            if (!isLValue(message))
+            {
+                syntaxError();
+                return null;
+            }
+            return new Linput(message, location);
+        }
     }
     Swap swapStatement()
     {

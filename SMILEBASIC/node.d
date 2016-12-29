@@ -50,6 +50,7 @@ enum NodeType
     XOff,
     Exec,
     Use,
+    Linput,
 }
 abstract class Node
 {
@@ -673,5 +674,26 @@ class Use : Statement
         super.location = loc;
         expression = e;
         this.type = NodeType.Use;
+    }
+}
+class Linput : Statement
+{
+    bool hasGuide;
+    Expression guide;
+    Expression expression;
+    this(Expression guide, Expression expr, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.Linput;
+        this.hasGuide = true;
+        this.guide = guide;
+        this.expression = expr;
+    }
+    this(Expression expr, SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.Linput;
+        this.hasGuide = false;
+        this.expression = expr;
     }
 }
