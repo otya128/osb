@@ -340,7 +340,7 @@ class VM
     static Name parse(wstring input)
     {
         import std.array;
-        sizediff_t index = cast(sizediff_t)input.indexOf(':');
+        sizediff_t index = input.indexOf(':');
         if (index == -1)
         {
             return Name(false, -1, input);
@@ -406,7 +406,21 @@ class VM
     }
     bool chkvar(wstring var)
     {
-        if (var in currentSlot.globalTable)
+        auto name = parse(var);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!checkSlotNumber(name.slot))
+            {
+                return false;
+            }
+            slot = slots[name.slot];
+        }
+        else
+        {
+            slot = currentSlot;
+        }
+        if (var in slot.globalTable)
             return true;
         if (currentFunction && var in currentFunction.variable)
             return true;
@@ -2288,99 +2302,124 @@ class SwapCode : Code
 
 class PushVarRefExpression : Code
 {
-    Scope sc;
-    this(Scope sc)
-    {
-        this.sc = sc;
-    }
     override void execute(VM vm)
     {
         Value valv;
         vm.pop(valv);
-        auto name = valv.castDString;
+        auto name = VM.parse(valv.castDString);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!vm.checkSlotNumber(name.slot))
+            {
+                throw new UndefinedVariable();
+            }
+            slot = vm.slots[name.slot];
+        }
+        else
+        {
+            slot = vm.currentSlot;
+        }
+
 
         VMVariable vmv = VMVariable(int.min);
-        if (sc.func)
+        if (!name.hasSlot && vm.currentFunction)
         {
-            vmv = sc.func.variable.get(name, vmv);
+            vmv = vm.currentFunction.variable.get(name.name, vmv);
             if (vmv.index != int.min)
             {
                 vm.push(Value(&vm.stack[vm.bp + vmv.index]));
                 return;
             }
         }
-        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        vmv = slot.globalTable.get(name.name, vmv);
         if (vmv.index == int.min)
         {
             throw new UndefinedVariable();
         }
-        vm.push(Value(&vm.currentSlot.global[vmv.index]));
+        vm.push(Value(&slot.global[vmv.index]));
     }
 }
 
 class PushVarExpression : Code
 {
-    Scope sc;
-    this(Scope sc)
-    {
-        this.sc = sc;
-    }
     override void execute(VM vm)
     {
         Value valv;
         vm.pop(valv);
-        auto name = valv.castDString;
+        auto name = VM.parse(valv.castDString);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!vm.checkSlotNumber(name.slot))
+            {
+                throw new UndefinedVariable();
+            }
+            slot = vm.slots[name.slot];
+        }
+        else
+        {
+            slot = vm.currentSlot;
+        }
 
         VMVariable vmv = VMVariable(int.min);
-        if (sc.func)
+        if (!name.hasSlot && vm.currentFunction)
         {
-            vmv = sc.func.variable.get(name, vmv);
+            vmv = vm.currentFunction.variable.get(name.name, vmv);
             if (vmv.index != int.min)
             {
                 vm.push(vm.stack[vm.bp + vmv.index]);
                 return;
             }
         }
-        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        vmv = slot.globalTable.get(name.name, vmv);
         if (vmv.index == int.min)
         {
             throw new UndefinedVariable();
         }
-        vm.push(vm.currentSlot.global[vmv.index]);
+        vm.push(slot.global[vmv.index]);
     }
 }
 
 class PopVarExpression : Code
 {
-    Scope sc;
-    this(Scope sc)
-    {
-        this.sc = sc;
-    }
     override void execute(VM vm)
     {
         Value valv;
         vm.pop(valv);
         Value expr;
         vm.pop(expr);
-        auto name = valv.castDString;
+        auto name = VM.parse(valv.castDString);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!vm.checkSlotNumber(name.slot))
+            {
+                throw new UndefinedVariable();
+            }
+            slot = vm.slots[name.slot];
+        }
+        else
+        {
+            slot = vm.currentSlot;
+        }
 
         VMVariable vmv = VMVariable(int.min);
-        if (sc.func)
+        if (!name.hasSlot && vm.currentFunction)
         {
-            vmv = sc.func.variable.get(name, vmv);
+            vmv = vm.currentFunction.variable.get(name.name, vmv);
             if (vmv.index != int.min)
             {
                 vm.stack[vm.bp + vmv.index] = expr;
                 return;
             }
         }
-        vmv = vm.currentSlot.globalTable.get(name, vmv);
+        vmv = slot.globalTable.get(name.name, vmv);
         if (vmv.index == int.min)
         {
             throw new UndefinedVariable();
         }
-        vm.currentSlot.global[vmv.index] = expr;
+        slot.global[vmv.index] = expr;
     }
 }
 

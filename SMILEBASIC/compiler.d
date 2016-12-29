@@ -586,7 +586,7 @@ class Compiler
                 {
                     auto varref = cast(VarRef)exp;
                     compileExpression(varref.expression, sc);
-                    genCode(new PushVarExpression(sc));
+                    genCode(new PushVarExpression());
                 }
                 break;
             default:
@@ -643,7 +643,7 @@ class Compiler
                 {
                     auto varref = cast(VarRef)exp;
                     compileExpression(varref.expression, sc);
-                    genCode(new PushVarRefExpression(sc));
+                    genCode(new PushVarRefExpression());
                 }
                 break;
             default:
@@ -692,7 +692,7 @@ class Compiler
                 {
                     auto varref = cast(VarRef)expr;
                     compileExpression(varref.expression, sc);
-                    genCode(new PopVarExpression(sc));
+                    genCode(new PopVarExpression());
                 }
                 break;
             case NodeType.VoidExpression:
