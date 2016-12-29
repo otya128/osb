@@ -340,7 +340,7 @@ class VM
     static Name parse(wstring input)
     {
         import std.array;
-        int index = input.indexOf(':');
+        sizediff_t index = cast(sizediff_t)input.indexOf(':');
         if (index == -1)
         {
             return Name(false, -1, input);
