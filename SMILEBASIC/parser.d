@@ -1926,15 +1926,23 @@ class Parser
                 {
                     auto func = new CallFunction(token.value.stringValue, lex.location);
                     node = func;
-                    //関数呼び出しだった
-                    while(true)
+                    lex.popFront();
+                    if(lex.front().type != TokenType.RParen)
                     {
-                        lex.popFront();
-                        token = lex.front();
+                        //関数呼び出しだった
+                        while(true)
+                        {
+                            token = lex.front();
 
-                        if(token.type == TokenType.RParen) break;
                             func.addArg(expression());
-                        if(lex.front().type == TokenType.RParen) break;
+                            if(lex.front().type == TokenType.RParen) break;
+                            if(lex.front().type != TokenType.Comma)
+                            {
+                                syntaxError();
+                                break;
+                            }
+                            lex.popFront();
+                        }
                     }
                 }
                 else

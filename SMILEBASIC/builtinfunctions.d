@@ -1350,17 +1350,48 @@ class BuiltinFunction
         str2[digits - str.length..digits] = str;
         return str2[0..digits].to!wstring;
     }
+    /+
+    HEX$(1,0)=>1
+    HEX$(1)=>1
+    HEX$(1,)=>1(???)
+    HEX$(1,2)=>01
+    +/
     static wstring HEX(int val, DefaultValue!(int, false) digits)
     {
         import std.format;
         if(digits > 8 || digits < 0)
         {
-            throw new OutOfRange();
+            throw new OutOfRange("HEX$", 2);
         }
         FormatSpec!char f;
         f.spec = 'X';
         f.flZero = !digits.isDefault;
         f.width = cast(int)digits;
+        auto w = appender!wstring();
+        formatValue(w, val, f);
+        return cast(immutable)(w.data);
+    }
+    /+
+    BIN$(1,0)=>1
+    BIN$(1)=>1
+    BIN$(1,)=>Type mismatch(BIN$:2)
+    BIN$(1,2)=>01
+    +/
+    static wstring BIN(int val)
+    {
+        return val.to!wstring(2);
+    }
+    static wstring BIN(int val, int digits)
+    {
+        import std.format;
+        if(digits > 32 || digits < 0)
+        {
+            throw new OutOfRange("BIN$", 2);
+        }
+        FormatSpec!char f;
+        f.spec = 'b';
+        f.flZero = true;
+        f.width = digits;
         auto w = appender!wstring();
         formatValue(w, val, f);
         return cast(immutable)(w.data);
