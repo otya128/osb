@@ -1028,7 +1028,15 @@ class Sprite
     {
         if(parent >= child)
         {
-            throw new IllegalFunctionCall("SPLINK");
+            throw new IllegalFunctionCall("SPLINK", 2);
+        }
+        if (!isSpriteDefined(child))
+        {
+            throw new IllegalFunctionCall("SPLINK", 1);
+        }
+        if (!isSpriteDefined(parent))
+        {
+            throw new IllegalFunctionCall("SPLINK", 2);
         }
         parent = spid(parent);
         child = spid(child);

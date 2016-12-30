@@ -1456,6 +1456,10 @@ class BuiltinFunction
     }
     static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCHR", 1);
+        }
         if(!V.isDefault && !W.isDefault)
         {
             int u = defno;
@@ -1514,14 +1518,26 @@ class BuiltinFunction
     }
     static void SPHIDE(PetitComputer p, int id)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPHIDE", 1);
+        }
         p.sprite.sphide(id);
     }
     static void SPSHOW(PetitComputer p, int id)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPSHOW", 1);
+        }
         p.sprite.spshow(id);
     }
     static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y, double z)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPOFS", 1);
+        }
         if (x.isDefault || y.isDefault)
         {
             double x_, y_, z_;
@@ -1533,6 +1549,10 @@ class BuiltinFunction
     }
     static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPOFS", 1);
+        }
         if (x.isDefault || y.isDefault)
         {
             double x_, y_, z_;
@@ -1545,6 +1565,10 @@ class BuiltinFunction
     @StartOptional("z")
     static void SPOFS(PetitComputer p, int id, out double x, out double y, out double z)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPOFS", 1);
+        }
         p.sprite.getspofs(id, x, y, z);
     }
     static void SPANIM(PetitComputer p, Value[] va_args)
@@ -1552,6 +1576,10 @@ class BuiltinFunction
         //TODO:配列
         auto args = retro(va_args);
         int no = args[0].castInteger;
+        if (!p.sprite.isSpriteDefined(no))
+        {
+            throw new IllegalFunctionCall("SPANIM", 1);
+        }
         double[] animdata;
         if(args[2].isString)
         {
@@ -1699,6 +1727,7 @@ class BuiltinFunction
     }
     static void SPCLR(PetitComputer p, DefaultValue!(int, false) i)
     {
+        //spset is not checked
         if(i.isDefault)
             p.sprite.spclr();
         else
@@ -1706,18 +1735,34 @@ class BuiltinFunction
     }
     static void SPHOME(PetitComputer p, int i, int hx, int hy)
     {
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPHOME", 1);
+        }
         p.sprite.sphome(i, hx, hy);
     }
     static void SPSCALE(PetitComputer p, int i, double x, double y)
     {
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPSCALE", 1);
+        }
         p.sprite.spscale(i, x, y);
     }
     static void SPROT(PetitComputer p, int i, double rot)
     {
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPROT", 1);
+        }
         p.sprite.sprot(i, rot);
     }
     static void SPCOLOR(PetitComputer p, int id, int color)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOLOR", 1);
+        }
         p.sprite.spcolor(id, cast(uint)color);
     }
     static void SPLINK(PetitComputer p, int child, int parent)
@@ -1726,38 +1771,67 @@ class BuiltinFunction
     }
     static void SPUNLINK(PetitComputer p, int id)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPUNLINK", 1);
+        }
         p.sprite.spunlink(id);
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!(int, false) scale)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(bool)scale);
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!int scale, int mask)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(bool)scale, mask);
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, int scale)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, cast(bool)scale, -1);
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale, int mask)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, cast(bool)scale, mask);
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         scale.setDefaultValue(false);
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, cast(bool)scale, -1);
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h)
     {
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOL", 1);
+        }
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, false, -1);
     }
     static int SPHITSP(PetitComputer p, int id)
     {
+        //spset is not checked
         return p.sprite.sphitsp(id);
     }
     static int SPHITSP(PetitComputer p, int id, int min)
@@ -1770,6 +1844,7 @@ class BuiltinFunction
     }
     static void SPVAR(PetitComputer p, int id, int var, double val)
     {
+        //spset is not checked
         p.sprite.spvar(id, var, val);
     }
     static double SPVAR(PetitComputer p, int id, int var)
