@@ -1289,7 +1289,7 @@ class PetitComputer
                     }
                     auto endmaincnt = maincnt + vsyncFrame;
                     oldmaincnt = maincntRender;
-                    while (maincnt < endmaincnt && !quit)
+                    while (maincnt < endmaincnt && !quit && running)
                     {
                         SDL_Delay(1);
                         if (maincntRender != oldmaincnt)
