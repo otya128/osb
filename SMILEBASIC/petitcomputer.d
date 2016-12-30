@@ -1671,6 +1671,7 @@ class PetitComputer
         }
     }
 
+    int clipboardSize = 1048576;
     wstring clipboard()
     {
         if(SDL_HasClipboardText())
@@ -1678,6 +1679,8 @@ class PetitComputer
             char* cl = SDL_GetClipboardText();
             string an = cast(string)(cl[0..core.stdc.string.strlen(cl)]);
             auto ret = an.to!wstring;
+            if (ret.length > clipboardSize)
+                ret = ret[0..clipboardSize];
             SDL_free(cl);
             return ret;
         }
@@ -1685,6 +1688,10 @@ class PetitComputer
     }
     void clipboard(wstring ws)
     {
+        if (ws.length > clipboardSize)
+        {
+            throw new StringTooLong("CLIPBOARD");
+        }
         SDL_SetClipboardText(ws.to!string.toStringz);
     }
 
