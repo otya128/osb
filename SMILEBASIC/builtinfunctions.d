@@ -3370,6 +3370,15 @@ class BuiltinFunction
     {
         p.console.scroll(x, y);
     }
+    static void CLIPBOARD(PetitComputer p, wstring value)
+    {
+        p.clipboard = value;
+    }
+    static wstring CLIPBOARD(PetitComputer p)
+    {
+        return p.clipboard;
+    }
+
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

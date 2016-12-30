@@ -1483,6 +1483,7 @@ class PetitComputer
                         char* cl = SDL_GetClipboardText();
                         string an = cast(string)(cl[0..core.stdc.string.strlen(cl)]);
                         ks = an.to!wstring;
+                        SDL_free(cl);
                     }
                 }
                 console.print(ks);
@@ -1668,7 +1669,23 @@ class PetitComputer
         {
             this.console.initGRPF();
         }
+    }
 
+    wstring clipboard()
+    {
+        if(SDL_HasClipboardText())
+        {
+            char* cl = SDL_GetClipboardText();
+            string an = cast(string)(cl[0..core.stdc.string.strlen(cl)]);
+            auto ret = an.to!wstring;
+            SDL_free(cl);
+            return ret;
+        }
+        return "";
+    }
+    void clipboard(wstring ws)
+    {
+        SDL_SetClipboardText(ws.to!string.toStringz);
     }
 
     //プチコン内部表現はRGB5_A1
