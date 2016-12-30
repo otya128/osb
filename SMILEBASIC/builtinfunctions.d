@@ -1800,6 +1800,14 @@ class BuiltinFunction
     {
         p.sprite.spclip(x1, y1, x2, y2);
     }
+    static int SPUSED(PetitComputer p, int id)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange("SPUSED", 1);
+        }
+        return p.sprite.spused(id);
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");

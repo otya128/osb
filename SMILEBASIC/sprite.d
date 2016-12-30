@@ -1171,4 +1171,9 @@ class Sprite
             return sprites.length > id + spmax;
         }
     }
+    bool spused(int id)
+    {
+        id = spid(id);
+        return sprites[id].define;
+    }
 }
