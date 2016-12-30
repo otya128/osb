@@ -333,12 +333,6 @@ class BuiltinFunction
     {
         return p.backcolor;
     }
-    static void XON(PetitComputer p, Value mode/*!?!???!?*/)
-    {
-    }
-    static void XOFF(PetitComputer p, Value mode/*!?!???!?*/)
-    {
-    }
     static void TOUCH(PetitComputer p, out int tm, out int tchx, out int tchy)
     {
         auto pos = p.touchPosition;
