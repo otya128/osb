@@ -1113,7 +1113,7 @@ class PetitComputer
                 {
                     printPrompt();
                 }
-                auto prg = input("", true);
+                auto prg = input("", true, false);
                 if (!prg.empty && (inputHistory.length == 0 || inputHistory[inputHistory.length - 1] != prg))
                 {
                     inputHistory.put(prg);
@@ -1322,7 +1322,7 @@ class PetitComputer
         keybufferlen = 0;
     }
     RingBuffer!wstring inputHistory = new RingBuffer!wstring(32/*ダイレクトモードでの履歴の数は32*/);
-    wstring input(wstring prompt, bool useClipBoard)
+    wstring input(wstring prompt, bool useClipBoard, bool isVM/*if this flag is true, enable start/select interrupt*/)
     {
         auto olddisplay = displaynum;
         //displaynum = 0;
@@ -1383,10 +1383,10 @@ class PetitComputer
                 console.CSRX = 0;
             }
         }
-        while(!quit)
+        while(!quit && (!isVM || running))
         {
             auto oldpos = keybufferpos;
-            while(oldpos == keybufferpos && !quit)
+            while(oldpos == keybufferpos && !quit && (!isVM || running))
             {
                 Button old;
                 synchronized(buttonLock)

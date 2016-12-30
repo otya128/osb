@@ -1873,7 +1873,7 @@ class InputCode : Code
             {
                 vm.petitcomputer.console.printString("?Redo from start \n");
             }
-            wstring input = vm.petitcomputer.input("", false);
+            wstring input = vm.petitcomputer.input("", false, true);
             wstring[] split = input.split(",");
             error = false;
             if(split.length == 0)
@@ -2558,6 +2558,6 @@ class Linput : Code
     {
         Value guide;
         vm.pop(guide);
-        vm.push(Value(vm.petitcomputer.input(guide.castDString, false)));
+        vm.push(Value(vm.petitcomputer.input(guide.castDString, false, true)));
     }
 }
