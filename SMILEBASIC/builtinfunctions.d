@@ -3245,6 +3245,123 @@ class BuiltinFunction
     {
         return p.program.name(slot);
     }
+    static auto split2(R)(R range, size_t size)
+    {
+        return Split2!R(range, size);
+    }
+    unittest
+    {
+        struct IR
+        {
+            void popFront()
+            {
+            }
+            bool empty()
+            {
+                return true;
+            }
+            int front()
+            {
+                return 1;
+            }
+        }
+        static assert(isInputRange!(Split2!IR));
+        static assert(isInputRange!(Split2!(int[])));
+    }
+    struct Split2(R)
+    if (isInputRange!R)
+    {
+        R range;
+        size_t size;
+        ElementType!(R)[] item;
+        bool isEmpty;
+        this(R range, size_t size)
+        {
+            this.range = range;
+            this.size = size;
+            popFront();
+        }
+        void popFront()
+        {
+            isEmpty = range.empty;
+            if (isEmpty)
+                return;
+            static if (hasSlicing!R && is(range[0..size] == item))
+            {
+                item = range[0..size];
+                popFrontN(item, size);
+            }
+            else
+            {
+                item = new ElementType!(R)[size];
+                for (size_t i = 0; i < size; i++)
+                {
+                    item[i] = range.front();
+                    range.popFront();
+                }
+            }
+        }
+        auto front()
+        {
+            return item;
+        }
+        bool empty()
+        {
+            return isEmpty;
+        }
+    }
+    static void FONTDEF(PetitComputer p, int icode, Value array)
+    {
+        if (icode < 0 || icode > 0xFFFF)
+        {
+            throw new OutOfRange("FONTDEF", 1);
+        }
+        ushort code = cast(ushort)icode;
+        if (!p.console.canDefine(code))
+        {
+            throw new IllegalFunctionCall("FONTDEF"/*, 1*/);
+        }
+        int color = 4;
+        if (array.isString)
+        {
+            wstring definition = array.castDString;
+            //FONTDEF 0,"0000"*65'=>OK
+            if (definition.length < p.console.fontDefWidth * p.console.fontDefHeight * color)
+            {
+                throw new IllegalFunctionCall("FONTDEF", 2);
+            }
+            int[] font = new int[p.console.fontDefWidth * p.console.fontDefHeight * color];
+            try
+            {
+                p.console.define(code, split2(definition, 4).map!(x => x.to!int(16)).array);
+            }
+            catch (ConvException)
+            {
+                throw new IllegalFunctionCall("FONTDEF", 2);
+            }
+            return;
+        }
+        //DIM A$[63]
+        //FONTDEF 0,A$'=>Subscript out of range(FONTDEF:2)
+        //DIM A$[64]
+        //FONTDEF 0,A$'=>Type mismatch(FONTDEF:2)
+        //FONTDEF 0,1'=>Type mismatch(FONTDEF:2)
+
+        if (!array.isArray)
+            throw new TypeMismatch("FONTDEF", 2);
+        if (array.length < p.console.fontDefWidth * p.console.fontDefHeight)
+            throw new SubscriptOutOfRange("FONTDEF", 2);
+        if (!array.isNumberArray)
+            throw new TypeMismatch("FONTDEF", 2);
+        if (array.type == ValueType.IntegerArray)
+        {
+            p.console.define(code, array.integerArray.array);
+        }
+        else if (array.type == ValueType.DoubleArray)
+        {
+            p.console.define(code, array.doubleArray.array);
+        }
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

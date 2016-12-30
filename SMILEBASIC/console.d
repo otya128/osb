@@ -30,9 +30,24 @@ enum ConsoleAttribute
     TREVV = 8,
 }
 
+struct FontRect
+{
+    int x, y, w, h;
+    bool define = true;
+}
+
 class Console
 {
 
+    //width 16,16 => return 16
+    int fontDefWidth()
+    {
+        return 8;
+    }
+    int fontDefHeight()
+    {
+        return 8;
+    }
     int[2] fontWidths;
     int[2] fontHeights;
     int consoleWidthDisplay1;
@@ -125,7 +140,7 @@ class Console
 
     bool showCursor;
     bool animationCursor;
-    SDL_Rect[] fontTable = new SDL_Rect[65536];
+    FontRect[] fontTable = new FontRect[65536];
     GraphicPage GRPF;
     PetitComputer petitcom;
     bool[2] visibles = [true, true];
@@ -202,7 +217,7 @@ class Console
     void createFontTable()
     {
         auto file = File(petitcom.fontTableFile, "w");
-        std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
+        std.algorithm.fill(fontTable, FontRect(488,120, 8, 8, false));//TODO:480,120とどっちが使われているかは要調査
         for (int i = 1; i <= 16; i++)
         {
             string html = cast(string)get("http://smilebasic.com/supplements/unicode" ~ format("%02d",i));
@@ -229,6 +244,7 @@ class Console
                 file.write(fontTable[index].y, '\n');
                 fontTable[index].w = 8;
                 fontTable[index].h = 8;
+                fontTable[index].define = true;
             }
         }
     }
@@ -236,7 +252,7 @@ class Console
     {
         import std.csv;
         import std.typecons;
-        std.algorithm.fill(fontTable, SDL_Rect(488,120, 8, 8));//TODO:480,120とどっちが使われているかは要調査
+        std.algorithm.fill(fontTable, FontRect(488,120, 8, 8, false));//TODO:480,120とどっちが使われているかは要調査
         auto csv = csvReader!(Tuple!(int,int,int))(readText(petitcom.fontTableFile));
         foreach(record; csv)
         {
@@ -244,6 +260,7 @@ class Console
             fontTable[record[0]].y = record[2];
             fontTable[record[0]].w = 8;
             fontTable[record[0]].h = 8;
+            fontTable[record[0]].define = true;
         }
     }
     void cls()
@@ -479,5 +496,32 @@ class Console
         }
         consoleC[consoleHeightC - 1] = tmp;
         tmp[] = ConsoleCharacter(0, foreColor, backColor, attr, CSRZ);
+    }
+    bool canDefine(ushort a)
+    {
+        return fontTable[a].define;
+    }
+    void define(T)(ushort code, T[] array)
+    {
+        import otya.smilebasic.graphic;
+        if (!canDefine(code))
+        {
+            return;
+        }
+        auto buffer = cast(int*)GRPF.surface.pixels;
+        auto w = GRPF.surface.w;
+        auto h = GRPF.surface.h;
+        auto font = fontTable[code];
+        for (int y = 0; y < font.h; y++)
+        {
+            for (int x = 0; x < font.w; x++)
+            {
+                buffer[x + font.x + (font.y + y) * w] = Graphic.RGBA16ToARGB32Color(cast(int)array[x + y * font.w]);
+            }
+        }
+        //update texture
+        glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
+        glFlush();
     }
 }
