@@ -3366,6 +3366,10 @@ class BuiltinFunction
     {
         p.console.initGRPF();
     }
+    static void SCROLL(PetitComputer p, int x, int y)
+    {
+        p.console.scroll(x, y);
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)

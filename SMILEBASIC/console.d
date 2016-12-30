@@ -497,6 +497,69 @@ class Console
         consoleC[consoleHeightC - 1] = tmp;
         tmp[] = ConsoleCharacter(0, foreColor, backColor, attr, CSRZ);
     }
+    import std.range;
+    void tonikakusugokutesutekinasaikyounaFill(T, T2)(T input, T2 v)
+    {
+        foreach (ref e; input)
+        {
+            e[] = v;
+        }
+    }
+    void scroll(int x, int y)
+    {
+        import std.math;
+        if (abs(x) >= consoleWidthC)
+        {
+            auto oldCSRX = CSRX;
+            auto oldCSRY = CSRY;
+            auto oldCSRZ = CSRZ;
+            cls();
+            CSRX = oldCSRX;
+            CSRY = oldCSRY;
+            CSRZ = oldCSRZ;
+            return;
+        }
+        if (abs(y) >= consoleHeightC)
+        {
+            cls();
+            return;
+        }
+        for (int i = 0; i < consoleHeightC; i++)
+        {
+            if (x > 0)
+            {
+                for (int j = x; j < consoleWidthC; j++)
+                {
+                    consoleC[i][j - x] = consoleC[i][j];
+                }
+                consoleC[i][$ - x..$] = ConsoleCharacter(0, foreColor, backColor);
+            }
+            else if (x < 0)
+            {
+                for (int j = consoleWidthC - 1; j >= -x; j--)
+                {
+                    consoleC[i][j] = consoleC[i][j + x];
+                }
+                consoleC[i][0..-x] = ConsoleCharacter(0, foreColor, backColor);
+            }
+        }
+        if (y > 0)
+        {
+            for (int i = y; i < consoleHeightC; i++)
+            {
+                consoleC[i - y][] = consoleC[i][];
+            }
+            tonikakusugokutesutekinasaikyounaFill(consoleC[$ - y..$], ConsoleCharacter(0, foreColor, backColor));
+        }
+        else if (y < 0)
+        {
+            for (int i = consoleHeightC - 1; i >= -y; i--)
+            {
+                consoleC[i][] = consoleC[i + y][];
+            }
+            tonikakusugokutesutekinasaikyounaFill(consoleC[0..-y], ConsoleCharacter(0, foreColor, backColor));
+        }
+    }
     bool canDefine(ushort a)
     {
         return fontTable[a].define;
