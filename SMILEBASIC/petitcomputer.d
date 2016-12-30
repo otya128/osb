@@ -736,10 +736,7 @@ class PetitComputer
                 return;
             }
             SDL_GL_MakeCurrent(window, context);
-            console.GRPF = graphic.createGRPF(fontFile);
-            graphic.GRPFWidth = console.GRPF.surface.w;
-            graphic.GRPFHeight = console.GRPF.surface.h;
-            console.GRPF.createTexture(renderer, textureScaleMode);
+            console.initGRPF();
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
             version(Windows)
@@ -1669,7 +1666,7 @@ class PetitComputer
         }
         if (fontdef)
         {
-            //TODO
+            this.console.initGRPF();
         }
 
     }

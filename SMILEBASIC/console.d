@@ -524,4 +524,16 @@ class Console
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
         glFlush();
     }
+    void initGRPF()
+    {
+        if (GRPF)
+        {
+            GRPF.deleteGL();
+            GRPF.deleteSDL();
+        }
+        GRPF = petitcom.graphic.createGRPF(petitcom.fontFile);
+        petitcom.graphic.GRPFWidth = GRPF.surface.w;
+        petitcom.graphic.GRPFHeight = GRPF.surface.h;
+        GRPF.createTexture(petitcom.renderer, petitcom.textureScaleMode);
+    }
 }

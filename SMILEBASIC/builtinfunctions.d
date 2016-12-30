@@ -3362,6 +3362,10 @@ class BuiltinFunction
             p.console.define(code, array.doubleArray.array);
         }
     }
+    static void FONTDEF(PetitComputer p)
+    {
+        p.console.initGRPF();
+    }
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
     static wstring getBasicName(BFD)(const wstring def)
