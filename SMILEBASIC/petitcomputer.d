@@ -526,6 +526,16 @@ class PetitComputer
         SDL_SetWindowSize(window, cast(int)(currentDisplay.windowSize.width * scaleX), cast(int)(currentDisplay.windowSize.height * scaleY));
     }
 
+    bool isValidLayer(int layer)
+    {
+        if (layer < 0)
+            return false;
+        if(displaynum)
+        {
+            return layer < bg.length - bgmax;
+        }
+        return layer < bgmax;
+    }
     BG getBG(int layer)
     {
         if(displaynum)

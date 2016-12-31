@@ -2735,11 +2735,22 @@ class CallBG : Code
 {
     override void execute(VM vm)
     {
+        vm.petitcomputer.callidx++;
         if (!vm.petitcomputer.callback)
         {
-            vm.petitcomputer.callidx++;
             return;
         }
-        vm.petitcomputer.callidx++;
+        if (!vm.petitcomputer.isValidLayer(vm.petitcomputer.callidx))
+        {
+            vm.petitcomputer.callback = false;
+            return;
+        }
+        auto callback = vm.petitcomputer.getBG(vm.petitcomputer.callidx).callback;
+        vm.pc--;
+        if (!callback.isCallable)
+        {
+            return;
+        }
+        callback(vm);
     }
 }

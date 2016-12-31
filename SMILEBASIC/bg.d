@@ -249,4 +249,6 @@ class BG
                 }
             }
         }
+    import otya.smilebasic.vm;
+    Callback callback;
 }

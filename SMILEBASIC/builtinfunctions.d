@@ -2223,6 +2223,17 @@ class BuiltinFunction
         }
         BGLOAD(p, layer, 0, 0, p.getBG(layer).width, p.getBG(layer).height, ary, 0);
     }
+    static void BGFUNC(PetitComputer p, int layer, wstring func)
+    {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGFUNC", 1);
+        }
+        auto callback = p.vm.createCallback(func);
+        if (callback.type == CallbackType.none)
+            throw new IllegalFunctionCall("BGUNC"/*, 2*/);
+        p.getBG(layer).callback = callback;
+    }
     static void EFCON()
     {
     }
