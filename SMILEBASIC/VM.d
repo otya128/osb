@@ -82,7 +82,7 @@ struct Callback
         if (type == CallbackType.label)
             return slot.unique == slotUnique;
         if (type == CallbackType.function_)
-            return func.isDead;
+            return !func.isDead;
         return false;
     }
 }
