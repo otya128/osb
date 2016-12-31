@@ -57,6 +57,7 @@ class VMSlot
         int bp;
         otya.smilebasic.type.Data currentData;
         Function currentFunction;
+        int backtrace;
     }
     ExecData execData;
 }
@@ -280,6 +281,7 @@ class VM
             bp = currentSlot.execData.bp;
             currentFunction = currentSlot.execData.currentFunction;
             currentData = currentSlot.execData.currentData;
+            traceI = currentSlot.execData.backtrace;
             setCurrentSlot(currentSlot.execReturnAddress.slot);
         }
         else
@@ -2499,6 +2501,7 @@ class Exec : Code
             vm.slots[slot].execData.bp = vm.bp;
             vm.slots[slot].execData.currentFunction = vm.currentFunction;
             vm.slots[slot].execData.currentData = vm.currentData;
+            vm.slots[slot].execData.backtrace = vm.traceI;
         }
         vm.setCurrentSlot(slot);
         vm.pc = 0 - 1;
