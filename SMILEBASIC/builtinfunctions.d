@@ -2378,13 +2378,21 @@ class BuiltinFunction
         }
         p.getBG(layer).scale(x, y);
     }
-    static void BGROT(PetitComputer p, int layer, double rot)
+    static void BGROT(PetitComputer p, int layer, int rot)
     {
         if (!p.isValidLayer(layer))
         {
             throw new OutOfRange("BGROT", 1);
         }
         p.getBG(layer).rot(rot);
+    }
+    static int BGROT(PetitComputer p, int layer)
+    {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        return p.getBG(layer).rot;
     }
     static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, int screendata)
     {

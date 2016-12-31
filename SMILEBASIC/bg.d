@@ -187,9 +187,13 @@ class BG
         this.scalex = x;
         this.scaley = y;
     }
-    void rot(double rot)
+    void rot(int rot)
     {
         this.r = rot;
+    }
+    int rot()
+    {
+        return cast(int)r;
     }
     void fill(int x, int y, int x2, int y2, int screendata)
     {
