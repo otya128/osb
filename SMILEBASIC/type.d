@@ -147,7 +147,7 @@ struct Value
                 break;
         }
     }
-    bool boolValue()
+    int boolValue()
     {
         switch(type)
         {
@@ -156,10 +156,10 @@ struct Value
             case ValueType.Integer:
                 return this.integerValue != 0;
             case ValueType.String:
-                return true;//3.1現在では文字列はtrue(ただし!"A"などは動かない)
+                return 3;//3.1現在では文字列はtrue(ただし!"A"などは動かない)
             default:
                 //配列はtype mismatch
-                return false;
+                throw new TypeMismatch();
         }
     }
     bool isArray()

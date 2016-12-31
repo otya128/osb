@@ -825,12 +825,6 @@ class Operate : Code
                 case TokenType.Or:
                     vm.push(Value(li | ri));
                     return;
-                case TokenType.LogicalAnd:
-                    vm.push(Value(li && ri));
-                    return;
-                case TokenType.LogicalOr:
-                    vm.push(Value(li || ri));
-                    return;
                 case TokenType.Xor:
                     vm.push(Value(li ^ ri));
                     return;
@@ -901,12 +895,6 @@ class Operate : Code
                 return;
             case TokenType.Or:
                 vm.push(Value(li | ri));
-                return;
-            case TokenType.LogicalAnd:
-                vm.push(Value(li && ri));
-                return;
-            case TokenType.LogicalOr:
-                vm.push(Value(li || ri));
                 return;
             case TokenType.Xor:
                 vm.push(Value(li ^ ri));
@@ -2619,15 +2607,7 @@ class ConvertBool : Code
             throw new StackUnderFlow();
         }
         auto top = &vm.stack[vm.stacki - 1];
-        if (top.type == ValueType.String)
-        {
-            top.type = ValueType.Integer;
-            top.integerValue = 3;
-        }
-        else if (top.isNumber)
-        {
-            top.type = ValueType.Integer;
-            top.integerValue = top.boolValue;
-        }
+        top.integerValue = top.boolValue;
+        top.type = ValueType.Integer;
     }
 }
