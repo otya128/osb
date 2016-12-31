@@ -1520,47 +1520,53 @@ class BuiltinFunction
             return;
         p.sprite.spset(ix, u, v, w, h, cast(SpriteAttr)attr);
     }
-    static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
+    static void SPCHR(PetitComputer p, int id, int defno)
     {
         if (!p.sprite.isValidSpriteId(id))
         {
             throw new OutOfRange(smilebasicFunctionName, 1);
         }
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isValidDef(defno))
         {
             throw new OutOfRange(smilebasicFunctionName, 2);
         }
-        if (!p.sprite.isSpriteDefined(id))
-        {
-            throw new IllegalFunctionCall("SPCHR", 1);
-        }
-        if(!V.isDefault && !W.isDefault)
-        {
-            int u = defno;
-            int v = cast(int)V;
-            int w = 16, h = 16, attr = 1;
-            if(!ATTR.isDefault)
-            {
-                w = cast(int)W;
-                h = cast(int)H;
-                attr = cast(int)ATTR;
-            }
-            else
-            {
-                if(!W.isDefault && !H.isDefault)
-                {
-                    w = cast(int)W;
-                    h = cast(int)H;
-                }
-                if(!W.isDefault && H.isDefault)
-                {
-                    attr = cast(int)W;
-                }
-            }
-            p.sprite.spchr(id, u, v, w, h, cast(SpriteAttr)attr);
-            return;
-        }
         p.sprite.spchr(id, defno);
+    }
+    static void SPCHR(PetitComputer p, int id, int U, int V)
+    {
+        SPCHR(p, id, U, V, 16, 16, 1);
+    }
+    static void SPCHR(PetitComputer p, int id, int U, int V, int ATTR)
+    {
+        SPCHR(p, id, U, V, 16, 16, ATTR);
+    }
+    static void SPCHR(PetitComputer p, int id, int U, int V, int W, int H)
+    {
+        SPCHR(p, id, U, V, W, H, 1);
+    }
+    static void SPCHR(PetitComputer p, int id, int u, int v, int w, int h, int attr)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        if (!p.sprite.isSpriteDefined(id))
+            throw new IllegalFunctionCall(smilebasicFunctionName, 1);
+        if (u < 0)
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        if (v < 0)
+            throw new OutOfRange(smilebasicFunctionName, 3);
+        if (w > p.graphic.width || w < 0)
+            throw new OutOfRange(smilebasicFunctionName, 4);
+        if (h > p.graphic.height || h < 0)
+            throw new OutOfRange(smilebasicFunctionName, 5);
+        if (u + w > p.graphic.width)
+            throw new OutOfRange(smilebasicFunctionName);
+        if (v + h > p.graphic.height)
+            throw new OutOfRange(smilebasicFunctionName);
+        p.sprite.spchr(id, u, v, w, h, cast(SpriteAttr)attr);
     }
     static void SPCHR(PetitComputer p, int id, out int defno)
     {
