@@ -1603,6 +1603,11 @@ class BuiltinFunction
         int w, h, attr;
         SPCHR(p, id, u, v, w, h , attr);
     }
+    static void SPCHR(PetitComputer p, int id, out int u, out int v, out int attr)
+    {
+        int w, h;
+        SPCHR(p, id, u, v, w, h , attr);
+    }
     static void SPCHR(PetitComputer p, int id, out int u, out int v, out int w, out int h)
     {
         int attr;
