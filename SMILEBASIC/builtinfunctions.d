@@ -1474,6 +1474,17 @@ class BuiltinFunction
             return;
         p.sprite.spset(ix, u, v, w, h, cast(SpriteAttr)attr);
     }
+    static void SPSET(PetitComputer p, int defno, out int ix)
+    {
+        if (!p.sprite.isValidDef(defno))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        ix = p.sprite.allocSprite();
+        if (ix == -1)
+            return;
+        p.sprite.spset(ix, defno);
+    }
     static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
         if (!p.sprite.isValidSpriteId(id))

@@ -823,6 +823,10 @@ class Sprite
         synchronized (this)
             sprites[id] = SpriteData(id, spdef, 0/*要調査*/);
     }
+    int allocSprite()
+    {
+        return allocSprite(0, petitcom.displaynum ? cast(int)sprites.length - spmax - 1 : spmax - 1);
+    }
     int allocSprite(int lower, int upper)
     {
         for (int i = lower; i <= upper; i++)
