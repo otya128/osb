@@ -2360,6 +2360,14 @@ class BuiltinFunction
         {
             throw new OutOfRange("BGPUT", 1);
         }
+        if (x < 0 || x >= p.getBG(layer).width)
+        {
+            throw new OutOfRange("BGPUT", 2);
+        }
+        if (y < 0 || y >= p.getBG(layer).height)
+        {
+            throw new OutOfRange("BGPUT", 3);
+        }
         p.getBG(layer).put(x, y, screendata);
     }
     static void BGHOME(PetitComputer p, int layer, int x, int y)
