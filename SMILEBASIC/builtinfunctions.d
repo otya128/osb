@@ -1398,7 +1398,7 @@ class BuiltinFunction
         formatValue(w, val, f);
         return cast(immutable)(w.data);
     }
-    static void SPSET(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
+    static void SPSET(PetitComputer p, int id, int defno)
     {
         if (!p.sprite.isValidSpriteId(id))
         {
@@ -1408,33 +1408,33 @@ class BuiltinFunction
         {
             throw new OutOfRange(smilebasicFunctionName, 2);
         }
-        if(!V.isDefault && !W.isDefault)
-        {
-            int u = defno;
-            int v = cast(int)V;
-            int w = 16, h = 16, attr = 1;
-            if(!ATTR.isDefault)
-            {
-                w = cast(int)W;
-                h = cast(int)H;
-                attr = cast(int)ATTR;
-            }
-            else
-            {
-                if(!W.isDefault && !H.isDefault)
-                {
-                    w = cast(int)W;
-                    h = cast(int)H;
-                }
-                if(!W.isDefault && H.isDefault)
-                {
-                    attr = cast(int)W;
-                }
-            }
-            p.sprite.spset(id, u, v, w, h, cast(SpriteAttr)attr);
-            return;
-        }
         p.sprite.spset(id, defno);
+    }
+    static void SPSET(PetitComputer p, int id, int U, int V)
+    {
+        SPSET(p, id, U, V, 16, 16, 1);
+    }
+    static void SPSET(PetitComputer p, int id, int U, int V, int ATTR)
+    {
+        SPSET(p, id, U, V, 16, 16, ATTR);
+    }
+    static void SPSET(PetitComputer p, int id, int U, int V, int W, int H)
+    {
+        SPSET(p, id, U, V, W, H, 1);
+    }
+    static void SPSET(PetitComputer p, int id, int u, int v, int w, int h, int attr)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        if (u < 0)
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        if (v < 0)
+            throw new OutOfRange(smilebasicFunctionName, 3);
+        if (u + w >= p.graphic.width)
+            throw new OutOfRange(smilebasicFunctionName);
+        if (v + h >= p.graphic.height)
+            throw new OutOfRange(smilebasicFunctionName);
+        p.sprite.spset(id, u, v, w, h, cast(SpriteAttr)attr);
     }
     static void SPSET(PetitComputer p, int lower, int upper, int defno, out int ix)
     {
