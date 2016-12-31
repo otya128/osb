@@ -356,13 +356,15 @@ class Sprite
     void spchr(int i, int d)
     {
         i = spid(i);
-        sprites[i].change(SPDEFTable[d]);
+        synchronized (this)
+            sprites[i].change(SPDEFTable[d]);
     }
     void spchr(int id, int u, int v, int w, int h, SpriteAttr attr)
     {
         id = spid(id);
         auto spdef = SpriteDef(u, v, w, h, sprites[id].homex, sprites[id].homey, attr);
-        sprites[id].change(spdef);
+        synchronized (this)
+            sprites[id].change(spdef);
     }
     void getSpchr(int i, out int d)
     {
