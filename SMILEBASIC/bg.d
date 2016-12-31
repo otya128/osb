@@ -187,6 +187,11 @@ class BG
         this.scalex = x;
         this.scaley = y;
     }
+    void getScale(out double x, out double y)
+    {
+        x = this.scalex;
+        y = this.scaley;
+    }
     void rot(int rot)
     {
         this.r = rot;

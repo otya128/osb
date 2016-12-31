@@ -2378,6 +2378,14 @@ class BuiltinFunction
         }
         p.getBG(layer).scale(x, y);
     }
+    static void BGSCALE(PetitComputer p, int layer, out double x, out double y)
+    {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGSCALE", 1);
+        }
+        p.getBG(layer).getScale(x, y);
+    }
     static void BGROT(PetitComputer p, int layer, int rot)
     {
         if (!p.isValidLayer(layer))
