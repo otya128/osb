@@ -1695,6 +1695,9 @@ class PetitComputer
         SDL_SetClipboardText(ws.to!string.toStringz);
     }
 
+    bool callback;
+    int callidx = 0;
+
     //プチコン内部表現はRGB5_A1
     static uint toGLColor(GLenum format, ubyte r, ubyte g, ubyte b, ubyte a)
     {

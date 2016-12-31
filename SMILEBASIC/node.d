@@ -51,6 +51,8 @@ enum NodeType
     Exec,
     Use,
     Linput,
+    CallSprite,
+    CallBG,
 }
 abstract class Node
 {
@@ -695,5 +697,21 @@ class Linput : Statement
         this.type = NodeType.Linput;
         this.hasGuide = false;
         this.expression = expr;
+    }
+}
+class CallSprite : Statement
+{
+    this(SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.CallSprite;
+    }
+}
+class CallBG : Statement
+{
+    this(SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.CallBG;
     }
 }

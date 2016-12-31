@@ -939,6 +939,23 @@ class Parser
                         }
                     }
                     lex.popFront();
+                    if (token.type == TokenType.Call)
+                    {
+                        if (lex.front.type == TokenType.Iden)
+                        {
+                            auto arg = std.uni.toUpper(lex.front.value.castString);
+                            if (arg == "SPRITE")
+                            {
+                                node = new CallSprite(lex.location);
+                                break;
+                            }
+                            if (arg == "BG")
+                            {
+                                node = new CallBG(lex.location);
+                                break;
+                            }
+                        }
+                    }
                     //命令呼び出し
                     auto func = new CallFunctionStatement(name, lex.location);
                     node = func;

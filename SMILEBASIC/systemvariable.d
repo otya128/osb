@@ -10,6 +10,9 @@ class SystemVariable
     @property
         void value(Value value)
         {
+            //v3.3.2
+            //TIME$=1,TIME$="1"=>Type mismatch(runtime)
+            //MAINCNT=1,MAINCNT="1"=>Syntax error(runtime)
             throw new TypeMismatch();
         }
 }
@@ -138,4 +141,11 @@ class ProgramSlot : SystemVariable
         {
             return Value(vm.petitcomputer.program.currentSlot);
         }
+}
+class CallIndex : SystemVariable
+{
+    @property override Value value()
+    {
+        return Value(vm.petitcomputer.callidx);
+    }
 }

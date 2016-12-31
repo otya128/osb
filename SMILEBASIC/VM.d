@@ -85,6 +85,22 @@ struct Callback
             return !func.isDead;
         return false;
     }
+    void opCall(VM vm)
+    {
+        if (!isCallable)
+            return;
+        if (type == CallbackType.label)
+        {
+            vm.pushBackTrace("");
+            vm.pushpc;
+            vm.setCurrentSlot(slot.index);
+            vm.pc = label - 1;
+        }
+        if (type == CallbackType.function_)
+        {
+            vm.call(func, 0, 0);
+        }
+    }
 }
 
 class VM
@@ -500,6 +516,42 @@ class VM
         result.type = CallbackType.label;
         result.label = label;
         return result;
+    }
+    void call(Function func, int argCount, int outArgCount)
+    {
+        alias vm = this;
+        if(func.argCount != argCount)
+        {
+            throw new IllegalFunctionCall(func.name.to!string);
+        }
+        if(func.outArgCount != outArgCount)
+        {
+            throw new IllegalFunctionCall(func.name.to!string);
+        }
+        vm.pushBackTrace(func.name);
+        //TODO:args
+        auto bp = vm.stacki;
+        vm.push(Value(vm.currentFunction));
+        vm.currentFunction = func;
+        vm.push(Value(vm.currentData));
+        vm.currentData.index = 0;
+        vm.currentData.table = func.scope_.data;
+        vm.push(Value(vm.bp));
+        vm.pushpc;//vm.push(Value(vm.pc));
+        vm.bp = bp;
+        vm.pc = func.address - 1;
+        vm.stacki += func.variableIndex - 1;
+        foreach(wstring k, VMVariable v ; func.variable)
+        {
+            if(v.index > 0)
+            {
+                vm.stack[bp + v.index] = Value(v.type);
+            }
+        }
+        if (func.isCommon)
+        {
+            vm.setCurrentSlot(func.slot.index);
+        }
     }
 }
 enum CodeType
@@ -1612,38 +1664,7 @@ class CallFunctionCode : Code
         {
             resolve(vm);
         }
-        if(func.argCount != this.argCount)
-        {
-            throw new IllegalFunctionCall(name.to!string);
-        }
-        if(func.outArgCount != this.outArgCount)
-        {
-            throw new IllegalFunctionCall(name.to!string);
-        }
-        vm.pushBackTrace(name);
-        //TODO:args
-        auto bp = vm.stacki;
-        vm.push(Value(vm.currentFunction));
-        vm.currentFunction = func;
-        vm.push(Value(vm.currentData));
-        vm.currentData.index = 0;
-        vm.currentData.table = func.scope_.data;
-        vm.push(Value(vm.bp));
-        vm.pushpc;//vm.push(Value(vm.pc));
-        vm.bp = bp;
-        vm.pc = func.address - 1;
-        vm.stacki += func.variableIndex - 1;
-        foreach(wstring k, VMVariable v ; func.variable)
-        {
-            if(v.index > 0)
-            {
-                vm.stack[bp + v.index] = Value(v.type);
-            }
-        }
-        if (func.isCommon)
-        {
-            vm.setCurrentSlot(func.slot.index);
-        }
+        vm.call(func, this.argCount, this.outArgCount);
     }
     override string toString(VM vm)
     {
@@ -1690,34 +1711,7 @@ class CallFunctionS : Code
     }
     void callFunc(Function func, VM vm)
     {
-        if(func.argCount != this.argCount)
-        {
-            throw new IllegalFunctionCall(func.name.to!string);
-        }
-        if(func.outArgCount != this.outArgCount)
-        {
-            throw new IllegalFunctionCall(func.name.to!string);
-        }
-        //TODO:args
-        auto bp = vm.stacki;
-        vm.push(Value(vm.currentFunction));
-        vm.currentFunction = func;
-        vm.push(Value(vm.currentData));
-        vm.currentData.index = 0;
-        vm.currentData.table = func.scope_.data;
-        vm.push(Value(vm.bp));
-        vm.pushpc;
-        vm.bp = bp;
-        vm.pc = func.address - 1;
-        vm.stacki += func.variableIndex - 1;
-        foreach(wstring k, VMVariable v ; func.variable)
-        {
-            if(v.index > 0)
-            {
-                vm.stack[bp + v.index] = Value(v.type);
-            }
-        }
-        vm.setCurrentSlot(func.slot.index);
+        vm.call(func, argCount, outArgCount);
     }
     override void execute(VM vm)
     {
@@ -1759,7 +1753,6 @@ class CallFunctionS : Code
             callBuintinFunc(bfunc, vm);
             return;
         }
-        vm.pushBackTrace(name.name);
         callFunc(func, vm);
     }
     override string toString(VM vm)
@@ -2681,5 +2674,72 @@ class ConvertBool : Code
         auto top = &vm.stack[vm.stacki - 1];
         top.integerValue = top.boolValue;
         top.type = ValueType.Integer;
+    }
+}
+
+/+
+SPFUNC 0,@A
+FOR I=1TO 511
+SPFUNC I,@B
+NEXT
+CALL SPRITE
+END
+@A
+?"BEFORE CALL BG",CALLIDX
+CALL BG
+?"AFTER CALL BG",CALLIDX
+RETUERN
+@B
+?CALLIDX
+RETURN
+
+RESULT
+BEFORE CALL BG  0
+AFTER CALL BG   4
+=>SPFUNC 1~511 is not called
++/
+class InitCallback : Code
+{
+    override void execute(VM vm)
+    {
+        vm.petitcomputer.callidx = -1;
+        vm.petitcomputer.callback = true;
+    }
+}
+
+class CallSprite : Code
+{
+    override void execute(VM vm)
+    {
+        vm.petitcomputer.callidx++;
+        if (!vm.petitcomputer.callback)
+        {
+            return;
+        }
+        if (!vm.petitcomputer.sprite.isValidSpriteId(vm.petitcomputer.callidx))
+        {
+            vm.petitcomputer.callback = false;
+            return;
+        }
+        auto callback = vm.petitcomputer.sprite.getCallback(vm.petitcomputer.callidx);
+        vm.pc--;
+        if (!callback.isCallable)
+        {
+            return;
+        }
+        callback(vm);
+    }
+}
+
+class CallBG : Code
+{
+    override void execute(VM vm)
+    {
+        if (!vm.petitcomputer.callback)
+        {
+            vm.petitcomputer.callidx++;
+            return;
+        }
+        vm.petitcomputer.callidx++;
     }
 }

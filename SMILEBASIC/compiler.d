@@ -227,6 +227,7 @@ class Compiler
         addSystemVariable("HARDWARE", new Hardware());
         addSystemVariable("MILLISEC", new MilliSecond());
         addSystemVariable("PRGSLOT", new ProgramSlot());
+        addSystemVariable("CALLIDX", new CallIndex());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {
@@ -970,6 +971,16 @@ class Compiler
         genCode(new otya.smilebasic.vm.Linput);
         compilePopVar(linput.expression, sc);
     }
+    void compileCallSprite(otya.smilebasic.node.CallSprite call, Scope sc)
+    {
+        genCode(new InitCallback);
+        genCode(new otya.smilebasic.vm.CallSprite);
+    }
+    void compileCallBG(otya.smilebasic.node.CallBG call, Scope sc)
+    {
+        genCode(new InitCallback);
+        genCode(new otya.smilebasic.vm.CallBG);
+    }
     void compileStatement(Statement i, Scope s)
     {
         switch(i.type)
@@ -1246,6 +1257,12 @@ class Compiler
                 break;
             case NodeType.Linput:
                 compileLinput(cast(otya.smilebasic.node.Linput)i, s);
+                break;
+            case NodeType.CallSprite:
+                compileCallSprite(cast(otya.smilebasic.node.CallSprite)i, s);
+                break;
+            case NodeType.CallBG:
+                compileCallBG(cast(otya.smilebasic.node.CallBG)i, s);
                 break;
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);

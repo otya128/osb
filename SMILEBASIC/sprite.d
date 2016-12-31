@@ -1191,4 +1191,8 @@ class Sprite
         id = spid(id);
         sprites[id].callback = callback;
     }
+    Callback getCallback(int id)
+    {
+        return sprites[spid(id)].callback;
+    }
 }
