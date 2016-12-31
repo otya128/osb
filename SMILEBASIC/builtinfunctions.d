@@ -1430,9 +1430,13 @@ class BuiltinFunction
             throw new OutOfRange(smilebasicFunctionName, 2);
         if (v < 0)
             throw new OutOfRange(smilebasicFunctionName, 3);
-        if (u + w >= p.graphic.width)
+        if (w > p.graphic.width || w < 0)
+            throw new OutOfRange(smilebasicFunctionName, 4);
+        if (h > p.graphic.height || h < 0)
+            throw new OutOfRange(smilebasicFunctionName, 5);
+        if (u + w > p.graphic.width)
             throw new OutOfRange(smilebasicFunctionName);
-        if (v + h >= p.graphic.height)
+        if (v + h > p.graphic.height)
             throw new OutOfRange(smilebasicFunctionName);
         p.sprite.spset(id, u, v, w, h, cast(SpriteAttr)attr);
     }
@@ -1469,6 +1473,18 @@ class BuiltinFunction
             throw new OutOfRange("SPSET", 2);
         if (upper < lower)
             throw new IllegalFunctionCall("SPSET", 2);
+        if (u < 0)
+            throw new OutOfRange(smilebasicFunctionName, 3);
+        if (v < 0)
+            throw new OutOfRange(smilebasicFunctionName, 4);
+        if (w > p.graphic.width || w < 0)
+            throw new OutOfRange(smilebasicFunctionName, 5);
+        if (h > p.graphic.height || h < 0)
+            throw new OutOfRange(smilebasicFunctionName, 6);
+        if (u + w > p.graphic.width)
+            throw new OutOfRange(smilebasicFunctionName);
+        if (v + h > p.graphic.height)
+            throw new OutOfRange(smilebasicFunctionName);
         ix = p.sprite.allocSprite(lower, upper);
         if (ix == -1)
             return;
