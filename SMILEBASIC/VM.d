@@ -2561,3 +2561,50 @@ class Linput : Code
         vm.push(Value(vm.petitcomputer.input(guide.castDString, false, true)));
     }
 }
+
+class LogicalAnd : Code
+{
+    int addr;
+    override void execute(VM vm)
+    {
+        if (vm.stacki == 0)
+        {
+            throw new StackUnderFlow();
+        }
+        //TRUE->POP
+        //FALSE->JUMP
+        if (!vm.stack[vm.stacki - 1].boolValue)
+        {
+            vm.pc = addr - 1;
+        }
+        else
+        {
+            vm.decSP;
+        }
+    }
+}
+class ConvertBool : Code
+{
+    //0 => 0(int)
+    //-1,-2,-3... => 1(int)
+    //1,2,3... => 1(int)
+    //"string" => 3(int)
+    override void execute(VM vm)
+    {
+        if (vm.stacki == 0)
+        {
+            throw new StackUnderFlow();
+        }
+        auto top = &vm.stack[vm.stacki - 1];
+        if (top.type == ValueType.String)
+        {
+            top.type = ValueType.Integer;
+            top.integerValue = 3;
+        }
+        else if (top.isNumber)
+        {
+            top.type = ValueType.Integer;
+            top.integerValue = top.boolValue;
+        }
+    }
+}

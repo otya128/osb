@@ -502,6 +502,16 @@ class Compiler
             case NodeType.BinaryOperator:
                 {
                     auto binop = cast(BinaryOperator)exp;
+                    if(binop.operator == TokenType.LogicalAnd)
+                    {
+                        compileExpression(binop.item1, sc);
+                        auto jmp = new LogicalAnd();
+                        genCode(jmp);
+                        compileExpression(binop.item2, sc);
+                        genCode(new ConvertBool());  
+                        jmp.addr = cast(int)code.length;
+                        break;
+                    }
                     compileExpression(binop.item1, sc);
                     compileExpression(binop.item2, sc);
                     if(binop.operator == TokenType.LBracket)
