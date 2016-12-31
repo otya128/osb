@@ -1883,6 +1883,22 @@ class BuiltinFunction
         }
         return p.sprite.spused(id);
     }
+    static void SPFUNC(PetitComputer p, int id, wstring func)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange("SPFUNC", 1);
+        }
+        /*
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPFUNC", 1);
+        }*/
+        auto callback = p.vm.createCallback(func);
+        if (callback.type == CallbackType.none)
+            throw new IllegalFunctionCall("SPFUNC"/*, 2*/);
+        p.sprite.spfunc(id, callback);
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");

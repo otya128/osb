@@ -98,7 +98,7 @@ class Function
     Scope scope_;
     bool isCommon;
     VMSlot slot;
-    bool isDead;/*common function*/
+    bool isDead;
     /**
     0:bp
     1:pc

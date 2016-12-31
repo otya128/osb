@@ -60,7 +60,33 @@ class VMSlot
         int backtrace;
     }
     ExecData execData;
+    //This value is changed each time slot is used.
+    size_t unique;
 }
+
+enum CallbackType
+{
+    none,
+    label,
+    function_,
+}
+struct Callback
+{
+    CallbackType type;
+    Function func;
+    VMSlot slot;
+    size_t slotUnique;
+    int label;
+    bool isCallable()
+    {
+        if (type == CallbackType.label)
+            return slot.unique == slotUnique;
+        if (type == CallbackType.function_)
+            return func.isDead;
+        return false;
+    }
+}
+
 class VM
 {
     VMSlot[5] slots;
@@ -119,9 +145,9 @@ class VM
             {
                 if (f.isCommon)
                 {
-                    f.isDead = true;
                     commonFunctions.remove(f.name);
                 }
+                f.isDead = true;
             }
         auto s = this.slots[slot];
         s.hasExecReturnAddress = false;
@@ -148,7 +174,9 @@ class VM
         s.globalData = otya.smilebasic.type.Data(gdt, 0);
         s.globalLabel = globalLabel;
         s.debugInfo = dinfo;
+        s.unique = unique++;
     }
+    int unique;
     Code getCurrent()
     {
         return currentSlot.code[pc];
@@ -400,9 +428,9 @@ class VM
         {
             slot = currentSlot;
         }
-        if (label in slot.globalLabel)
+        if (name.name in slot.globalLabel)
             return true;
-        if (currentFunction && label in currentFunction.label)
+        if (currentFunction && name.name in currentFunction.label)
             return true;
         return false;
     }
@@ -422,15 +450,56 @@ class VM
         {
             slot = currentSlot;
         }
-        if (var in slot.globalTable)
+        if (name.name in slot.globalTable)
             return true;
-        if (currentFunction && var in currentFunction.variable)
+        if (currentFunction && name.name in currentFunction.variable)
             return true;
         return false;
     }
     bool checkSlotNumber(int slot)
     {
         return slot >= 0 && slot < slotSize;
+    }
+    Callback createCallback(wstring funcOrLabel)
+    {
+        Callback result;
+        result.type = CallbackType.none;
+        import otya.smilebasic.builtinfunctions;
+        auto name = parse(funcOrLabel);
+        VMSlot slot;
+        if (name.hasSlot)
+        {
+            if (!checkSlotNumber(name.slot))
+            {
+                return result;
+            }
+            slot = slots[name.slot];
+        }
+        else
+        {
+            slot = currentSlot;
+        }
+        result.slot = slot;
+        result.slotUnique = slot.unique;
+        Function func;
+        func = slot.functions.get(name.name, null);
+        if (func is null)
+            func = commonFunctions.get(name.name, null);
+        if (func)
+        {
+            result.type = CallbackType.function_;
+            result.func = func;
+            return result;
+        }
+        //global only
+        int label = slot.globalLabel.get(name.name, int.min);
+        if (label == int.min)
+        {
+            return result;
+        }
+        result.type = CallbackType.label;
+        result.label = label;
+        return result;
     }
 }
 enum CodeType

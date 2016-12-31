@@ -1,6 +1,7 @@
 module otya.smilebasic.sprite;
 import otya.smilebasic.petitcomputer;
 import otya.smilebasic.error;
+import otya.smilebasic.vm;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 enum SpriteAttr
@@ -191,6 +192,7 @@ struct SpriteData
     double scalex;
     double scaley;
     double r;
+    Callback callback;
     this(int id)
     {
         this.id = id;
@@ -1183,5 +1185,10 @@ class Sprite
     {
         id = spid(id);
         return sprites[id].define;
+    }
+    void spfunc(int id, Callback callback)
+    {
+        id = spid(id);
+        sprites[id].callback = callback;
     }
 }
