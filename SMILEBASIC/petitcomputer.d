@@ -864,6 +864,7 @@ class PetitComputer
                         }
                     }
                 }
+                maincntRender++;
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -982,7 +983,6 @@ class PetitComputer
                 long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                 if(delay > 0)
                     SDL_Delay(cast(uint)delay);
-                maincntRender++;
             }
         }
         catch(Throwable t)
