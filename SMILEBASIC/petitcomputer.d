@@ -1023,7 +1023,7 @@ class PetitComputer
     void printInformation()
     {
         console.print("otyaSMILEBASIC ver ", versionString, "\n");
-        console.print("(C)2015-2016 otya\n");
+        console.print("(C)2015-2017 otya\n");
         console.print("8327164 bytes free\n");
         console.print("\n");
         printPrompt();
