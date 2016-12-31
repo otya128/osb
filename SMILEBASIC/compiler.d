@@ -512,6 +512,16 @@ class Compiler
                         jmp.addr = cast(int)code.length;
                         break;
                     }
+                    if (binop.operator == TokenType.LogicalOr)
+                    {
+                        compileExpression(binop.item1, sc);
+                        auto jmp = new LogicalOr();
+                        genCode(jmp);
+                        compileExpression(binop.item2, sc);
+                        jmp.addr = cast(int)code.length;
+                        genCode(new ConvertBool());
+                        break;
+                    }
                     compileExpression(binop.item1, sc);
                     compileExpression(binop.item2, sc);
                     if(binop.operator == TokenType.LBracket)

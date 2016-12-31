@@ -2583,6 +2583,29 @@ class LogicalAnd : Code
         }
     }
 }
+
+class LogicalOr : Code
+{
+    int addr;
+    override void execute(VM vm)
+    {
+        if (vm.stacki == 0)
+        {
+            throw new StackUnderFlow();
+        }
+        //FALSE->POP
+        //TRUE->JUMP
+        if (vm.stack[vm.stacki - 1].boolValue)
+        {
+            vm.pc = addr - 1;
+        }
+        else
+        {
+            vm.decSP;
+        }
+    }
+}
+
 class ConvertBool : Code
 {
     //0 => 0(int)
