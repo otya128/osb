@@ -1769,6 +1769,10 @@ class BuiltinFunction
     {
         p.sprite.splink(child, parent);
     }
+    static int SPLINK(PetitComputer p, int id)
+    {
+        return p.sprite.splink(id);
+    }
     static void SPUNLINK(PetitComputer p, int id)
     {
         if (!p.sprite.isSpriteDefined(id))

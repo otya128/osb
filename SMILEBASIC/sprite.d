@@ -802,6 +802,14 @@ class Sprite
         }
         return id;
     }
+    int unspid(int id)
+    {
+        if(petitcom.displaynum == 1)
+        {
+            return id - this.spmax;
+        }
+        return id;
+    }
     void spset(int id, int defno)
     {
         id = spid(id);
@@ -1055,6 +1063,19 @@ class Sprite
             sprites[child].linkz = sprites[child].z + sprites[parent].linkz;
             zChange = true;
         }
+    }
+    int splink(int id)
+    {
+        if (!isSpriteDefined(id))
+        {
+            return -1;
+        }
+        id = spid(id);
+        if (!sprites[id].parent)
+        {
+            return -1;
+        }
+        return unspid(sprites[id].parent.id);
     }
     //再帰的にUNLINKされるのか？
     void spunlink(int id)
