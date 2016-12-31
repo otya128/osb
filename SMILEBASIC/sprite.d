@@ -1204,6 +1204,10 @@ class Sprite
             return sprites.length > id + spmax;
         }
     }
+    bool isValidDef(int def)
+    {
+        return def >= 0 && def < SPDEFTable.length;
+    }
     bool spused(int id)
     {
         id = spid(id);

@@ -96,6 +96,14 @@ class BuiltinFunctions
 alias DefaultValue!(int, false) optionalint;
 alias DefaultValue!(int, false) optionaldouble;
 alias DefaultValue!(int, false) optionalstring;
+template smilebasicFunctionName(string func = __FUNCTION__)
+{
+    static fn = func[func.lastIndexOf('.') + 1..$];
+    auto smilebasicFunctionName()
+    {
+        return fn;
+    }
+}
 /**
 ここに関数を定義すればコンパイル時にBuiltinFunctionに変換してくれる便利なクラス
 */
@@ -1392,6 +1400,14 @@ class BuiltinFunction
     }
     static void SPSET(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isValidDef(defno))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        }
         if(!V.isDefault && !W.isDefault)
         {
             int u = defno;
@@ -1428,6 +1444,10 @@ class BuiltinFunction
             throw new OutOfRange("SPSET", 2);
         if (upper < lower)
             throw new IllegalFunctionCall("SPSET", 2);
+        if (!p.sprite.isValidDef(defno))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 3);
+        }
         ix = p.sprite.allocSprite(lower, upper);
         if (ix == -1)
             return;
@@ -1456,6 +1476,14 @@ class BuiltinFunction
     }
     static void SPCHR(PetitComputer p, int id, int defno, DefaultValue!(int, false) V, DefaultValue!(int, false) W, DefaultValue!(int, false) H, DefaultValue!(int, false) ATTR)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isValidDef(defno))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCHR", 1);
@@ -1490,6 +1518,14 @@ class BuiltinFunction
     }
     static void SPCHR(PetitComputer p, int id, out int defno)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isValidDef(defno))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCHR", 1);
@@ -1498,6 +1534,10 @@ class BuiltinFunction
     }
     static void SPCHR(PetitComputer p, int id, out int u, out int v, out int w, out int h, out int attr)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCHR", 1);
@@ -1518,6 +1558,10 @@ class BuiltinFunction
     }
     static void SPHIDE(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPHIDE", 1);
@@ -1526,6 +1570,10 @@ class BuiltinFunction
     }
     static void SPSHOW(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPSHOW", 1);
@@ -1534,6 +1582,10 @@ class BuiltinFunction
     }
     static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y, double z)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPOFS", 1);
@@ -1549,6 +1601,10 @@ class BuiltinFunction
     }
     static void SPOFS(PetitComputer p, int id, DefaultValue!double x, DefaultValue!double y)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPOFS", 1);
@@ -1565,6 +1621,10 @@ class BuiltinFunction
     @StartOptional("z")
     static void SPOFS(PetitComputer p, int id, out double x, out double y, out double z)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPOFS", 1);
@@ -1576,6 +1636,10 @@ class BuiltinFunction
         //TODO:配列
         auto args = retro(va_args);
         int no = args[0].castInteger;
+        if (!p.sprite.isValidSpriteId(no))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(no))
         {
             throw new IllegalFunctionCall("SPANIM", 1);
@@ -1620,26 +1684,46 @@ class BuiltinFunction
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int A)
     {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         int dummy;
         p.sprite.getspdef(id, U, V, dummy, dummy, dummy, dummy, A);
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H)
     {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         int dummy;
         p.sprite.getspdef(id, U, V, W, H, dummy, dummy, dummy);
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int A)
     {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         int dummy;
         p.sprite.getspdef(id, U, V, W, H, dummy, dummy, A);
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int HX, out int HY)
     {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         int dummy;
         p.sprite.getspdef(id, U, V, W, H, HX, HY, dummy);
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int W, out int H, out int HX, out int HY, out int A)
     {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         p.sprite.getspdef(id, U, V, W, H, HX, HY, A);
     }
     static void SPDEF(PetitComputer p, Value[] va_args2)
@@ -1685,6 +1769,10 @@ class BuiltinFunction
         }
         {
             int defno = va_args[0].castInteger;
+            if (!p.sprite.isValidDef(defno))
+            {
+                throw new OutOfRange(smilebasicFunctionName, 1);
+            }
             int U = va_args[1].castInteger;
             int V = va_args[2].castInteger;
             int W = 16, H = 16, HX = 0, HY = 0, ATTR = 1;
@@ -1731,10 +1819,20 @@ class BuiltinFunction
         if(i.isDefault)
             p.sprite.spclr();
         else
+        {
+            if (!p.sprite.isValidSpriteId(cast(int)i))
+            {
+                throw new OutOfRange(smilebasicFunctionName, 1);
+            }
             p.sprite.spclr(cast(int)i);
+        }
     }
     static void SPHOME(PetitComputer p, int i, int hx, int hy)
     {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(i))
         {
             throw new IllegalFunctionCall("SPHOME", 1);
@@ -1743,6 +1841,10 @@ class BuiltinFunction
     }
     static void SPSCALE(PetitComputer p, int i, double x, double y)
     {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(i))
         {
             throw new IllegalFunctionCall("SPSCALE", 1);
@@ -1751,6 +1853,10 @@ class BuiltinFunction
     }
     static void SPROT(PetitComputer p, int i, double rot)
     {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(i))
         {
             throw new IllegalFunctionCall("SPROT", 1);
@@ -1759,6 +1865,10 @@ class BuiltinFunction
     }
     static void SPCOLOR(PetitComputer p, int id, int color)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOLOR", 1);
@@ -1767,14 +1877,30 @@ class BuiltinFunction
     }
     static void SPLINK(PetitComputer p, int child, int parent)
     {
+        if (!p.sprite.isValidSpriteId(child))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isValidSpriteId(parent))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 2);
+        }
         p.sprite.splink(child, parent);
     }
     static int SPLINK(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange("SPLINK", 1);
+        }
         return p.sprite.splink(id);
     }
     static void SPUNLINK(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPUNLINK", 1);
@@ -1783,6 +1909,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!(int, false) scale)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1792,6 +1922,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, DefaultValue!int scale, int mask)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1801,6 +1935,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, int scale)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1809,6 +1947,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale, int mask)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1818,6 +1960,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h, DefaultValue!int scale)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1827,6 +1973,10 @@ class BuiltinFunction
     }
     static void SPCOL(PetitComputer p, int id, int x, int y, int w, int h)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         if (!p.sprite.isSpriteDefined(id))
         {
             throw new IllegalFunctionCall("SPCOL", 1);
@@ -1835,28 +1985,52 @@ class BuiltinFunction
     }
     static int SPHITSP(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         //spset is not checked
         return p.sprite.sphitsp(id);
     }
     static int SPHITSP(PetitComputer p, int id, int min)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         return p.sprite.sphitsp(id, min, 511);//?
     }
     static int SPHITSP(PetitComputer p, int id, int min, int max)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         return p.sprite.sphitsp(id, min, max);
     }
     static void SPVAR(PetitComputer p, int id, int var, double val)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         //spset is not checked
         p.sprite.spvar(id, var, val);
     }
     static double SPVAR(PetitComputer p, int id, int var)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         return p.sprite.spvar(id, var);
     }
     static int SPCHK(PetitComputer p, int id)
     {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
         return p.sprite.spchk(id);
     }
     static void SPPAGE(PetitComputer p, int page)
