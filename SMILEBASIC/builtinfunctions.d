@@ -2080,43 +2080,83 @@ class BuiltinFunction
             }
             return;
         }
+        if (!p.isValidLayer(cast(int)layer))
+        {
+            throw new OutOfRange("BGCLR", 1);
+        }
         p.getBG(cast(int)layer).clear;
     }
     static void BGSCREEN(PetitComputer p, int layer, int w, int h)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGSCREEN", 1);
+        }
         p.getBG(layer).screen(w, h);
     }
     static void BGOFS(PetitComputer p, int layer, int x, int y, DefaultValue!(int, false) z)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGOFS", 1);
+        }
         z.setDefaultValue(p.getBG(layer).offsetz);
         p.getBG(layer).ofs(x, y, cast(int)z);
     }
     static void BGCLIP(PetitComputer p, int layer)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGCLIP", 1);
+        }
         p.getBG(layer).clip();
     }
     static void BGCLIP(PetitComputer p, int layer, int x, int y, int x2, int y2)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGCLIP", 1);
+        }
         p.getBG(layer).clip(x, y, x2, y2);
     }
     static void BGPUT(PetitComputer p, int layer, int x, int y, int screendata)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGPUT", 1);
+        }
         p.getBG(layer).put(x, y, screendata);
     }
     static void BGHOME(PetitComputer p, int layer, int x, int y)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGHOME", 1);
+        }
         p.getBG(layer).home(x, y);
     }
     static void BGSCALE(PetitComputer p, int layer, double x, double y)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGSCALE", 1);
+        }
         p.getBG(layer).scale(x, y);
     }
     static void BGROT(PetitComputer p, int layer, double rot)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGROT", 1);
+        }
         p.getBG(layer).rot(rot);
     }
     static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, int screendata)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGFILL", 1);
+        }
         p.getBG(layer).fill(x, y, x2, y2, screendata);
     }
     static void BGPAGE(PetitComputer p, int page)
@@ -2133,10 +2173,18 @@ class BuiltinFunction
     }
     static void BGSHOW(PetitComputer p, int layer)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGSHOW", 1);
+        }
         p.getBG(layer).show = true;
     }
     static void BGHIDE(PetitComputer p, int layer)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGHIDE", 1);
+        }
         p.getBG(layer).show = false;
     }
     static int BGGET(PetitComputer p, int layer, int x, int y)
@@ -2145,10 +2193,18 @@ class BuiltinFunction
     }
     static int BGGET(PetitComputer p, int layer, int x, int y, int flag)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGGET", 1);
+        }
         return p.getBG(layer).get(x, y, flag);
     }
     static void BGSAVE(PetitComputer p, int layer, int x, int y, int w, int h, Value ary)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGSAVE", 1);
+        }
         if (w < 1)
         {
             throw new OutOfRange("BGSAVE", 4);
@@ -2185,6 +2241,10 @@ class BuiltinFunction
     }
     static void BGLOAD(PetitComputer p, int layer, int x, int y, int w, int h, Value ary, int bgcharoffset)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGLOAD", 1);
+        }
         if (w < 1)
         {
             throw new OutOfRange("BGLOAD", 4);
@@ -2217,6 +2277,10 @@ class BuiltinFunction
     }
     static void BGLOAD(PetitComputer p, int layer, Value ary)
     {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGLOAD", 1);
+        }
         if (!ary.isNumberArray)
         {
             throw new TypeMismatch("BGLOAD", 2);
