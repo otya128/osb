@@ -245,14 +245,24 @@ class BuiltinFunction
     //static ABS = function double(double x) => abs(this.result == ValueType.Double ? 1 : 0);
     static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y, int z)
     {
+        if (!x.isDefault && x < 0 || x >= p.console.consoleWidthC)
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        if (!y.isDefault && y < 0 || y >= p.console.consoleHeightC)
+            throw new OutOfRange(smilebasicFunctionName, 2);
         x.setDefaultValue(p.console.CSRX);
         y.setDefaultValue(p.console.CSRY);
+        if (z < -256 || z > 1024)
+            throw new OutOfRange(smilebasicFunctionName, 3);
         p.console.CSRX = cast(int)x;
         p.console.CSRY = cast(int)y;
         p.console.CSRZ = cast(int)z;
     }
     static void LOCATE(PetitComputer p, DefaultValue!int x, DefaultValue!int y)
     {
+        if (!x.isDefault && x < 0 || x >= p.console.consoleWidthC)
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        if (!y.isDefault && y < 0 || y >= p.console.consoleHeightC)
+            throw new OutOfRange(smilebasicFunctionName, 2);
         x.setDefaultValue(p.console.CSRX);
         y.setDefaultValue(p.console.CSRY);
         p.console.CSRX = cast(int)x;
