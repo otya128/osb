@@ -126,6 +126,10 @@ class Function
         {
             //local変数をあたる
             //それでもだめならOPTION STRICTならエラー
+            if (c.isStrictMode)
+            {
+                throw new UndefinedVariable();
+            }
             this.variable[name] = VMVariable(var = ++variableIndex, c.getType(name));
         }
         return var;
