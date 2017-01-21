@@ -1260,7 +1260,8 @@ class PetitComputer
                             console.print(t.to!string);
                             console.print("\n");
                             writeln(t);
-                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(vm.currentLocation));
+                            loc = vm.currentLocation;
+                            console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
