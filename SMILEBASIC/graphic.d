@@ -1183,7 +1183,7 @@ class Graphic2 : Graphic
             {
                 if (font[iy / scaley * 8 + ix / scalex] >> 24/*is trans*/)
                 {
-                    (buffer + (y + iy) * width + x + ix)[0] = font[iy / scaley * 8 + ix / scaley];
+                    (buffer + (y + iy) * width + x + ix)[0] = font[iy / scaley * 8 + ix / scalex];
                 }
             }
         }
