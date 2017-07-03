@@ -1205,13 +1205,13 @@ class BuiltinFunction
         munch(str, " ");
         if(str.length > 2 && str[0..2] == "&H")
         {
-            int r;
+            uint r;
             str = str[2..$];
-            if (tryParse!(int, wstring)(str, 16, r))
+            if (tryParse!(uint, wstring)(str, 16, r))
             {
                 if (!str.empty)
                     return 0;
-                return r;
+                return cast(int)r;
             }
             else
             {
@@ -1220,13 +1220,13 @@ class BuiltinFunction
         }
         if(str.length > 2 && str[0..2] == "&B")
         {
-            int r;
+            uint r;
             str = str[2..$];
-            if (tryParse!(int, wstring)(str, 2, r))
+            if (tryParse!(uint, wstring)(str, 2, r))
             {
                 if (!str.empty)
                     return 0;
-                return r;
+                return cast(int)r;
             }
             else
             {

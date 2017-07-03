@@ -202,6 +202,13 @@ r"ファイルを書き込みます。
         File f = File(path, "rb");
         DataHeader[1] harray;
         f.rawRead(harray);
+        if (harray[0].magic != "PCBN0001")
+        {
+            f.seek(0);
+            harray[0].dimension = 1;
+            harray[0].dim[] = [cast(int)f.size, 0, 0, 0];
+            harray[0].type = DataType.int_;
+        }
         if (harray[0].dimension != contents.dimCount)
         {
             throw new TypeMismatch("LOAD");
@@ -240,6 +247,10 @@ r"ファイルを書き込みます。
             ushort[] array = new ushort[len];
             f.rawRead(array);
             result = array.map!(x => x.to!T).array;
+        }
+        else
+        {
+            throw new TypeMismatch("LOAD(invalid file)");
         }
         //配列に書き込むというより配列を差し替えている
         contents.array = result;
