@@ -208,7 +208,7 @@ r"ファイルを書き込みます。
         {
             f.seek(0);
             harray[0].dimension = 1;
-            harray[0].dim[] = [cast(int)f.size / int.sizeof, 0, 0, 0];
+            harray[0].dim[] = [cast(int)(f.size / int.sizeof), 0, 0, 0];
             harray[0].type = DataType.int_;
         }
         if (harray[0].dimension != contents.dimCount)
