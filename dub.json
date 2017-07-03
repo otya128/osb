@@ -1,8 +1,8 @@
 {
 	"name": "otyasmilebasic",
 	"dependencies": {
-		"derelict-sdl2": "~>1.9.7",
-		"derelict-gl3": "*"
+		"derelict-sdl2": "1.9.7",
+		"derelict-gl3": "1.0.15"
 	},
 	"sourcePaths": ["SMILEBASIC/"],
 	"importPaths": ["SMILEBASIC/"],
