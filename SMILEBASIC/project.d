@@ -178,6 +178,76 @@ r"ファイルを書き込みます。
         return true;
     }
 
+    bool loadDataFile(T)(FileName file, ref Array!T contents)
+        if (is(T == int) || is(T == double))
+    {
+        wstring project;
+        result = DialogResult.FAILURE;
+        if (file.project.empty)
+            project = convertProjectName(currentProject);
+        else
+        {
+            project = file.project;
+            if (!isValidProjectName(project))
+                throw new IllegalFunctionCall("LOAD");
+        }
+        if (!isValidFilename(file.name))
+            throw new IllegalFunctionCall("LOAD");
+        auto path = buildPath(projectPath, project, "DAT"w, file.name).to!string;
+
+        //show dialog
+        result = DialogResult.SUCCESS;
+        import std.stdio;
+        import std.algorithm;
+        File f = File(path, "rb");
+        DataHeader[1] harray;
+        f.rawRead(harray);
+        if (harray[0].dimension != contents.dimCount)
+        {
+            throw new TypeMismatch("LOAD");
+        }
+        auto dim = harray[0].dim[0..harray[0].dimension];
+        auto len = dim.reduce!((x, y) => x * y);
+        T[] result;
+        if (harray[0].type == DataType.int_)
+        {
+            int[] array = new int[len];
+            f.rawRead(array);
+            static if (!is(T == int))
+            {
+                result = array.map!(x => x.to!T).array;
+            }
+            else
+            {
+                result = array;
+            }
+        }
+        else if (harray[0].type == DataType.double_)
+        {
+            double[] array = new double[len];
+            f.rawRead(array);
+            static if (!is(T == double))
+            {
+                result = array.map!(x => x.to!T).array;
+            }
+            else
+            {
+                result = array;
+            }
+        }
+        else if (harray[0].type == DataType.ushort_)
+        {
+            ushort[] array = new ushort[len];
+            f.rawRead(array);
+            result = array.map!(x => x.to!T).array;
+        }
+        //配列に書き込むというより配列を差し替えている
+        contents.array = result;
+        contents.dim[] = harray[0].dim[];
+        contents.dimCount = harray[0].dimension;
+        return true;
+    }
+
     void saveTextFile(FileName file, wstring content)
     {
         wstring project;
@@ -236,6 +306,8 @@ r"ファイルを書き込みます。
     {
         if (proj.empty)
         {
+            if (currentProject.empty)
+                return "[DEFAULT]";
             return currentProject;
         }
         return proj;

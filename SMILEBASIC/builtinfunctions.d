@@ -2739,54 +2739,84 @@ class BuiltinFunction
         }
         throw new IllegalFunctionCall("LOAD");
     }
-    @BasicName("LOAD")
-    static void LOAD2(PetitComputer p, wstring name, DefaultValue!(int, false) flag)
+    //LOAD"TXT:HOGE",ARRAY Type mismatch(LOAD:2)
+    //LOAD"TXT:HOGE",STR$ Type mismatch(LOAD:2)
+    //LOAD"DAT:HOGE",STR$ Type mismatch(LOAD:2)
+    static void LOAD(PetitComputer p, wstring name)
     {
-        import otya.smilebasic.project;
-        flag.setDefaultValue(0);
-        auto type = Projects.splitResourceName(name);
-        wstring txt;
-        wstring resname = type[0].toUpper;
-        wstring projectname = type[1];
-        wstring filename = type[2];
-        if (!Projects.isValidFileName(filename))
+        LOAD(p, name, Value(0));
+    }
+    static void LOAD(PetitComputer p, wstring name, Value data)
+    {
+        void LOAD2(PetitComputer p, wstring name, int flag)
         {
-            throw new IllegalFunctionCall("LOAD");
-        }
-        if(projectname != "" && projectname.toUpper != "SYS")
-        {
-            throw new IllegalFunctionCall("LOAD");
-        }
-        if(projectname == "")
-        {
-            projectname = p.project.currentProject;
-        }
-        if(resname == "" || resname.indexOf("PRG") == 0)
-        {
-            int lot = 0/*always 0...?*/;
-            if(resname != "" && resname != "PRG")
+            import otya.smilebasic.project;
+            auto type = Projects.splitResourceName(name);
+            wstring txt;
+            wstring resname = type[0].toUpper;
+            wstring projectname = type[1];
+            wstring filename = type[2];
+            if (!Projects.isValidFileName(filename))
             {
-                auto num = resname[3..$];
-                lot = num.to!int;
+                throw new IllegalFunctionCall("LOAD");
             }
-            if(!p.project.loadFile(projectname, "TXT", filename, txt))
+            if(projectname != "" && projectname.toUpper != "SYS")
             {
-                //not exist
+                throw new IllegalFunctionCall("LOAD");
+            }
+            if(projectname == "")
+            {
+                projectname = p.project.currentProject;
+            }
+            if(resname == "" || resname.indexOf("PRG") == 0)
+            {
+                int lot = 0/*always 0...?*/;
+                if(resname != "" && resname != "PRG")
+                {
+                    auto num = resname[3..$];
+                    lot = num.to!int;
+                }
+                if(!p.project.loadFile(projectname, "TXT", filename, txt))
+                {
+                    //not exist
+                    return;
+                }
+                p.program.slot[lot].load(filename, txt);
                 return;
             }
-            p.program.slot[lot].load(filename, txt);
+            if(resname.indexOf("GRP") == 0)
+            {
+                throw new IllegalFunctionCall("NOTIMPL:LOAD GRP");
+            }
+            throw new IllegalFunctionCall("LOAD");
+        }
+        if (data.isNumber)
+        {
+            LOAD2(p, name, data.castInteger);
             return;
         }
-        if(resname.indexOf("GRP") == 0)
-        {
-            throw new IllegalFunctionCall("NOTIMPL:LOAD GRP");
-        }
-        throw new IllegalFunctionCall("LOAD");
+        LOAD(p, name, data, 0);
     }
-    static void LOAD(wstring name, Value arr, DefaultValue!(int, false) flag)
+    static void LOAD(PetitComputer p, wstring name, Value data, int flag)
     {
-        flag.setDefaultValue(0);
-        throw new IllegalFunctionCall("NOTIMPL:LOAD");
+        auto file = Projects.parseFileName(name);
+        if (file.resource != Resource.data)
+        {
+            throw new IllegalFunctionCall("LOAD", 2);
+        }
+        if (data.isNumberArray)
+        {
+            if (data.type == ValueType.IntegerArray)
+                p.project.loadDataFile(file, data.integerArray);
+            else if (data.type == ValueType.DoubleArray)
+                p.project.loadDataFile(file, data.doubleArray);
+            else
+                throw new TypeMismatch("LOAD", 2);
+        }
+        else
+        {
+            throw new TypeMismatch("LOAD", 2);
+        }
     }
     static void SAVE(PetitComputer p, wstring name)
     {
