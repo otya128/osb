@@ -2348,6 +2348,11 @@ class SwapCode : Code
             refitem2.stringArrayReference = new Array!wchar([wc]);
             return;
         }
+        if (refitem2.type == ValueType.StringArrayReference && refitem1.type == ValueType.StringArrayReference)
+        {
+            refitem1.stringArrayReference.swap(refitem2.stringArrayReference);
+            return;
+        }
         throw new TypeMismatch();
     }
 }
