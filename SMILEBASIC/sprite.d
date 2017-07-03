@@ -1030,6 +1030,15 @@ class Sprite
             sprites[i].scaley = y;
         }
     }
+    void getspscale(int i, out double x, out double y)
+    {
+        i = spid(i);
+        synchronized (this)
+        {
+            x = sprites[i].scalex;
+            y = sprites[i].scaley;
+        }
+    }
     void sprot(int i, double rot)
     {
         i = spid(i);

@@ -1932,6 +1932,18 @@ class BuiltinFunction
         }
         p.sprite.spscale(i, x, y);
     }
+    static void SPSCALE(PetitComputer p, int i, out double x, out double y)
+    {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPSCALE", 1);
+        }
+        p.sprite.getspscale(i, x, y);
+    }
     static void SPROT(PetitComputer p, int i, double rot)
     {
         if (!p.sprite.isValidSpriteId(i))
