@@ -119,11 +119,12 @@ r"ファイルを書き込みます。
     {
         import std.algorithm;
         import std.functional;
+        if (project.empty)
+            project = convertProjectName(currentProject);
         if(!isValidProjectName(project))
         {
             return null;
         }
-        if(project == "") project = "[DEFAULT]";
         auto dir(wstring type)
         {
             auto path = buildPath(projectPath, project, type).to!string;
@@ -156,7 +157,8 @@ r"ファイルを書き込みます。
         type = type.toUpper;
         //TODO:case-sensitive filesystem...
         name = name.toUpper;
-        if(project == "") project = "[DEFAULT]";
+        if (project.empty)
+            project = convertProjectName(currentProject);
         if(type != "TXT" && type != "DAT")
         {
             return false;
@@ -206,7 +208,7 @@ r"ファイルを書き込みます。
         {
             f.seek(0);
             harray[0].dimension = 1;
-            harray[0].dim[] = [cast(int)f.size, 0, 0, 0];
+            harray[0].dim[] = [cast(int)f.size / int.sizeof, 0, 0, 0];
             harray[0].type = DataType.int_;
         }
         if (harray[0].dimension != contents.dimCount)
