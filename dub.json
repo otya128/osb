@@ -5,6 +5,7 @@
 		"derelict-gl3": "*"
 	},
 	"sourcePaths": ["SMILEBASIC/"],
+	"importPaths": ["SMILEBASIC/"],
 	"targetType": "executable",
 	"buildRequirements": ["allowWarnings"],
 	"targetPath": "out",
