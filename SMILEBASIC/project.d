@@ -236,7 +236,7 @@ r"ファイルを書き込みます。
     {
         if (proj.empty)
         {
-            return "[DEFAULT]";//TODO:current project!!
+            return currentProject;
         }
         return proj;
     }
