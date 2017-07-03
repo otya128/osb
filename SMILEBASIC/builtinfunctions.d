@@ -1920,6 +1920,18 @@ class BuiltinFunction
         }
         p.sprite.sphome(i, hx, hy);
     }
+    static void SPHOME(PetitComputer p, int i, out int hx, out int hy)
+    {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPHOME", 1);
+        }
+        p.sprite.getsphome(i, hx, hy);
+    }
     static void SPSCALE(PetitComputer p, int i, double x, double y)
     {
         if (!p.sprite.isValidSpriteId(i))
@@ -1956,6 +1968,18 @@ class BuiltinFunction
         }
         p.sprite.sprot(i, rot);
     }
+    static void SPROT(PetitComputer p, int i, out double rot)
+    {
+        if (!p.sprite.isValidSpriteId(i))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isSpriteDefined(i))
+        {
+            throw new IllegalFunctionCall("SPROT", 1);
+        }
+        p.sprite.getsprot(i, rot);
+    }
     static void SPCOLOR(PetitComputer p, int id, int color)
     {
         if (!p.sprite.isValidSpriteId(id))
@@ -1967,6 +1991,18 @@ class BuiltinFunction
             throw new IllegalFunctionCall("SPCOLOR", 1);
         }
         p.sprite.spcolor(id, cast(uint)color);
+    }
+    static void SPCOLOR(PetitComputer p, int id, out int color)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCOLOR", 1);
+        }
+        p.sprite.getspcolor(id, color);
     }
     static void SPLINK(PetitComputer p, int child, int parent)
     {

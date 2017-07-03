@@ -1021,6 +1021,15 @@ class Sprite
             sprites[i].homey = hy;
         }
     }
+    void getsphome(int i, out int hx, out int hy)
+    {
+        i = spid(i);
+        synchronized (this)
+        {
+            hx = sprites[i].homex;
+            hy = sprites[i].homey;
+        }
+    }
     void spscale(int i, double x, double y)
     {
         i = spid(i);
@@ -1044,10 +1053,20 @@ class Sprite
         i = spid(i);
         sprites[i].r = rot;
     }
+    void getsprot(int i, out double rot)
+    {
+        i = spid(i);
+        rot = sprites[i].r;
+    }
     void spcolor(int id, uint color)
     {
         id = spid(id);
         sprites[id].color = petitcom.toGLColor(color);
+    }
+    void getspcolor(int id, out int color)
+    {
+        id = spid(id);
+        petitcom.fromGLColor(sprites[id].color);
     }
     void splink(int child, int parent)
     {

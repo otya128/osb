@@ -250,6 +250,11 @@ class PetitComputer
         //ARGB -> ABGR
         return (color & 0xFF00FF00) | (color >> 16 & 0xFF) | ((color & 0xFF) << 16);
     }
+    uint fromGLColor(uint color)
+    {
+        //ARGB <- ABGR
+        return (color & 0xFF00FF00) | (color >> 16 & 0xFF) | ((color & 0xFF) << 16);
+    }
     struct ConsoleCharacter
     {
         wchar character;
