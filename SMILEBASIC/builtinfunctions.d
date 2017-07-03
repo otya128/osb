@@ -758,15 +758,29 @@ class BuiltinFunction
     {
         PetitComputer.RGBRead(color, R, G, B, A);
     }
-    static int RND(int max)
+    static void RANDOMIZE(PetitComputer p, int seedid)
     {
-        import std.random;
-        return uniform(0, max);
+        p.random.randomize(seedid);
     }
-    static double RNDF()
+    static void RANDOMIZE(PetitComputer p, int seedid, int seed)
     {
-        import std.random;
-        return uniform(0.0, 1.0);
+        p.random.randomize(seedid, seed);
+    }
+    static int RND(PetitComputer p, int seedid, int max)
+    {
+        return p.random.random(seedid, 0, max);
+    }
+    static double RNDF(PetitComputer p, int seedid)
+    {
+        return p.random.random(seedid, 0.0, 1.0);
+    }
+    static int RND(PetitComputer p, int max)
+    {
+        return p.random.random(0, 0, max);
+    }
+    static double RNDF(PetitComputer p)
+    {
+        return p.random.random(0, 0.0, 1.0);
     }
     @StartOptional("W")
     static void DTREAD(out int Y, out int M, out int D, out int W)

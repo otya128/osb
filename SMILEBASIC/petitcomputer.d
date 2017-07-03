@@ -21,6 +21,7 @@ import otya.smilebasic.console;
 import otya.smilebasic.graphic;
 import otya.smilebasic.dialog;
 import otya.smilebasic.program;
+import otya.smilebasic.random;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -275,6 +276,7 @@ class PetitComputer
     Projects project;
     void init()
     {
+        random = new Random();
         project = new Projects(".");
         //   DerelictGL.load();
         if(!exists(resourcePath))
@@ -1752,4 +1754,5 @@ class PetitComputer
     {
         return a << 24 | r << 16 | g << 8 | b; 
     }
+    public Random random;
 }
