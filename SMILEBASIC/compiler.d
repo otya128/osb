@@ -1294,6 +1294,15 @@ class Compiler
             case NodeType.CallBG:
                 compileCallBG(cast(otya.smilebasic.node.CallBG)i, s);
                 break;
+            case NodeType.StopStatement:
+                {
+                    if (isDirectMode)
+                    {
+                        throw new CantUseFromDirectMode();
+                    }
+                    genCode(new Stop());
+                    break;
+                }
             default:
                 stderr.writeln("Compile:NotImpl ", i.type);
         }

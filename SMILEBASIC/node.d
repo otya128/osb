@@ -53,6 +53,7 @@ enum NodeType
     Linput,
     CallSprite,
     CallBG,
+    StopStatement,
 }
 abstract class Node
 {
@@ -713,5 +714,13 @@ class CallBG : Statement
     {
         super.location = loc;
         this.type = NodeType.CallBG;
+    }
+}
+class StopStatement : Statement
+{
+    this(SourceLocation loc)
+    {
+        super.location = loc;
+        this.type = NodeType.StopStatement;
     }
 }

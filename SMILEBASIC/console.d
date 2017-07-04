@@ -150,7 +150,6 @@ class Console
         imEditInfo.editingText = e;
         imEditInfo.start = s;
         imEditInfo.length = l;
-        writefln("%s,%s,%s", e, s, l);
     }
 
     bool showCursor;

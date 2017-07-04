@@ -83,6 +83,7 @@ class Lexical
         reserved["UNTIL"] = TokenType.Until;
         reserved["SWAP"] = TokenType.Swap;
         reserved["LINPUT"] = TokenType.Linput;
+        reserved["STOP"] = TokenType.Stop;
         reserved.rehash();
     }
     this(wstring input)
@@ -1144,6 +1145,9 @@ class Parser
                 return swapStatement();
             case TokenType.Linput:
                 return linputStatement();
+            case TokenType.Stop:
+                node = new StopStatement(lex.location);
+                break;
             default:
                 syntaxError();
                 break;

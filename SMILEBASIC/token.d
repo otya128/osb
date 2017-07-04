@@ -77,6 +77,7 @@ enum TokenType
     Dim,
     Constant,
     Linput,
+    Stop,
 }
 
 enum TokenValueType

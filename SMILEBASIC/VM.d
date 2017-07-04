@@ -2747,3 +2747,11 @@ class CallBG : Code
         callback(vm);
     }
 }
+
+class Stop : Code
+{
+    override void execute(VM vm)
+    {
+        vm.petitcomputer.stop();
+    }
+}
