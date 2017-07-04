@@ -406,7 +406,7 @@ class Console
                         {
                             cc.foreColor = 1;
                         }
-                        drawCharacter(j, CSRYs[0], cc);
+                        drawCharacter(cast(int)j, CSRYs[0], cc);
                     }
                 }
                 for(int y = 0; y < consoleHeight; y++)
