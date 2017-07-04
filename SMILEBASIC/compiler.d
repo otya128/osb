@@ -1276,7 +1276,11 @@ class Compiler
     Scope globalScope;
     Code[] compileProgram()
     {
-        Scope s = globalScope = new Scope();
+        return compileProgram(new Scope());
+    }
+    Code[] compileProgram(Scope scope_)
+    {
+        Scope s = globalScope = scope_;
         foreach(Statement i ; statements.statements)
         {
             if(i.type == NodeType.DefineFunction)
@@ -1381,7 +1385,14 @@ class Compiler
         this.code = vm.currentSlot.code;
         globalIndex = cast(int)vm.currentSlot.global.length;
         functions = vm.currentSlot.functions;
-        compileProgram();
+        if (vm.currentFunction)
+        {
+            auto sc = new Scope(vm.currentFunction);
+            sc.data = vm.currentData.table;
+            compileProgram(sc);
+        }
+        else
+            compileProgram();
         registerSystemVariable(vm);
         vm.directSlot(start, code, globalIndex + 1, global, functions, globalScope.data, globalLabel, debugInfo);
     }
