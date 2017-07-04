@@ -429,6 +429,7 @@ class PetitComputer
         glOrtho(x, x + w, y + h, y, 1024, -2048);
     }
     Button[] buttonTable;
+    Button[] controllerButtonTable;
     Sprite sprite;
     Size[7] resolutionTable = [Size(256, 192), Size(320, 200), Size(320, 240), Size(400, 240), Size(640, 400), Size(640, 480), Size(854, 480)];
     int xscreenmode = 0;
@@ -762,6 +763,11 @@ class PetitComputer
             buttonTable[SDL_SCANCODE_S] = Button.Y;
             buttonTable[SDL_SCANCODE_Q] = Button.L;
             buttonTable[SDL_SCANCODE_W] = Button.R;
+            controllerButtonTable = new Button[SDL_SCANCODE_SLEEP + 1];
+            controllerButtonTable[SDL_SCANCODE_UP] = Button.UP;
+            controllerButtonTable[SDL_SCANCODE_DOWN] = Button.DOWN;
+            controllerButtonTable[SDL_SCANCODE_LEFT] = Button.LEFT;
+            controllerButtonTable[SDL_SCANCODE_RIGHT] = Button.RIGHT;
 
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_UP] = Button.UP;
             controllerTable[SDL_CONTROLLER_BUTTON_DPAD_DOWN] = Button.DOWN;
@@ -939,6 +945,8 @@ class PetitComputer
                                 auto key = event.key.keysym.sym;
                                 if (controllers.length == 0)
                                     button &= ~buttonTable[event.key.keysym.scancode];
+                                else
+                                    button &= ~controllerButtonTable[event.key.keysym.scancode];
                             }
                             break;
                         case SDL_KEYDOWN:
@@ -959,6 +967,8 @@ class PetitComputer
                                 }
                                 if (controllers.length == 0)
                                     button |= buttonTable[event.key.keysym.scancode];
+                                else
+                                    button |= controllerButtonTable[event.key.keysym.scancode];
                                 if(key == SDLK_v)
                                 {
                                     auto mod = event.key.keysym.mod;
