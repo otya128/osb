@@ -679,6 +679,11 @@ class PetitComputer
 
             DerelictGL.load();
             DerelictGL3.load();
+            SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
+            for (int i = 0; i < SDL_NumJoysticks(); i++)
+            {
+                AddController(i);
+            }
         }
         catch(Throwable t)
         {
@@ -787,6 +792,7 @@ class PetitComputer
                     renderCondition.mutex.unlock;
                 renderCondition.notify();
             }
+
             while(true)
             {
                 auto profile = SDL_GetTicks();

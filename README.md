@@ -12,7 +12,7 @@ MIT
 
 # How to build
 ```sh
-git clone git@github.com:otya128/otyaSMILEBASIC.git
+git clone --recursive https://github.com/otya128/otyaSMILEBASIC.git
 cd otyaSMILEBASIC
 dub run
 ```
