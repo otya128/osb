@@ -82,7 +82,7 @@ class BuiltinFunctions
                 va = f;
         }
         //一応可変長は最後
-        if(va) return va;
+        if(va && (va.outoptional != 0 && va.outoptional <= outargc && va.results.length >= outargc) || va.results.length == outargc) return va;
         writeln("====function overloads===");
         writefln("func = %s argc = %d outargc = %d", func[0].name, argc, outargc);
         foreach(f; func)
@@ -1762,6 +1762,15 @@ class BuiltinFunction
             p.sprite.spanim(no, args[1].castDString, animdata);
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
+    }
+    static void SPDEF(PetitComputer p, int id, out int U, out int V)
+    {
+        if (!p.sprite.isValidDef(id))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        int dummy;
+        p.sprite.getspdef(id, U, V, dummy, dummy, dummy, dummy, dummy);
     }
     static void SPDEF(PetitComputer p, int id, out int U, out int V, out int A)
     {
