@@ -82,7 +82,7 @@ class BuiltinFunctions
                 va = f;
         }
         //一応可変長は最後
-        if(va && (va.outoptional != 0 && va.outoptional <= outargc && va.results.length >= outargc) || va.results.length == outargc) return va;
+        if(va && ((va.outoptional != 0 && va.outoptional <= outargc && va.results.length >= outargc) || va.results.length == outargc)) return va;
         writeln("====function overloads===");
         writefln("func = %s argc = %d outargc = %d", func[0].name, argc, outargc);
         foreach(f; func)

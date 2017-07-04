@@ -354,7 +354,16 @@ class VM
     }
     void restoreData(wstring label)
     {
-        currentData.index = currentData.table.label[label];
+        if (label in currentData.table.label)
+            currentData.index = currentData.table.label[label];
+        else if (label in currentSlot.globalData.table.label)
+        {
+            currentData.index = currentSlot.globalData.table.label[label];
+        }
+        else
+        {
+            throw new UndefinedLabel();
+        }
     }
     int olddti;
     void pushDataIndex()
@@ -549,6 +558,7 @@ class VM
         {
             vm.setCurrentSlot(func.slot.index);
         }
+        vm.currentData.table = func.scope_.data;
     }
 }
 enum CodeType
@@ -1591,6 +1601,14 @@ class ReturnFunction : Code
         else
         {
             vm.currentFunction = cfunc.func;
+            if (vm.currentFunction)
+            {
+                vm.currentData.table = vm.currentFunction.scope_.data;
+            }
+            else
+            {
+                vm.currentData.table = vm.currentSlot.globalData.table;
+            }
         }
         vm.stacki -= func.argCount;
         if(func.returnExpr)
