@@ -28,9 +28,9 @@ struct Data
     int index;
     void read(out Value value, VM vm)
     {
-        if(index >= table.data.length)
+        if(index >= table.length)
             throw new OutOfDATA();
-        value = table.data[index];
+        value = table.read(index);
         index++;
     }
 }

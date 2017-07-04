@@ -72,20 +72,45 @@ class Scope
 }
 class DataTable
 {
-    Value[] data;
-    int[wstring] label;
-    void addData(Value data)
+    public this()
     {
-        this.data ~= data;
+        data = new Data();
     }
-    void addLabel(wstring label)
+    public this(DataTable table)
     {
-        this.label[label] = cast(int)data.length;
+        this.data = table.data;
+    }
+    public size_t length()
+    {
+        return data.data.length;
+    }
+    public Value read(size_t index)
+    {
+        return data.data[index];
+    }
+    Data data;
+    int[wstring] label;
+    public void addLabel(wstring label)
+    {
+        this.label[label] = cast(int)data.data.length;
+    }
+    public void addData(Value data)
+    {
+        this.data.addData(data);
+    }
+
+    class Data
+    {
+        Value[] data;
+        public void addData(Value data)
+        {
+            this.data ~= data;
+        }
     }
 }
 class Function
 {
-    static const frameSize = 4;
+    static const frameSize = 3;
     int address;
     wstring name;
     int argCount;
@@ -891,6 +916,7 @@ class Compiler
         auto skip = genCodeGoto();
         Function func = new Function(cast(int)this.code.length, node.name, node.returnExpr, cast(int)node.arguments.length, node.isCommon);
         Scope sc = new Scope(func);
+        sc.data = new DataTable(globalScope.data);
         foreach(wstring arg; node.arguments)
         {
             func.defineArgumentIndex(arg, this);
@@ -1363,6 +1389,10 @@ class Compiler
             {
                 auto restore = cast(RestoreCodeS)c;
                 auto label = restore.scope_.data.label.get(restore.label, int.min);
+                if (label == int.min)
+                {
+                    label = globalScope.data.label.get(restore.label, int.min);
+                }
                 if (label == int.min)
                 {
                     code[i] = new RestoreUndefinedLabelCode(restore.label);

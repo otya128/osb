@@ -533,9 +533,6 @@ class VM
         auto bp = vm.stacki;
         vm.push(Value(vm.currentFunction));
         vm.currentFunction = func;
-        vm.push(Value(vm.currentData));
-        vm.currentData.index = 0;
-        vm.currentData.table = func.scope_.data;
         vm.push(Value(vm.bp));
         vm.pushpc;//vm.push(Value(vm.pc));
         vm.bp = bp;
@@ -1585,18 +1582,8 @@ class ReturnFunction : Code
         Value bp, pc;
         vm.poppc;//(pc);
         vm.pop(bp);
-        Value hae;
-        vm.pop(hae);
         Value cfunc;
         vm.pop(cfunc);
-        if (hae.type != ValueType.Data)
-        {
-            throw new TypeMismatch();
-        }
-        else
-        {
-            vm.currentData = hae.data;
-        }
         if (cfunc.type != ValueType.Function)
         {
             throw new TypeMismatch();
@@ -2571,6 +2558,7 @@ class Exec : Code
             vm.slots[slot].execData.backtrace = vm.traceI;
         }
         vm.setCurrentSlot(slot);
+        vm.currentData = vm.slots[slot].globalData;
         vm.pc = 0 - 1;
     }
 }
