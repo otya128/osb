@@ -121,7 +121,7 @@ r"ファイルを書き込みます。
         import std.functional;
         if (project.empty)
             project = convertProjectName(currentProject);
-        if(!isValidProjectName(project))
+        else if(!isValidProjectName(project))
         {
             return null;
         }
