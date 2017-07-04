@@ -739,12 +739,12 @@ class PetitComputer
         bool renderprofile = false;
         try
         {
-            version(Windows)
+            /*version(Windows)
             {
                 auto imm32 = LoadLibraryA("imm32.dll".toStringz);
                 ImmDisableIME ImmDisableIME = cast(ImmDisableIME)GetProcAddress(imm32, "ImmDisableIME".toStringz);
                 if(ImmDisableIME) ImmDisableIME(0);
-            }
+            }*/
             SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
             window = SDL_CreateWindow("SMILEBASIC", SDL_WINDOWPOS_UNDEFINED,
                                       SDL_WINDOWPOS_UNDEFINED, 400, 240,
@@ -808,7 +808,7 @@ class PetitComputer
             console.initGRPF();
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glEnable(GL_DEPTH_TEST);
-            version(Windows)
+            /*version(Windows)
             {
                 SDL_SysWMinfo wm;
                 if(SDL_GetWindowWMInfo(window, &wm))
@@ -819,7 +819,7 @@ class PetitComputer
                         auto c = ImmAssociateContext(wm.info.win.window, null);
                     }
                 }
-            }
+            }*/
             int loopcnt;
             DerelictGL3.reload();
             console.GRPF.createBuffer();
@@ -926,6 +926,7 @@ class PetitComputer
                 }
                 maincntRender++;
                 updateSticks();
+                bool isReturnKeyPressed;//for IM
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -984,15 +985,25 @@ class PetitComputer
                                 }
                                 if(key == SDLK_RETURN)
                                 {
-                                    sendKey('\u000D');
+                                    isReturnKeyPressed = true;
                                 }
                             }
                             break;
-                        case SDL_TEXTINPUT:
-                            auto text = event.text.text[0..event.text.text.indexOf('\0')].to!wstring;
-                            foreach(wchar key; text)
+                        case SDL_TEXTEDITING:
                             {
-                                sendKey(key);
+                                auto text = event.edit.text[0..event.text.text.indexOf('\0')].to!wstring;
+                                console.setIMEditInfo(text, event.edit.start, event.edit.length);
+                                break;
+                            }
+                        case SDL_TEXTINPUT:
+                            {
+                                console.setIMEditInfo("", 0, 0);
+                                auto text = event.text.text[0..event.text.text.indexOf('\0')].to!wstring;
+                                foreach(wchar key; text)
+                                {
+                                    sendKey(key);
+                                }
+                                isReturnKeyPressed = false;
                             }
                             break;
                         case SDL_MOUSEWHEEL:
@@ -1041,6 +1052,8 @@ class PetitComputer
                             break;
                     }
                 }
+                if (isReturnKeyPressed)
+                    sendKey('\u000D');
                 long delay = (1000/60) - (cast(long)SDL_GetTicks() - profile);
                 if(delay > 0)
                     SDL_Delay(cast(uint)delay);

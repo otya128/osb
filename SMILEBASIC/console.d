@@ -138,6 +138,21 @@ class Console
         backColors[petitcom.displaynum] = value;
     }
 
+    struct IMEditInfo
+    {
+        wstring editingText;
+        int start;
+        int length;
+    }
+    IMEditInfo imEditInfo;
+    void setIMEditInfo(wstring e, int s, int l)
+    {
+        imEditInfo.editingText = e;
+        imEditInfo.start = s;
+        imEditInfo.length = l;
+        writefln("%s,%s,%s", e, s, l);
+    }
+
     bool showCursor;
     bool animationCursor;
     FontRect[] fontTable = new FontRect[65536];
@@ -377,6 +392,24 @@ class Console
                 glEnable(GL_TEXTURE_2D);
 
                 glBegin(GL_QUADS);
+                if (i == 0 && !imEditInfo.editingText.empty)
+                {
+                    foreach (j, c; imEditInfo.editingText)
+                    {
+                        ConsoleCharacter cc;
+                        cc.character = c;
+                        cc.z = -256;
+                        if (imEditInfo.start <= j && (imEditInfo.start + imEditInfo.length > j || imEditInfo.length == 0))
+                        {
+                            cc.foreColor = 10;
+                        }
+                        else
+                        {
+                            cc.foreColor = 1;
+                        }
+                        drawCharacter(j, CSRYs[0], cc);
+                    }
+                }
                 for(int y = 0; y < consoleHeight; y++)
                     for(int x = 0; x < consoleWidth; x++)
                     {
@@ -385,6 +418,27 @@ class Console
                 glEnd();
                 glDisable(GL_TEXTURE_2D);
                 glBegin(GL_QUADS);
+
+                if (i == 0 && !imEditInfo.editingText.empty)
+                {
+                    foreach (j, c; imEditInfo.editingText)
+                    {
+                        auto x = j, y = CSRYs[0];
+                        auto back = consoleColorGL[15];
+                        if (imEditInfo.start <= j && (imEditInfo.start + imEditInfo.length > j || imEditInfo.length == 0))
+                        {
+                            back = consoleColorGL[1];
+                        }
+                        if(back)
+                        {
+                            glColor4ubv(cast(ubyte*)&back);
+                            glVertex3f(x * 8, y * 8 + 8, -256);
+                            glVertex3f(x * 8, y * 8, -256);
+                            glVertex3f(x * 8 + 8, y * 8, -256);
+                            glVertex3f(x * 8 + 8, y * 8 + 8, -256);
+                        }
+                    }
+                }
                 for(int y = 0; y < consoleHeight; y++)
                     for(int x = 0; x < consoleWidth; x++)
                     {
