@@ -3328,7 +3328,7 @@ class BuiltinFunction
         }
         if (args[0].type == ValueType.StringArray)
         {
-            sarray = args[0].stringArray.array[start..start + count].array;
+            sarray = args[0].stringArray.array[start..start + count];
         }
         if (args.length > 1)
         {
@@ -3382,7 +3382,7 @@ class BuiltinFunction
         }
         if (args[0].type == ValueType.StringArray)
         {
-            sarray = args[0].stringArray.array[start..start + count].array;
+            sarray = args[0].stringArray.array[start..start + count];
         }
         if (args.length > 1)
         {
