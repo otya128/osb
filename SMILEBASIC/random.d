@@ -3,7 +3,9 @@ import std.random;
 
 class Random
 {
-    LinearCongruentialEngine!(uint, 16_807, 0, 2_147_483_647)[8] engine;
+    alias RandomType = Xorshift64;
+    //LinearCongruentialEngine!(uint, 16_807, 0, 2_147_483_647)[8] engine;
+    RandomType[8] engine;
     public this()
     {
         foreach (e; engine)
