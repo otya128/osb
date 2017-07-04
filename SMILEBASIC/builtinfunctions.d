@@ -728,17 +728,17 @@ class BuiltinFunction
     static void BEEP(PetitComputer p, DefaultValue!(int, false) beep, DefaultValue!(int, false) pitch, DefaultValue!(int, false) volume, DefaultValue!(int, false) pan)
     {
     }
-    static void STICK(PetitComputer p, DefaultValue!(int, false) mp, out int x, out int y)
+    static void STICK(PetitComputer p, DefaultValue!(int, false) mp, out double x, out double y)
     {
-        //JOYSTICK?
-        x = 0;
-        y = 0;
+        auto s = p.stick(0);
+        x = s.x;
+        y = s.y;
     }
-    static void STICKEX(PetitComputer p, DefaultValue!(int, false) mp, out int x, out int y)
+    static void STICKEX(PetitComputer p, DefaultValue!(int, false) mp, out double x, out double y)
     {
-        //JOYSTICK?
-        x = 0;
-        y = 0;
+        auto s = p.stick(1);
+        x = s.x;
+        y = s.y;
     }
     static pure nothrow int RGB(int R, int G, int B, DefaultValue!(int, false) _)
     {

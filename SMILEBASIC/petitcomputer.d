@@ -659,6 +659,53 @@ class PetitComputer
             }
         }
     }
+    //https://miiverse.nintendo.net/replies/AYMHAAADAAB2V0f0v9-s2g
+    struct Stick
+    {
+        int internalX;//-105~105
+        int internalY;//-105~105
+        static const int max = 105;
+        double x()
+        {
+            return internalX / 120.0;
+        }
+        double y()
+        {
+            return internalY / 120.0;
+        }
+    }
+    private Object stickSync = new Object();
+    private Stick[2] sticks;//0:stick, 1:stickex
+    public Stick stick(int id)
+    {
+        synchronized (stickSync)
+            return sticks[id];
+    }
+    public void stick(int id, Stick stick)
+    {
+        synchronized (stickSync)
+            sticks[id] = stick;
+    }
+    private void updateStick(SDL_GameController* controller, int id, SDL_GameControllerAxis x, SDL_GameControllerAxis y)
+    {
+        Stick s;
+        if (!activeController)
+        {
+            stick(id, s);
+            return;
+        }
+        import std.algorithm : clamp, min, max;
+        short stickx = SDL_GameControllerGetAxis(controller, x).clamp(-short.max, short.max);
+        short sticky = SDL_GameControllerGetAxis(controller, y).clamp(-short.max, short.max);
+        s.internalX = stickx / (short.max / Stick.max);
+        s.internalY = -sticky / (short.max / Stick.max);
+        stick(id, s);
+    }
+    private void updateSticks()
+    {
+        updateStick(activeController, 0, SDL_CONTROLLER_AXIS_LEFTX, SDL_CONTROLLER_AXIS_LEFTY);
+        updateStick(activeController, 1, SDL_CONTROLLER_AXIS_RIGHTX, SDL_CONTROLLER_AXIS_RIGHTY);
+    }
     SDL_GLContext context;
     SDL_GLContext contextVM;
     Object renderSync = new Object();
@@ -878,6 +925,7 @@ class PetitComputer
                     }
                 }
                 maincntRender++;
+                updateSticks();
                 while (SDL_PollEvent(&event))
                 {
                     switch (event.type)
@@ -1005,6 +1053,7 @@ class PetitComputer
         }
     }
     SDL_GameController*[int] controllers;
+    SDL_GameController* activeController;
     void AddController(int id)
     {
         if(SDL_IsGameController(id))
@@ -1013,6 +1062,7 @@ class PetitComputer
             if (pad)
             {
                 controllers[id] = pad;
+                activeController = pad;
             }
         }
     }
@@ -1021,6 +1071,11 @@ class PetitComputer
         if(SDL_IsGameController(id))
         {
             SDL_GameControllerClose(controllers.get(id, null));
+            controllers.remove(id);
+            if (controllers.length == 0)
+                activeController = null;
+            else
+                activeController = controllers.byValue.front;
         }
     }
     SDL_Window* window;
