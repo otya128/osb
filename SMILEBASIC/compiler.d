@@ -331,7 +331,7 @@ class Compiler
             code ~= new PushG(global);
             return;
         }
-        if(sc.func)
+        if(sc.func && !isDirectMode)
         {
             code ~= new PushL(sc.func.getLocalVarIndex(name, this));
             return;
@@ -359,7 +359,7 @@ class Compiler
             code ~= new PushGRef(global);
             return;
         }
-        if(sc.func)
+        if(sc.func && !isDirectMode)
         {
             code ~= new PushLRef(sc.func.getLocalVarIndex(name, this));
             return;
@@ -388,7 +388,7 @@ class Compiler
             code ~= new PopG(global);
             return;
         }
-        if(sc.func)
+        if(sc.func && !isDirectMode)
         {
             code ~= new PopL(sc.func.getLocalVarIndex(name, this));
             return;
@@ -464,7 +464,7 @@ class Compiler
     }
     int defineVarIndex(wstring name, Scope sc)
     {
-        if(sc.func)
+        if(sc.func && !isDirectMode)
         {
             return sc.func.defineLocalVarIndex(name, this);
         }
@@ -472,7 +472,7 @@ class Compiler
     }
     int defineVarIndexVoid(wstring name, Scope sc)
     {
-        if(sc.func)
+        if(sc.func && !isDirectMode)
         {
             return sc.func.defineLocalVarIndexVoid(name, this);
         }
