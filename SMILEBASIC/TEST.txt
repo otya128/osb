@@ -60,18 +60,18 @@ DEF SWAPTEST
  VAR A=1
  VAR B=2
  SWAP A,B
- ASSERT__ B==1, "SWAP"
- ASSERT__ A==2, "SWAP"
+ ASSERT__ B==1, "SWAP1"
+ ASSERT__ A==2, "SWAP2"
  VAR A$="1
  VAR B$="2
  SWAP A$,B$
- ASSERT__ B$=="1", "SWAP"
- ASSERT__ A$=="2", "SWAP"
+ ASSERT__ B$=="1", "SWAP3"
+ ASSERT__ A$=="2", "SWAP4"
  VAR A%=1
  VAR B#=2.34567
  SWAP A%,B#
- ASSERT__ B#==1, "SWAP"
- ASSERT__ A%==2, "SWAP"
+ ASSERT__ B#==1, "SWAP5"
+ ASSERT__ A%==2, "SWAP6"
 END
 
 'REPEAT TEST

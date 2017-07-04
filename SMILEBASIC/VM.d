@@ -2293,7 +2293,7 @@ class SwapCode : Code
             if (refitem1.reference.type == ValueType.Double && refitem2.reference.type == ValueType.Integer)
             {
                 integer = refitem2.reference.castInteger;
-                refitem2.reference.integerValue = refitem1.reference.integerValue;
+                refitem2.reference.integerValue = refitem1.reference.castInteger;
                 refitem1.reference.doubleValue = integer;
                 return;
             }
