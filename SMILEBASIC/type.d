@@ -630,6 +630,13 @@ class Array(T)
     {
         return new Array!T(this);
     }
+    public override int opCmp(Object o)
+    {
+        Array!T array = cast(Array!T)o;
+        if (!array)
+            return super.opCmp(o);
+        return std.algorithm.comparison.cmp(this.array, array.array);
+    }
 
 }
 struct ArrayReference(T)
