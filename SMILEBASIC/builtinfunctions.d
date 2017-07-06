@@ -772,7 +772,7 @@ class BuiltinFunction
     }
     static double RNDF(PetitComputer p, int seedid)
     {
-        return p.random.random(seedid, 0.0, 1.0);
+        return p.random.RNDF(seedid);
     }
     static int RND(PetitComputer p, int max)
     {
@@ -780,7 +780,7 @@ class BuiltinFunction
     }
     static double RNDF(PetitComputer p)
     {
-        return p.random.random(0, 0.0, 1.0);
+        return p.random.RNDF(0);
     }
     @StartOptional("W")
     static void DTREAD(out int Y, out int M, out int D, out int W)
