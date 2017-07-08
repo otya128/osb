@@ -45,6 +45,13 @@ class InternalError : SmileBasicError
         this.errnum = 1;
         super("Internal Error");
     }
+    Throwable throwable;
+    this(Throwable throwable)
+    {
+        this.throwable = throwable;
+        this.errnum = 1;
+        super("Internal Error");
+    }
 }
 class SyntaxError : SmileBasicError
 {

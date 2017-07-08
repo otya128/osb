@@ -10,5 +10,5 @@
 	"buildRequirements": ["allowWarnings"],
 	"targetPath": "out",
 	"workingDirectory": "out",
-	"copyFiles": ["SMILEBASIC/resources/*.txt", "SMILEBASIC/spdef.csv", "SMILEBASIC/dialogresource", "SDL_GameControllerDB/gamecontrollerdb.txt"]
+	"copyFiles": ["SMILEBASIC/TEST.txt", "SMILEBASIC/resources/*.txt", "SMILEBASIC/spdef.csv", "SMILEBASIC/dialogresource", "SDL_GameControllerDB/gamecontrollerdb.txt"]
 }

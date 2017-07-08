@@ -1128,6 +1128,7 @@ class PetitComputer
     bool isRunningDirectMode = false;
     GLenum textureScaleMode;
     int maincnt;
+    SmileBasicError lastError;
     void run(bool nodirectmode = false, string inputfile = "", bool antialiasing = false, bool redirectConsole = false)
     {
         if (antialiasing)
@@ -1180,9 +1181,11 @@ class PetitComputer
                 if(sbe.getErrorMessage2.length) console.print(sbe.getErrorMessage2, "\n");
                 writeln(sbe.to!string);
                 writeln(sbe.getErrorMessage2);
+                lastError = sbe;
             }
             catch(Throwable t)
             {
+                lastError = new InternalError(t);
                 writeln(t);
             }
         }
@@ -1335,16 +1338,19 @@ class PetitComputer
                             writeln(sbe.to!string);
                             writeln(sbe.getErrorMessage2);
                             writeln(sbe.func);
+                            lastError = sbe;
                             loc = vm.currentLocation;
                             console.print(vm.currentSlotNumber, ":", loc.line, ":", loc.pos, ":", program.slot[vm.currentSlotNumber].getLine(loc));
                         }
                         catch(Throwable t)
                         {
+                            lastError = new InternalError(t);
                             writeln(t);
                         }
                     }
                     catch(Throwable t)
                     {
+                        lastError = new InternalError(t);
                         running = false;
                         try
                         {
