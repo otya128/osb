@@ -241,7 +241,7 @@ class PetitComputer
     static const string fontFile = resourcePath ~ "/font.png";
     static const string spriteFile = resourcePath ~ "/defsp.png";
     static const string BGFile = resourcePath ~ "/defbg.png";
-    static const string fontTableFile = resourcePath ~ "/fonttable.txt";
+    static const string fontTableFile = "./fonttable.txt";
     int screenWidth;
     int screenHeight;
     int screenWidthDisplay1;
