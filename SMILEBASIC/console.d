@@ -652,3 +652,19 @@ class Console
         GRPF.createTexture(petitcom.renderer, petitcom.textureScaleMode);
     }
 }
+
+class NativeConsole : Console
+{
+    File file;
+    this(File file, PetitComputer p)
+    {
+        super(p);
+        this.file = file;
+    }
+    override void printString(wstring text)
+    {
+        super.printString(text);
+        file.write(text);
+        file.flush;
+    }
+}

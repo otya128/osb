@@ -280,6 +280,7 @@ class PetitComputer
     }
     int[2] bgpage;
     Projects project;
+    bool redirectConsole;
     void init()
     {
         random = new Random();
@@ -313,7 +314,7 @@ class PetitComputer
         screenWidthDisplay1 = 320;
         screenHeightDisplay1 = 240;
         currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
-        console = new Console(this);
+        console = redirectConsole ? new NativeConsole(std.stdio.stdout, this) : new Console(this);
         if(!exists(fontTableFile))
         {
             writeln("create font table");
@@ -844,7 +845,7 @@ class PetitComputer
                 renderCondition.notify();
             }
 
-            while(true)
+            while(!quit)
             {
                 auto profile = SDL_GetTicks();
                 if(console.showCursor)
@@ -1127,7 +1128,7 @@ class PetitComputer
     bool isRunningDirectMode = false;
     GLenum textureScaleMode;
     int maincnt;
-    void run(bool nodirectmode = false, string inputfile = "", bool antialiasing = false)
+    void run(bool nodirectmode = false, string inputfile = "", bool antialiasing = false, bool redirectConsole = false)
     {
         if (antialiasing)
         {
@@ -1137,6 +1138,7 @@ class PetitComputer
         {
             textureScaleMode = GL_NEAREST;
         }
+        this.redirectConsole = redirectConsole;
         buttonLock = new Object();
         program = new Program();
         keybuffer = new Key[128];
@@ -1359,6 +1361,8 @@ class PetitComputer
                     }
                     if(!running || stopflg)
                     {
+                        if (nodirectmode)
+                            quit = true;
                         if(stopflg)
                         {
                             loc = vm.currentLocation;

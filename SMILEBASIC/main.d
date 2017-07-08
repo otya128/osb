@@ -12,7 +12,8 @@ int main(string[] argv)
     bool nodirectmode;
     string inputfile;
     bool antialiasing;
-    auto helpInformation = getopt(argv, "no-direct-mode", &nodirectmode, "file", &inputfile, "anti-aliasing", "Enable antialiasing.", &antialiasing);
+    bool redirectConsole;
+    auto helpInformation = getopt(argv, "redirect-console", &redirectConsole, "no-direct-mode", &nodirectmode, "file", &inputfile, "anti-aliasing", "Enable antialiasing.", &antialiasing);
     if (helpInformation.helpWanted)
     {
         defaultGetoptPrinter("Some information about the program.",
@@ -22,7 +23,7 @@ int main(string[] argv)
     //try
     {
         auto pc = new PetitComputer();
-        pc.run(nodirectmode, inputfile, antialiasing);
+        pc.run(nodirectmode, inputfile, antialiasing, redirectConsole);
     }
     /*(Throwable t)
     {
