@@ -3,6 +3,15 @@ language: d
 d:
   - dmd
   - ldc
-script: dub test --compiler=${DC} -- -h
-
+script: dub test --compiler=${DC}
+addons:
+  apt:
+    packages:
+      - libsdl2-2.0
+      - libsdl2-image-2.0-0
+      - libsdl2-ttf-2.0-0
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
 
