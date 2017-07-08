@@ -1853,3 +1853,10 @@ class PetitComputer
     }
     public Random random;
 }
+
+unittest
+{
+    auto petitcomputer = new PetitComputer();
+    petitcomputer.run(true, "TEST.txt", false, true);
+    assert(petitcomputer.lastError is null);
+}

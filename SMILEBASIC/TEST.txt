@@ -336,4 +336,4 @@ ASSERT__ _4==4, "DATA"
 ASSERT__ ARY[1]==5, "DATA"
 LOCATE 10,
 COLOR 1,15
-PRINT "テスト正常終了"
+PRINT "Test has been run successfully."

@@ -48,7 +48,7 @@ after_build:
 
 test_script:
   - cd c:\projects\otyaSMILEBASIC
-  - c:\projects\dub\dub.exe test -- --no-direct-mode --file c:\projects\otyaSMILEBASIC\SMILEBASIC\TEST.TXT --redirect-console
+  - c:\projects\dub\dub.exe test
 
 artifacts:
   - path: otyasmilebasic.zip
