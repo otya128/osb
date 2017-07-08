@@ -2,7 +2,6 @@ module otya.smilebasic.console;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl;
-import derelict.opengl3.gl3;
 import otya.smilebasic.petitcomputer;
 import std.string;
 import std.stdio;

@@ -6,7 +6,6 @@ import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.sdl2.ttf;
 import derelict.opengl3.gl;
-import derelict.opengl3.gl3;
 
 class DialogBase
 {

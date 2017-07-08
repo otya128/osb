@@ -2,7 +2,6 @@ module otya.smilebasic.petitcomputer;
 import derelict.sdl2.sdl;
 import derelict.sdl2.image;
 import derelict.opengl3.gl;
-import derelict.opengl3.gl3;
 import std.net.curl;
 import std.file;
 import std.stdio;
@@ -148,8 +147,10 @@ class GraphicPage
     }
     void deleteGL()
     {
-        glDeleteFramebuffersEXT(1, &buffer);
-        glDeleteRenderbuffersEXT(1, &render);
+        if (buffer)
+            glDeleteFramebuffersEXT(1, &buffer);
+        if (render)
+            glDeleteRenderbuffersEXT(1, &render);
         glDeleteTextures(1, &glTexture);
         buffer = render = glTexture = 0;
     }
@@ -726,7 +727,6 @@ class PetitComputer
             SDL_Init(SDL_INIT_GAMECONTROLLER);
 
             DerelictGL.load();
-            DerelictGL3.load();
             SDL_GameControllerAddMappingsFromFile("gamecontrollerdb.txt");
             for (int i = 0; i < SDL_NumJoysticks(); i++)
             {
@@ -827,8 +827,6 @@ class PetitComputer
                 }
             }*/
             int loopcnt;
-            DerelictGL3.reload();
-            console.GRPF.createBuffer();
             graphic.initGraphicPages();
             dialogResource = new DialogResources(renderer, textureScaleMode);
             //3graphic.initGLGraphicPages();
