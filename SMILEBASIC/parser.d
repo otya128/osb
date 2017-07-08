@@ -7,6 +7,7 @@ import std.ascii;
 import std.stdio;
 import std.conv;
 import std.range;
+static import std.uni;
 class Lexical
 {
     TokenType[] table;
@@ -1128,7 +1129,6 @@ class Parser
                     }
                     return new Use(expr, lex.location);
                 }
-                break;
             case TokenType.Exec:
                 {
                     lex.popFront();
@@ -1140,7 +1140,6 @@ class Parser
                     }
                     return new Exec(expr, lex.location);
                 }
-                break;
             case TokenType.Swap:
                 return swapStatement();
             case TokenType.Linput:

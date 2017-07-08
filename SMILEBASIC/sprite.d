@@ -4,6 +4,7 @@ import otya.smilebasic.error;
 import otya.smilebasic.vm;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
+static import std.uni;
 enum SpriteAttr
 {
     none = 0,

@@ -817,7 +817,7 @@ class BuiltinFunction
         {
             formattedRead(time, "%d:%d:%d", &H, &M, &S);
         }
-        catch
+        catch (Throwable)
         {
             throw new IllegalFunctionCall("TMREAD", 1);
         }
@@ -837,6 +837,7 @@ class BuiltinFunction
         if (isInputRange!Source && isSomeChar!(ElementType!Source) && !is(Source == enum) &&
             isFloatingPoint!Target && !is(Target == enum))
         {
+            static import core.stdc.math;
             static immutable real[14] negtab =
             [ 1e-4096L,1e-2048L,1e-1024L,1e-512L,1e-256L,1e-128L,1e-64L,1e-32L,
             1e-16L,1e-8L,1e-4L,1e-2L,1e-1L,1.0L ];
@@ -3928,14 +3929,15 @@ class BuiltinFunction
     static wstring getBasicName(BFD)(const wstring def)
     {
         enum attr = __traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_]);
+        wstring r = def;
         foreach(i; attr)
         {
-            static if(__traits(compiles, i.naame))
+            if(__traits(compiles, i.naame))
             {
-                return i.naame;
+                r = (cast(BasicName)i).naame;
             }
         }
-        return def;
+        return r;
     }
 
     static this()
@@ -3989,19 +3991,21 @@ template GetOutStartSkip(BFD)
         enum so = __traits(getAttributes, __traits(getOverloads, BFD.C_, BFD.N)[BFD.I_])[0];
         int GetOutStartSkip()
         {
+            auto result = 0;
             int k;
             foreach (j, i; ParameterIdentifierTuple!(__traits(getOverloads, BFD.C_, BFD.N)[BFD.I_]))
             {
                 if(i == so.name)
                 {
-                    return k;
+                    result = k;
+                    break;
                 }
                 else if(BFD.ParameterStorageClass[j] & ParameterStorageClass.out_)
                 {
                     k++;
                 }
             }
-            return 0;
+            return result;
         }
     }
     else

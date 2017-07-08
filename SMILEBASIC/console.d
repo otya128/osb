@@ -9,6 +9,7 @@ import std.file;
 import std.conv;
 import std.csv;
 import std.net.curl;
+import std.algorithm;
 
 struct ConsoleCharacter
 {

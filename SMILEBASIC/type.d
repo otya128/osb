@@ -1,5 +1,9 @@
 module otya.smilebasic.type;
 import otya.smilebasic.error;
+import otya.smilebasic.compiler;
+import otya.smilebasic.vm;
+static import std.algorithm;
+static import std.algorithm.comparison;
 enum ValueType : byte
 {
     Void,//DEF A()ENDの返り値とか未初期化の変数とか
@@ -20,8 +24,6 @@ enum ValueType : byte
     Data,
     Function,
 }
-import otya.smilebasic.compiler;
-import otya.smilebasic.vm;
 struct Data
 {
     DataTable table;

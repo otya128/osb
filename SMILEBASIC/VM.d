@@ -9,6 +9,7 @@ import std.uni;
 import std.utf;
 import std.conv;
 import std.stdio;
+static import std.algorithm;
 struct Trace
 {
     int slot;
@@ -1966,7 +1967,7 @@ class InputCode : Code
                     {
                         vm.push(Value(to!double(s)));
                     }
-                    catch
+                    catch(Throwable)
                     {
                         error = true;
                         break;

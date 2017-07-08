@@ -8,9 +8,11 @@ import std.stdio;
 import std.conv;
 import std.string;
 import std.range;
+static import std.algorithm;
 import core.stdc.stdio;
 import core.sync.mutex;
 import core.sync.condition;
+static import core.stdc.string;
 import otya.smilebasic.sprite;
 import otya.smilebasic.error;
 import otya.smilebasic.bg;
@@ -21,6 +23,7 @@ import otya.smilebasic.graphic;
 import otya.smilebasic.dialog;
 import otya.smilebasic.program;
 import otya.smilebasic.random;
+static import otya.smilebasic.token;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
 const static rot_test_y = 1f;
@@ -1235,6 +1238,7 @@ class PetitComputer
                         token = lex.front();
                         if(token.type != otya.smilebasic.token.TokenType.Integer)
                         {
+                            //TODO:error
                             console.print("Illegal function call", "\n");
                             continue;
                         }

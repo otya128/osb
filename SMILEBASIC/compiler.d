@@ -5,6 +5,7 @@ import otya.smilebasic.vm;
 import otya.smilebasic.type;
 import otya.smilebasic.error;
 import otya.smilebasic.systemvariable;
+import otya.smilebasic.builtinfunctions;
 import std.stdio;
 struct DebugData
 {
