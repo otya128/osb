@@ -1,5 +1,6 @@
 language: d
 sudo: required
+dist: trusty
 
 d:
   - dmd
