@@ -226,6 +226,14 @@ class IllegalSymbolString : SmileBasicError
         super("Illegal symbol string");
     }
 }
+class IllegalFileFormat : SmileBasicError
+{
+    this(string func)
+    {
+        this.errnum = 35;
+        super("Illegal file format(" ~ func ~ ")");
+    }
+}
 class UsePRGEDITBeforeAnyPRGFunction : SmileBasicError
 {
     this(string func)

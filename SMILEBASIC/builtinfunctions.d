@@ -579,7 +579,15 @@ class BuiltinFunction
         {
             if (size > ary.length)
             {
-                ary.integerArray.length = size;
+                if (ary.dimCount != 2)
+                {
+                    ary.integerArray.length = size;
+                }
+                else
+                {
+                    ary.integerArray.dim[0..2] = [w, h];
+                    ary.integerArray.array = new int[size];
+                }
             }
             p.graphic.gsave(savepage, x, y, w, h, ary.integerArray.array, flag);
         }
@@ -587,7 +595,15 @@ class BuiltinFunction
         {
             if (size > ary.length)
             {
-                ary.doubleArray.length = size;
+                if (ary.dimCount != 2)
+                {
+                    ary.doubleArray.length = size;
+                }
+                else
+                {
+                    ary.doubleArray.dim[0..2] = [w, h];
+                    ary.doubleArray.array = new double[size];
+                }
             }
             p.graphic.gsave(savepage, x, y, w, h, ary.doubleArray.array, flag);
         }   

@@ -180,8 +180,8 @@ r"ファイルを書き込みます。
         return true;
     }
 
-    bool loadDataFile(T)(FileName file, ref Array!T contents)
-        if (is(T == int) || is(T == double))
+    bool loadDataFile(T)(FileName file, ref Array!T contents, out DataHeader header)
+    if (is(T == int) || is(T == double))
     {
         wstring project;
         result = DialogResult.FAILURE;
@@ -211,6 +211,7 @@ r"ファイルを書き込みます。
             harray[0].dim[] = [cast(int)(f.size / int.sizeof), 0, 0, 0];
             harray[0].type = DataType.int_;
         }
+        header = harray[0];
         if (harray[0].dimension != contents.dimCount)
         {
             throw new TypeMismatch("LOAD");
@@ -259,6 +260,12 @@ r"ファイルを書き込みます。
         contents.dim[] = harray[0].dim[];
         contents.dimCount = harray[0].dimension;
         return true;
+    }
+    bool loadDataFile(T)(FileName file, ref Array!T contents)
+        if (is(T == int) || is(T == double))
+    {
+        DataHeader dh;
+        return loadDataFile(file, contents, dh);
     }
 
     void saveTextFile(FileName file, wstring content)
@@ -359,6 +366,8 @@ r"ファイルを書き込みます。
                 return Resource.data;
             case "TXT":
                 return Resource.text;
+            case "GRPF":
+                return Resource.graphicFont;
             default:
                 return Resource.illegal;
         }
@@ -406,6 +415,7 @@ enum Resource
     data,
     text,
     illegal,
+    graphicFont,
 }
 
 struct FileName

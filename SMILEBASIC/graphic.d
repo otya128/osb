@@ -1206,7 +1206,13 @@ class Graphic2 : Graphic
     {
         int arrayH = h, arrayW = w;
         int sx, sy;
-        int* buffer = cast(int*)GRP[savepage].surface.pixels;
+        int* buffer;
+        if (savepage == -1)
+        {
+            buffer = cast(int*)petitcom.console.GRPF.surface.pixels;
+        }
+        else
+            buffer = cast(int*)GRP[savepage].surface.pixels;
         for (int iy = sy; iy < h; iy++)
         {
             for (int ix = sx; ix < w; ix++)

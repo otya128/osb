@@ -138,6 +138,21 @@ struct Value
         this.type = ValueType.Function;
         this.func = func;
     }
+    this(Array!int a)
+    {
+        this.type = ValueType.IntegerArray;
+        this.integerArray = a;
+    }
+    this(Array!double a)
+    {
+        this.type = ValueType.DoubleArray;
+        this.doubleArray = a;
+    }
+    this(Array!(Array!wchar) a)
+    {
+        this.type = ValueType.StringArray;
+        this.stringArray = a;
+    }
     void castOp(ValueType type)
     {
         switch(type)
