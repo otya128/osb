@@ -67,7 +67,7 @@ r"ファイルを書き込みます。
     }
     static bool isValidFileName(C)(C[] filename) if(isSomeChar!(C))
     {
-        if(filename.length > 12)
+        if(filename.length > 14)
         {
             return false;
         }
