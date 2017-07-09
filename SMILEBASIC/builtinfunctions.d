@@ -2824,6 +2824,7 @@ class BuiltinFunction
             wstring resname = type[0].toUpper;
             wstring projectname = type[1];
             wstring filename = type[2];
+            auto file = Projects.parseFileName(name);
             if (!Projects.isValidFileName(filename))
             {
                 throw new IllegalFunctionCall("LOAD");
@@ -2852,9 +2853,17 @@ class BuiltinFunction
                 p.program.slot[lot].load(filename, txt);
                 return;
             }
-            if(resname.indexOf("GRP") == 0)
+            if(file.resource == Resource.graphic)
             {
-                throw new IllegalFunctionCall("NOTIMPL:LOAD GRP");
+                import otya.smilebasic.data;
+                DataHeader header;
+                Value data = Value(new Array!int([0, 0]));
+                if (!p.project.loadDataFile(file, data.integerArray, header))
+                    return;
+                if (header.type == DataType.double_)
+                    throw new IllegalFileFormat("LOAD");
+                GLOAD(p, 0, 0, data.integerArray.dim[0], data.integerArray.dim[1], data, Value(1), 1);
+                return;
             }
             throw new IllegalFunctionCall("LOAD");
         }
