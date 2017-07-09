@@ -258,6 +258,11 @@ class Compiler
         addSystemVariable("MILLISEC", new MilliSecond());
         addSystemVariable("PRGSLOT", new ProgramSlot());
         addSystemVariable("CALLIDX", new CallIndex());
+        addSystemVariable("MPCOUNT", new Zero());
+        addSystemVariable("MPHOST", new Zero());
+        addSystemVariable("MPLOCAL", new Zero());
+        addSystemVariable("MICPOS", new Zero());
+        addSystemVariable("MICSIIZE", new Zero());
     }
     void addSystemVariable(wstring name, SystemVariable var)
     {

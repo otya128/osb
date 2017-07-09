@@ -149,3 +149,11 @@ class CallIndex : SystemVariable
         return Value(vm.petitcomputer.callidx);
     }
 }
+class Zero : SystemVariable
+{
+    @property override Value value()
+    {
+        return Value(0);
+    }
+}
+
