@@ -355,11 +355,27 @@ class VM
     }
     void restoreData(wstring label)
     {
-        if (label in currentData.table.label)
-            currentData.index = currentData.table.label[label];
-        else if (label in currentSlot.globalData.table.label)
+        auto name = parse(label);
+        VMSlot slot;
+        if (name.hasSlot)
         {
-            currentData.index = currentSlot.globalData.table.label[label];
+            if (!checkSlotNumber(name.slot))
+            {
+                throw new IllegalSymbolString();
+            }
+            slot = slots[name.slot];
+        }
+        else
+        {
+            slot = currentSlot;
+        }
+        if (name.name.indexOf('@') != 0)
+            throw new IllegalSymbolString();
+        if (name.name in currentData.table.label)
+            currentData.index = currentData.table.label[name.name];
+        else if (name.name in slot.globalData.table.label)
+        {
+            currentData.index = slot.globalData.table.label[name.name];
         }
         else
         {
