@@ -3079,10 +3079,11 @@ class BuiltinFunction
         func = func.toUpper;
         return p.vm.chkcall(func);
     }
-    static int CHKLABEL(PetitComputer p, wstring label)
+    static int CHKLABEL(PetitComputer p, wstring label, DefaultValue!(int, false) global)
     {
         label = label.toUpper;
-        return p.vm.chklabel(label);
+        global.setDefaultValue(0);
+        return p.vm.chklabel(label, cast(bool)global);
     }
     static int CHKVAR(PetitComputer p, wstring var)
     {

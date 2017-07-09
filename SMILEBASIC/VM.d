@@ -438,7 +438,7 @@ class VM
             return true;
         return false;
     }
-    bool chklabel(wstring label)
+    bool chklabel(wstring label, bool global)
     {
         auto name = parse(label);
         VMSlot slot;
@@ -454,9 +454,14 @@ class VM
         {
             slot = currentSlot;
         }
+        if (currentFunction)
+        {
+            if (name.name in currentFunction.label)
+                return true;
+            if (!global)
+                return false;
+        }
         if (name.name in slot.globalLabel)
-            return true;
-        if (currentFunction && name.name in currentFunction.label)
             return true;
         return false;
     }
