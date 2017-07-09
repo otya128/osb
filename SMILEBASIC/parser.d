@@ -1745,7 +1745,9 @@ class Parser
         while(true)
         {
             //3号から厳密になって必ずいる
-            if(token.type == TokenType.Colon || token.type == TokenType.NewLine)
+            if(token.type == TokenType.Colon || token.type == TokenType.NewLine ||
+               token.type == TokenType.Else || token.type == TokenType.Endif ||
+               token.type == TokenType.Elseif || token.type == TokenType.Print)
             {
                 if(addline) print.addLine();
                 break;
