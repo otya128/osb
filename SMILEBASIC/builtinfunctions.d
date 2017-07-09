@@ -575,18 +575,17 @@ class BuiltinFunction
         if (!ary.isNumberArray)
             throw new TypeMismatch("GSAVE", 6);
         int size = w * h;
+        if (ary.dimCount != 1 && size > ary.length)
+        {
+            throw new SubscriptOutOfRange("GSAVE", 6);
+        }
         if (ary.type == ValueType.IntegerArray)
         {
             if (size > ary.length)
             {
-                if (ary.dimCount != 2)
+                if (ary.dimCount == 1)
                 {
                     ary.integerArray.length = size;
-                }
-                else
-                {
-                    ary.integerArray.dim[0..2] = [w, h];
-                    ary.integerArray.array = new int[size];
                 }
             }
             p.graphic.gsave(savepage, x, y, w, h, ary.integerArray.array, flag);
@@ -595,14 +594,9 @@ class BuiltinFunction
         {
             if (size > ary.length)
             {
-                if (ary.dimCount != 2)
+                if (ary.dimCount == 1)
                 {
                     ary.doubleArray.length = size;
-                }
-                else
-                {
-                    ary.doubleArray.dim[0..2] = [w, h];
-                    ary.doubleArray.array = new double[size];
                 }
             }
             p.graphic.gsave(savepage, x, y, w, h, ary.doubleArray.array, flag);
@@ -616,6 +610,11 @@ class BuiltinFunction
             throw new OutOfRange("GSAVE", 4);
         if (!ary.isNumberArray)
             throw new TypeMismatch("GSAVE", 5);
+        int size = w * h;
+        if (ary.dimCount != 1 && size > ary.length)
+        {
+            throw new SubscriptOutOfRange("GSAVE", 5);
+        }
         GSAVE(p, p.graphic.useGRP, x, y, w, h, ary, flag);
     }
     static void GSAVE(PetitComputer p, int savepage, Value ary, int flag)
@@ -623,12 +622,23 @@ class BuiltinFunction
         if (!ary.isNumberArray)
             throw new TypeMismatch("GSAVE", 2);
         auto writeArea = p.graphic.writeArea[p.displaynum];
+        int size = writeArea.w * writeArea.h;
+        if (ary.dimCount != 1 && size > ary.length)
+        {
+            throw new SubscriptOutOfRange("GSAVE", 2);
+        }
         GSAVE(p, savepage, writeArea.x, writeArea.y, writeArea.w, writeArea.h, ary, flag);
     }
     static void GSAVE(PetitComputer p, Value ary, int flag)
     {
         if (!ary.isNumberArray)
             throw new TypeMismatch("GSAVE", 1);
+        auto writeArea = p.graphic.writeArea[p.displaynum];
+        int size = writeArea.h * writeArea.h;
+        if (ary.dimCount != 1 && size > ary.length)
+        {
+            throw new SubscriptOutOfRange("GSAVE", 1);
+        }
         GSAVE(p, p.graphic.useGRP, ary, flag);
     }
     static void GLOAD(PetitComputer p, int x, int y, int w, int h, Value ary, Value flagOrPalette, int copymode)
