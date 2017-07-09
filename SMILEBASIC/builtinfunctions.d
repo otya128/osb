@@ -2122,6 +2122,20 @@ class BuiltinFunction
         }
         p.sprite.spcol(id, cast(short)x, cast(short)y, cast(ushort)w, cast(ushort)h, false, -1);
     }
+
+    @StartOptional("mask")
+    static void SPCOL(PetitComputer p, int id, out int scalable, out int mask)
+    {
+        int dummy;
+        SPCOL(p, id, dummy, dummy, dummy, dummy, scalable, mask);
+    }
+    @StartOptional("scalable")
+    static void SPCOL(PetitComputer p, int id, out int x, out int y, out int w, out int h, out int scalable, out int mask)
+    {
+        bool s;
+        p.sprite.getspcol(id, x, y, w, h, s, mask);
+        scalable = cast(int)(s);
+    }
     static int SPHITSP(PetitComputer p, int id)
     {
         if (!p.sprite.isValidSpriteId(id))
@@ -2219,6 +2233,14 @@ class BuiltinFunction
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");
+    }
+    static void BGMSTOP(PetitComputer p, int track)
+    {
+        writeln("NOTIMPL:BGMSTOP %d", track);
+    }
+    static void BGMSTOP(PetitComputer p, int track, int fade)
+    {
+        writeln("NOTIMPL:BGMSTOP %d,%d", track, fade);
     }
     static int BGMCHK(PetitComputer p)
     {
