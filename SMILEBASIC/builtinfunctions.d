@@ -660,11 +660,11 @@ class BuiltinFunction
             int colorflag = flagOrPalette.castInteger;
             if (ary.type == ValueType.IntegerArray)
             {
-                p.graphic.gload(x, y, w, h, ary.integerArray.array, colorflag, copymode);
+                p.graphic.gload(p.graphic.useGRP, x, y, w, h, ary.integerArray.array, colorflag, copymode);
             }
             if (ary.type == ValueType.DoubleArray)
             {
-                p.graphic.gload(x, y, w, h, ary.doubleArray.array, colorflag, copymode);
+                p.graphic.gload(p.graphic.useGRP, x, y, w, h, ary.doubleArray.array, colorflag, copymode);
             }
         }
         else if (flagOrPalette.isNumberArray)
@@ -2879,8 +2879,15 @@ class BuiltinFunction
                 p.program.slot[lot].load(filename, txt);
                 return;
             }
-            if(file.resource == Resource.graphic)
+            if(file.resource == Resource.graphic || file.resource == Resource.graphicFont)
             {
+                auto r = file.resourceNumber;
+                if (file.resource == Resource.graphicFont)
+                {
+                    r = -1;
+                }
+                else if (!file.hasResourceNumber)
+                    throw new IllegalFunctionCall("LOAD");
                 import otya.smilebasic.data;
                 DataHeader header;
                 Value data = Value(new Array!int([0, 0]));
@@ -2888,7 +2895,7 @@ class BuiltinFunction
                     return;
                 if (header.type == DataType.double_)
                     throw new IllegalFileFormat("LOAD");
-                GLOAD(p, 0, 0, data.integerArray.dim[0], data.integerArray.dim[1], data, Value(1), 1);
+                p.graphic.gload(r, 0, 0, data.integerArray.dim[0], data.integerArray.dim[1], data.integerArray.array, 1, 1);
                 return;
             }
             throw new IllegalFunctionCall("LOAD");

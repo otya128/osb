@@ -304,8 +304,8 @@ class Graphic
     abstract int gspoit(int page, int x, int y);
     abstract void gsave(int savepage, int x, int y, int w, int h, double[] array, int flag);
     abstract void gsave(int savepage, int x, int y, int w, int h, int[] array, int flag);
-    abstract void gload(int x, int y, int w, int h, int[] array, int flag, int copymode);
-    abstract void gload(int x, int y, int w, int h, double[] array, int flag, int copymode);
+    abstract void gload(int page, int x, int y, int w, int h, int[] array, int flag, int copymode);
+    abstract void gload(int page, int x, int y, int w, int h, double[] array, int flag, int copymode);
     void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
     if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
     {
@@ -691,13 +691,26 @@ class GraphicFBO : Graphic
             }
         }
     }
-    override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
+    override void gload(int page, int x, int y, int w, int h, int[] array, int flag, int copymode)
     {
         if (w * h > array.length)
             return;
         if (!copymode)
         {
             glEnable(GL_ALPHA_TEST);
+        }
+        auto oldPage = useGRP;
+        if (page == -1)
+        {
+            glBindFramebufferEXT(GL_FRAMEBUFFER, petitcom.console.GRPF.buffer);
+        }
+        else
+        {
+            useGRP = page;
+        }
+        scope (exit)
+        {
+            useGRP = oldPage;
         }
         glRasterPos2i(x, y);
         //convertColor
@@ -719,13 +732,13 @@ class GraphicFBO : Graphic
             glDisable(GL_ALPHA_TEST);
         }
     }
-    override void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
+    override void gload(int page, int x, int y, int w, int h, double[] array, int flag, int copymode)
     {
         for (int i = 0; i < array.length; i++)
         {
             paint.buffer[i] = cast(int)array[i];
         }
-        gload(x, y, w, h, cast(int[])paint.buffer, flag, copymode);
+        gload(useGRP, x, y, w, h, cast(int[])paint.buffer, flag, copymode);
     }
     void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
         if ((is(T == int) || is(T == double)) && (is(T2 == int) || is(T2 == double)))
@@ -734,7 +747,7 @@ class GraphicFBO : Graphic
             {
                 paint.buffer[i] = cast(int)palette[cast(int)array[i]];
             }
-            gload(x, y, w, h, cast(int[])paint.buffer, 0, copymode);
+            gload(useGRP, x, y, w, h, cast(int[])paint.buffer, 0, copymode);
         }
 }
 
@@ -782,6 +795,12 @@ class Graphic2 : Graphic
     }
 
     bool df;
+    void updateTexture(int page)
+    {
+        glBindTexture(GL_TEXTURE_2D, this.GRP[page].glTexture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_BGRA, GL_UNSIGNED_BYTE, this.GRP[page].surface.pixels);
+        glFlush();
+    }
     void updateTexture()
     {
         glBindTexture(GL_TEXTURE_2D, this.GRP[useGRP].glTexture);
@@ -1238,12 +1257,19 @@ class Graphic2 : Graphic
         gsaveTempl(savepage, x, y, w, h, array, flag);
     }
 
-    void gloadTempl(T)(int x, int y, int w, int h, T array, int flag, int copymode)
+    void gloadTempl(T)(int page, int x, int y, int w, int h, T array, int flag, int copymode)
     {
         int arrayH = h, arrayW = w;
         int sx, sy;
         if (clipXYWH(writeArea[petitcom.displaynum], x, y, w, h, sx, sy, w, h))
             return;
+        int* buffer;
+        if (page == -1)
+        {
+            buffer = cast(int*)petitcom.console.GRPF.surface.pixels;
+        }
+        else
+            buffer = cast(int*)GRP[page].surface.pixels;
         for (int iy = sy; iy < sy + h; iy++)
         {
             for (int ix = sx; ix < sx + w; ix++)
@@ -1256,17 +1282,30 @@ class Graphic2 : Graphic
                     *(buffer + (iy + y) * width + (x + ix)) = c;
             }
         }
-        df = true;
+        if (page == -1)
+        {
+            petitcom.console.updateTexture();
+        }
+        else if (useGRP == page)
+        {
+            df = true;
+        }
+        else
+        {
+            //ここに到達するときはLOAD関数なのでオーバーヘッドを考える必要が薄いので何も考えずupdateTexture
+            updateTexture(page);
+        }
+        
     }
 
-    override void gload(int x, int y, int w, int h, int[] array, int flag, int copymode)
+    override void gload(int page, int x, int y, int w, int h, int[] array, int flag, int copymode)
     {
-        gloadTempl(x, y, w, h, array, flag, copymode);
+        gloadTempl(page, x, y, w, h, array, flag, copymode);
     }
 
-    override void gload(int x, int y, int w, int h, double[] array, int flag, int copymode)
+    override void gload(int page, int x, int y, int w, int h, double[] array, int flag, int copymode)
     {
-        gloadTempl(x, y, w, h, array, flag, copymode);
+        gloadTempl(page, x, y, w, h, array, flag, copymode);
     }
 
     void gloadPalette(T, T2)(int x, int y, int w, int h, T[] array, T2[] palette, int copymode)
@@ -1299,7 +1338,7 @@ class Graphic2 : Graphic
             swap(y1, y2);
         int w = x2 - x1 + 1, h = y2 - y1 + 1;
         gsaveTempl(srcpage, x1, y1, w, h, tempbuffer, 0);
-        gloadTempl(x3, y3, w, h, tempbuffer, 0, cpmode);
+        gloadTempl(useGRP, x3, y3, w, h, tempbuffer, 0, cpmode);
     }
     override void gtri(int x1, int y1, int x2, int y2, int x3, int y3, int color)
     {

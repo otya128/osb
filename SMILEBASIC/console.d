@@ -635,6 +635,13 @@ class Console
                 buffer[x + font.x + (font.y + y) * w] = Graphic.RGBA16ToARGB32Color(cast(int)array[x + y * font.w]);
             }
         }
+        updateTexture;
+    }
+    public void updateTexture()
+    {
+        auto buffer = cast(int*)GRPF.surface.pixels;
+        auto w = GRPF.surface.w;
+        auto h = GRPF.surface.h;
         //update texture
         glBindTexture(GL_TEXTURE_2D, GRPF.glTexture);
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
