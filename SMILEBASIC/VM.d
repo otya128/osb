@@ -76,10 +76,13 @@ struct Callback
     CallbackType type;
     Function func;
     VMSlot slot;
+    VM vm;
     size_t slotUnique;
     int label;
-    bool isCallable()
+    bool isCallable(VM vm)
     {
+        if (vm != this.vm)
+            return false;
         if (type == CallbackType.label)
             return slot.unique == slotUnique;
         if (type == CallbackType.function_)
@@ -88,7 +91,7 @@ struct Callback
     }
     void opCall(VM vm)
     {
-        if (!isCallable)
+        if (!isCallable(vm))
             return;
         if (type == CallbackType.label)
         {
@@ -528,6 +531,7 @@ class VM
         {
             slot = currentSlot;
         }
+        result.vm = this;
         result.slot = slot;
         result.slotUnique = slot.unique;
         Function func;
@@ -2759,7 +2763,7 @@ class CallSprite : Code
         }
         auto callback = vm.petitcomputer.sprite.getCallback(vm.petitcomputer.callidx);
         vm.pc--;
-        if (!callback.isCallable)
+        if (!callback.isCallable(vm))
         {
             return;
         }
@@ -2783,7 +2787,7 @@ class CallBG : Code
         }
         auto callback = vm.petitcomputer.getBG(vm.petitcomputer.callidx).callback;
         vm.pc--;
-        if (!callback.isCallable)
+        if (!callback.isCallable(vm))
         {
             return;
         }
