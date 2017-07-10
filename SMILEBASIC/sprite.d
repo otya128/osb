@@ -95,7 +95,7 @@ struct SpriteAnimData
             case SpriteAnimTarget.XY:
                 this.data.x = cast(int)data[i++];
                 this.data.y = cast(int)data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.x += sprite.x;
                     this.data.y += sprite.y;
