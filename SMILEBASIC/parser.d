@@ -270,7 +270,7 @@ class Lexical
                 }
                 if (isLabel)
                 {
-                    token = Token(TokenType.Label, TokenValue(iden));
+                    token = Token(TokenType.Label, TokenValue(std.uni.toUpper(iden)));
                 }
                 else
                 {

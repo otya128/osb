@@ -2296,11 +2296,11 @@ class BuiltinFunction
     }
     static void BGMSTOP(PetitComputer p, int track)
     {
-        writeln("NOTIMPL:BGMSTOP %d", track);
+        writefln("NOTIMPL:BGMSTOP %d", track);
     }
     static void BGMSTOP(PetitComputer p, int track, int fade)
     {
-        writeln("NOTIMPL:BGMSTOP %d,%d", track, fade);
+        writefln("NOTIMPL:BGMSTOP %d,%d", track, fade);
     }
     static int BGMCHK(PetitComputer p)
     {
@@ -2309,11 +2309,11 @@ class BuiltinFunction
     }
     static void BGMSETD(int no, wstring label)
     {
-        writeln("NOTIMPL:BGMSETD %d,%s", no, label);
+        writefln("NOTIMPL:BGMSETD %d,%s", no, label);
     }
     static void BGMSET(int no, wstring mml)
     {
-        writeln("NOTIMPL:BGMSET %d,%s", no, mml);
+        writefln("NOTIMPL:BGMSET %d,%s", no, mml);
     }
     static int CHKCHR(PetitComputer p, int x, int y)
     {
