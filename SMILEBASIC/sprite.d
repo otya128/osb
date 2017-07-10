@@ -401,8 +401,8 @@ class Sprite
             switch(target)
             {
                 case SpriteAnimTarget.XY:
-                    sprite.x = data.data.x;
-                    sprite.y = data.data.y;
+                    sprite.x = cast(int)data.data.x;
+                    sprite.y = cast(int)data.data.y;
                     break;
                 case SpriteAnimTarget.Z:
                     sprite.z = cast(int)data.data.z;
@@ -437,8 +437,8 @@ class Sprite
             switch(target)
             {
                 case SpriteAnimTarget.XY:
-                    sprite.x = data.old.x + ((data.data.x - data.old.x) / data.frame) * frame;
-                    sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
+                    sprite.x = cast(int)(data.old.x + ((data.data.x - data.old.x) / data.frame) * frame);
+                    sprite.y = cast(int)(data.old.y + ((data.data.y - data.old.y) / data.frame) * frame);
                     break;
                 case SpriteAnimTarget.Z:
                     sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
