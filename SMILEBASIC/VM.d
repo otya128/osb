@@ -375,6 +375,7 @@ class VM
             currentData.index = currentData.table.label[name.name];
         else if (name.name in slot.globalData.table.label)
         {
+            currentData.table = slot.globalData.table;
             currentData.index = slot.globalData.table.label[name.name];
         }
         else

@@ -1861,7 +1861,6 @@ class BuiltinFunction
                     if(va_args[0].isString)
                     {
                         VM vm = p.vm;
-                        vm.pushDataIndex();
                         vm.restoreData(va_args[0].castDString);
                         auto count = vm.readData().castInteger;//読み込むスプライト数
                         int defno = 0;//?
@@ -1877,7 +1876,6 @@ class BuiltinFunction
                             p.sprite.SPDEFTable[defno] = SpriteDef(U, V, W, H, HX, HY, cast(SpriteAttr)ATTR);
                             defno++;
                         }
-                        vm.popDataIndex();
                         return;
                     }
                     throw new IllegalFunctionCall("SPDEF");
