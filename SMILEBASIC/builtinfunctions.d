@@ -2273,6 +2273,14 @@ class BuiltinFunction
         writeln("NOTIMPL:BGMCHK");
         return false;
     }
+    static void BGMSETD(int no, wstring label)
+    {
+        writeln("NOTIMPL:BGMSETD %d,%s", no, label);
+    }
+    static void BGMSET(int no, wstring mml)
+    {
+        writeln("NOTIMPL:BGMSET %d,%s", no, mml);
+    }
     static int CHKCHR(PetitComputer p, int x, int y)
     {
         return cast(int)(p.console.console[p.displaynum][y][x].character);
