@@ -105,7 +105,7 @@ struct SpriteAnimData
                 break;
             case SpriteAnimTarget.Z:
                 this.data.z = cast(int)data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.z += sprite.z;
                 }
@@ -114,7 +114,7 @@ struct SpriteAnimData
             case SpriteAnimTarget.UV:
                 this.data.u = cast(int)data[i++];
                 this.data.v = cast(int)data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.u += sprite.u;
                     this.data.v += sprite.v;
@@ -124,7 +124,7 @@ struct SpriteAnimData
                 break;
             case SpriteAnimTarget.I:
                 this.data.i = cast(int)data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.i += sprite.defno;
                 }
@@ -132,7 +132,7 @@ struct SpriteAnimData
                 break;
             case SpriteAnimTarget.R:
                 this.data.r = data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.r += sprite.r;
                 }
@@ -141,7 +141,7 @@ struct SpriteAnimData
             case SpriteAnimTarget.S:
                 this.data.scalex = data[i++];
                 this.data.scaley = data[i++];
-                if (!old && relative)
+                if (relative)
                 {
                     this.data.scalex += sprite.scalex;
                     this.data.scaley += sprite.scaley;
