@@ -23,6 +23,7 @@ import otya.smilebasic.graphic;
 import otya.smilebasic.dialog;
 import otya.smilebasic.program;
 import otya.smilebasic.random;
+import otya.smilebasic.fade;
 static import otya.smilebasic.token;
 const static rot_test_deg = 45f;
 const static rot_test_x = 0f;
@@ -284,6 +285,7 @@ class PetitComputer
     int[2] bgpage;
     Projects project;
     bool redirectConsole;
+    int displayCount;
     void init()
     {
         random = new Random();
@@ -317,6 +319,7 @@ class PetitComputer
         screenWidthDisplay1 = 320;
         screenHeightDisplay1 = 240;
         currentDisplay = Display([SDL_Rect(0, 0, screenWidth, screenHeight)]);
+        displayCount = 2;
         console = redirectConsole ? new NativeConsole(std.stdio.stdout, this) : new Console(this);
         if(!exists(fontTableFile))
         {
@@ -903,13 +906,17 @@ class PetitComputer
                     version(test) glRotatef(rot_test_deg, rot_test_x, rot_test_y, rot_test_z);
 
                     //http://marina.sys.wakayama-u.ac.jp/~tokoi/?date=20081122 みたいな方法もあるけどとりあえず
-                    //とりあえず一番楽な方法
+                    //とりあえず一番楽な方法main
                     //これだと同一Zでスプライトが一番下に来てしまうのでZ値を補正する必要がある->やった
                     glEnable(GL_BLEND);
                     glDepthMask(GL_FALSE);//スプライト同士でのZバッファは半透明だと邪魔なので無効
                     sprite.render();//Zソートすべき->やった->プチコンの挙動的に安定ソートか非安定ソートか
                     glDepthMask(GL_TRUE);
                     glDisable(GL_BLEND);
+                    for (int i = 0; i < currentDisplay.rect.length; i++)
+                    {
+                        fades[i].render();
+                    }
                     if (dialog)
                     {
                         dialog.render();
@@ -1153,6 +1160,9 @@ class PetitComputer
         sprite = new Sprite(this);
         for(int i = 0; i < bg.length; i++)
             bg[i] = new BG(this);
+        fades = new Fade[displayCount];
+        for (int i = 0; i < displayCount; i++)
+            fades[i] = new Fade(this, i);
         core.thread.Thread thread = new core.thread.Thread(&render);
         renderCondition = new Condition(new Mutex());
         thread.start();
@@ -1856,6 +1866,11 @@ class PetitComputer
         return a << 24 | r << 16 | g << 8 | b; 
     }
     public Random random;
+    Fade[] fades;
+    public Fade fade()
+    {
+        return fades[displaynum];
+    }
 }
 
 unittest

@@ -3996,6 +3996,18 @@ class BuiltinFunction
     {
         return p.clipboard;
     }
+    static void FADE(PetitComputer p, int color)
+    {
+        p.fade.fade(color);
+    }
+    static void FADE(PetitComputer p, int color, int time)
+    {
+        p.fade.fade(color, time);
+    }
+    static int FADE(PetitComputer p)
+    {
+        return p.fade.fade();
+    }
 
     //alias void function(PetitComputer, Value[], Value[]) BuiltinFunc;
     static BuiltinFunctions[wstring] builtinFunctions;
