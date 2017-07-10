@@ -2208,6 +2208,10 @@ class BuiltinFunction
         {
             throw new OutOfRange(smilebasicFunctionName, 1);
         }
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPCHK", 1);
+        }
         return p.sprite.spchk(id);
     }
     static void SPPAGE(PetitComputer p, int page)
