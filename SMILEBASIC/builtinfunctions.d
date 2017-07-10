@@ -2256,6 +2256,40 @@ class BuiltinFunction
             throw new IllegalFunctionCall("SPFUNC"/*, 2*/);
         p.sprite.spfunc(id, callback);
     }
+    static void SPSTART(PetitComputer p, int id)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange("SPSTART", 1);
+        }
+        
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPSTART", 1);
+        }
+        p.sprite.spstart(id);
+    }
+    static void SPSTART(PetitComputer p)
+    {
+        p.sprite.spstart();
+    }
+    static void SPSTOP(PetitComputer p, int id)
+    {
+        if (!p.sprite.isValidSpriteId(id))
+        {
+            throw new OutOfRange("SPSTOP", 1);
+        }
+
+        if (!p.sprite.isSpriteDefined(id))
+        {
+            throw new IllegalFunctionCall("SPSTOP", 1);
+        }
+        p.sprite.spstop(id);
+    }
+    static void SPSTOP(PetitComputer p)
+    {
+        p.sprite.spstop();
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");

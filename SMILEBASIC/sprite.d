@@ -255,6 +255,7 @@ struct SpriteData
         this.defno = defno;
         col = SpriteCollision(&this);
     }
+    bool animationEnabled = true;
     SpriteAnimData[][SpriteAnimTarget.V + 1] anim;
     int[SpriteAnimTarget.V + 1] animindex;
     int[SpriteAnimTarget.V + 1] animloop;
@@ -396,43 +397,48 @@ class Sprite
     }
     void animation(SpriteData* sprite, SpriteAnimData* data, SpriteAnimTarget target)
     {
-        if(!data.interpolation)
+        if (!sprite.animationEnabled)
+            return;
+        auto frame = data.elapse;
+        if(frame == 1)
         {
-            switch(target)
+            if(!data.interpolation)
             {
-                case SpriteAnimTarget.XY:
-                    sprite.x = cast(int)data.data.x;
-                    sprite.y = cast(int)data.data.y;
-                    break;
-                case SpriteAnimTarget.Z:
-                    sprite.z = cast(int)data.data.z;
-                    break;
-                case SpriteAnimTarget.UV:
-                    sprite.u = data.data.u;
-                    sprite.v = data.data.v;
-                    break;
-                case SpriteAnimTarget.I:
-                    sprite.defno = data.data.i;
-                    spchr(sprite.id, sprite.defno);
-                    break;
-                case SpriteAnimTarget.R:
-                    sprite.r = data.data.r;
-                    break;
-                case SpriteAnimTarget.S:
-                    sprite.scalex = data.data.scalex;
-                    sprite.scaley = data.data.scaley;
-                    break;
-                case SpriteAnimTarget.C:
-                    break;
-                case SpriteAnimTarget.V:
-                    break;
-                default:
-                    break;
+                switch(target)
+                {
+                    case SpriteAnimTarget.XY:
+                        sprite.x = cast(int)data.data.x;
+                        sprite.y = cast(int)data.data.y;
+                        break;
+                    case SpriteAnimTarget.Z:
+                        sprite.z = cast(int)data.data.z;
+                        break;
+                    case SpriteAnimTarget.UV:
+                        sprite.u = data.data.u;
+                        sprite.v = data.data.v;
+                        break;
+                    case SpriteAnimTarget.I:
+                        sprite.defno = data.data.i;
+                        spchr(sprite.id, sprite.defno);
+                        break;
+                    case SpriteAnimTarget.R:
+                        sprite.r = data.data.r;
+                        break;
+                    case SpriteAnimTarget.S:
+                        sprite.scalex = data.data.scalex;
+                        sprite.scaley = data.data.scaley;
+                        break;
+                    case SpriteAnimTarget.C:
+                        break;
+                    case SpriteAnimTarget.V:
+                        break;
+                    default:
+                        break;
+                }
             }
         }
-        else
+        if(data.interpolation)
         {
-            auto frame = data.elapse;
             //線形補完する奴
             switch(target)
             {
@@ -444,11 +450,11 @@ class Sprite
                     sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
                     break;
                 case SpriteAnimTarget.UV:
-                    sprite.u = data.old.u + ((data.data.u - data.old.u) / data.frame) * frame;
-                    sprite.v = data.old.v + ((data.data.v - data.old.v) / data.frame) * frame;
+                    sprite.u = data.old.u + cast(int)(((data.data.u - data.old.u) / cast(double)data.frame) * frame);
+                    sprite.v = data.old.v + cast(int)(((data.data.v - data.old.v) / cast(double)data.frame) * frame);
                     break;
                 case SpriteAnimTarget.I:
-                    sprite.defno = data.old.i + ((data.data.i - data.old.i) / data.frame) * frame;
+                    sprite.defno = data.old.i + cast(int)(((data.data.i - data.old.i) / cast(double)data.frame) * frame);
                     spchr(sprite.id, sprite.defno);
                     break;
                 case SpriteAnimTarget.R:
@@ -469,6 +475,8 @@ class Sprite
     }
     void animation(SpriteData* sprite)
     {
+        if (!sprite.animationEnabled)
+            return;
         foreach(i, ref d; sprite.anim)
         {
             if(!d) continue;//未定義
@@ -477,78 +485,7 @@ class Sprite
             SpriteAnimData* data = &d[index];
             data.elapse = data.elapse + 1;
             auto frame = data.elapse;
-            if(frame == 1)
-            {
-                if(!data.interpolation)
-                {
-                    switch(target)
-                    {
-                        case SpriteAnimTarget.XY:
-                            sprite.x = data.data.x;
-                            sprite.y = data.data.y;
-                            break;
-                        case SpriteAnimTarget.Z:
-                            sprite.z = cast(int)data.data.z;
-                            break;
-                        case SpriteAnimTarget.UV:
-                            sprite.u = data.data.u;
-                            sprite.v = data.data.v;
-                            break;
-                        case SpriteAnimTarget.I:
-                            sprite.defno = data.data.i;
-                            spchr(sprite.id, sprite.defno);
-                            break;
-                        case SpriteAnimTarget.R:
-                            sprite.r = data.data.r;
-                            break;
-                        case SpriteAnimTarget.S:
-                            sprite.scalex = data.data.scalex;
-                            sprite.scaley = data.data.scaley;
-                            break;
-                        case SpriteAnimTarget.C:
-                            break;
-                        case SpriteAnimTarget.V:
-                            break;
-                        default:
-                            break;
-                    }
-                }
-            }
-            if(data.interpolation)
-            {
-                //線形補完する奴
-                switch(target)
-                {
-                    case SpriteAnimTarget.XY:
-                        sprite.x = data.old.x + ((data.data.x - data.old.x) / data.frame) * frame;
-                        sprite.y = data.old.y + ((data.data.y - data.old.y) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.Z:
-                        sprite.z = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
-                        break;
-                    case SpriteAnimTarget.UV:
-                        sprite.u = data.old.u + cast(int)(((data.data.u - data.old.u) / cast(double)data.frame) * frame);
-                        sprite.v = data.old.v + cast(int)(((data.data.v - data.old.v) / cast(double)data.frame) * frame);
-                        break;
-                    case SpriteAnimTarget.I:
-                        sprite.defno = data.old.i + cast(int)(((data.data.i - data.old.i) / cast(double)data.frame) * frame);
-                        spchr(sprite.id, sprite.defno);
-                        break;
-                    case SpriteAnimTarget.R:
-                        sprite.r = data.old.r + ((data.data.r - data.old.r) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.S:
-                        sprite.scalex = data.old.scalex + ((data.data.scalex - data.old.scalex) / data.frame) * frame;
-                        sprite.scaley = data.old.scaley + ((data.data.scaley - data.old.scaley) / data.frame) * frame;
-                        break;
-                    case SpriteAnimTarget.C:
-                        break;
-                    case SpriteAnimTarget.V:
-                        break;
-                    default:
-                        break;
-                }
-            }
+            animation(sprite, data, target);
             if(frame >= data.frame)
             {
                 sprite.animindex[i] = (sprite.animindex[i] + 1) % cast(int)d.length;
@@ -1254,5 +1191,44 @@ class Sprite
     Callback getCallback(int id)
     {
         return sprites[spid(id)].callback;
+    }
+    void spstart(int id)
+    {
+        setSpriteAnimationEnabled(id, true);
+    }
+    void spstart()
+    {
+        setSpriteAnimationEnabled(true);
+    }
+    void spstop(int id)
+    {
+        setSpriteAnimationEnabled(id, false);
+    }
+    void spstop()
+    {
+        setSpriteAnimationEnabled(false);
+    }
+    void setSpriteAnimationEnabled(int id, bool flag)
+    {
+        id = spid(id);
+        sprites[id].animationEnabled = flag;
+    }
+    void setSpriteAnimationEnabled(bool flag)
+    {
+        auto id = spid(0);
+        if(spmax <= id)
+        {
+            synchronized (this) for(int i = id; i < sprites.length; i++)
+            {
+                sprites[i].animationEnabled = flag;
+            }
+        }
+        else
+        {
+            synchronized (this) for(int i = 0; i < spmax; i++)
+            {
+                sprites[i].animationEnabled = flag;
+            }
+        }
     }
 }
