@@ -76,8 +76,9 @@ struct SpriteAnimData
     bool interpolation;//線形補完するかどうか
     SpriteAnimState data;
     SpriteAnimState old;
-    int load(int i, ref SpriteData sprite, SpriteAnimTarget target, double[] data, SpriteAnimData* old)
+    int load(int i, ref SpriteData sprite, SpriteAnimTarget target, double[] data, SpriteAnimData* old, bool r)
     {
+        relative = r;
         this.frame = cast(int)data[i];
         if(this.frame < 0)
         {
@@ -94,30 +95,57 @@ struct SpriteAnimData
             case SpriteAnimTarget.XY:
                 this.data.x = cast(int)data[i++];
                 this.data.y = cast(int)data[i++];
+                if (!old && relative)
+                {
+                    this.data.x += sprite.x;
+                    this.data.y += sprite.y;
+                }
                 this.old.x = old ? old.data.x : sprite.x;
                 this.old.y = old ? old.data.y : sprite.y;
                 break;
             case SpriteAnimTarget.Z:
                 this.data.z = cast(int)data[i++];
+                if (!old && relative)
+                {
+                    this.data.z += sprite.z;
+                }
                 this.old.z = old ? old.data.z : sprite.z;
                 break;
             case SpriteAnimTarget.UV:
                 this.data.u = cast(int)data[i++];
                 this.data.v = cast(int)data[i++];
+                if (!old && relative)
+                {
+                    this.data.u += sprite.u;
+                    this.data.v += sprite.v;
+                }
                 this.old.u = old ? old.data.u : sprite.u;
                 this.old.v = old ? old.data.v : sprite.v;
                 break;
             case SpriteAnimTarget.I:
                 this.data.i = cast(int)data[i++];
+                if (!old && relative)
+                {
+                    this.data.i += sprite.defno;
+                }
                 this.old.i = old ? old.data.i : sprite.defno;
                 break;
             case SpriteAnimTarget.R:
                 this.data.r = data[i++];
+                if (!old && relative)
+                {
+                    this.data.r += sprite.r;
+                }
                 this.old.r = old ? old.data.r : sprite.r;
                 break;
             case SpriteAnimTarget.S:
                 this.data.scalex = data[i++];
                 this.data.scaley = data[i++];
+                if (!old && relative)
+                {
+                    this.data.scalex += sprite.scalex;
+                    this.data.scaley += sprite.scaley;
+                }
                 this.old.scalex = old ? old.data.scalex : sprite.scalex;
                 this.old.scaley = old ? old.data.scaley : sprite.scaley;
                 break;
@@ -890,7 +918,7 @@ class Sprite
             SpriteAnimData* old;
             for(int i = 0; i < data.length;)
             {
-                i = animdata[j].load(i, sprites[id], target, data, old);
+                i = animdata[j].load(i, sprites[id], target, data, old, relative);
                 old = &animdata[j++];
                 if(data.length - i == 1)
                 {
