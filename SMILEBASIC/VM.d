@@ -412,6 +412,7 @@ class VM
     static Name parse(wstring input)
     {
         import std.array;
+        input = std.uni.toUpper(input);
         sizediff_t index = input.indexOf(':');
         if (index == -1)
         {
@@ -2090,15 +2091,16 @@ class RestoreExprCode : Code
         vm.pop(label);
         if(!label.isString)
             throw new TypeMismatch();
-        if (label.castDString in datatable.label)
+        wstring l = std.uni.toUpper(label.castDString);
+        if (l in datatable.label)
         {
             vm.currentData.table = datatable;
-            vm.currentData.index = datatable.label[label.castDString];
+            vm.currentData.index = datatable.label[l];
         }
-        else if (label.castDString in vm.currentSlot.globalData.table.label)
+        else if (l in vm.currentSlot.globalData.table.label)
         {
             vm.currentData.table = vm.currentSlot.globalData.table;
-            vm.currentData.index = vm.currentSlot.globalData.table.label[label.castDString];
+            vm.currentData.index = vm.currentSlot.globalData.table.label[l];
         }
         else
         {
