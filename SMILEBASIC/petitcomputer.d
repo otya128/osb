@@ -1333,7 +1333,8 @@ class PetitComputer
                                 std.stdio.stderr.writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
                             version (dumpStackVM)
                                 vm.dumpStack();
-                            running = vm.runStep();
+                            auto b = vm.runStep();
+                            running = b && running;
                             debug if(trace && loc.line != vm.currentLocation.line)
                             {
                                 loc = vm.currentLocation;
