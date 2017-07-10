@@ -305,6 +305,7 @@ struct SpriteData
     {
         this.define = false;
         this.attr = SpriteAttr.none;
+        this.callback = Callback.init;
     }
     void change(ref SpriteDef s)
     {
