@@ -2292,6 +2292,30 @@ class BuiltinFunction
     {
         p.sprite.spstop();
     }
+    static void SPHITINFO(PetitComputer p, out double tm)
+    {
+        tm = p.sprite.spriteHitInfo.time;
+    }
+    static void SPHITINFO(PetitComputer p, out double tm, out double x1, out double y1, out double x2, out double y2)
+    {
+        tm = p.sprite.spriteHitInfo.time;
+        x1 = p.sprite.spriteHitInfo.x1;
+        y1 = p.sprite.spriteHitInfo.y1;
+        x2 = p.sprite.spriteHitInfo.x2;
+        y2 = p.sprite.spriteHitInfo.y2;
+    }
+    static void SPHITINFO(PetitComputer p, out double tm, out double x1, out double y1, out double vx1, out double vy1, out double x2, out double y2, out double vx2, out double vy2)
+    {
+        tm = p.sprite.spriteHitInfo.time;
+        x1 = p.sprite.spriteHitInfo.x1;
+        y1 = p.sprite.spriteHitInfo.y1;
+        x2 = p.sprite.spriteHitInfo.x2;
+        y2 = p.sprite.spriteHitInfo.y2;
+        vx1 = p.sprite.spriteHitInfo.vx1;
+        vy1 = p.sprite.spriteHitInfo.vy1;
+        vx2 = p.sprite.spriteHitInfo.vx2;
+        vy2 = p.sprite.spriteHitInfo.vy2;
+    }
     static void BGMSTOP(PetitComputer p)
     {
         writeln("NOTIMPL:BGMSTOP");

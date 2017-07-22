@@ -175,6 +175,9 @@ struct SpriteCollision
     short sy;
     ushort w;
     ushort h;
+    double vx = 0;
+    double vy = 0;
+
     bool detection(ref SpriteData sp)
     {
         if(sp.define && sp.col.mask & mask)
@@ -327,6 +330,18 @@ struct SpriteData
     //SPCOL
     SpriteCollision col;
     bool enableCol;
+}
+struct SpriteHitInfo
+{
+    double time;
+    double x1 = 0;
+    double y1 = 0;
+    double vx1 = 0;
+    double vy1 = 0;
+    double x2 = 0;
+    double y2 = 0;
+    double vx2 = 0;
+    double vy2 = 0;
 }
 class Sprite
 {
@@ -1146,6 +1161,7 @@ class Sprite
         end = spid(end);
         return sphitsp2(id, start, end);
     }
+    SpriteHitInfo spriteHitInfo;
     int sphitsp2(int id, int start, int end)
     {
         if (!sprites[id].enableCol)
@@ -1156,7 +1172,19 @@ class Sprite
         {
             if(id == start) continue;
             if(sprites[start].enableCol && sprites[id].col.detection(sprites[start]))
+            {
+                spriteHitInfo.time = 0;
+                spriteHitInfo.x1 = sprites[id].x;
+                spriteHitInfo.y1 = sprites[id].y;
+                spriteHitInfo.vx1 = sprites[id].col.vx;
+                spriteHitInfo.vy1 = sprites[id].col.vy;
+                spriteHitInfo.x2 = sprites[start].x;
+                spriteHitInfo.y2 = sprites[start].y;
+                spriteHitInfo.vx2 = sprites[start].col.vx;
+                spriteHitInfo.vy2 = sprites[start].col.vy;
+
                 return start;
+            }
         }
         return -1;
     }
