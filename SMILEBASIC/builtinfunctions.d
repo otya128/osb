@@ -1790,6 +1790,54 @@ class BuiltinFunction
         if(args[1].isNumber)
             p.sprite.spanim(no, cast(SpriteAnimTarget)(args[1].castInteger), animdata);
     }
+
+    static void BGANIM(PetitComputer p, Value[] va_args)
+    {
+        //TODO:配列
+        auto args = retro(va_args);
+        int no = args[0].castInteger;
+        if (!p.isValidLayer(no))
+        {
+            throw new OutOfRange(smilebasicFunctionName, 1);
+        }
+        double[] animdata;
+        if(args[2].isString)
+        {
+            VM vm = p.vm;
+            vm.restoreData(args[2].castDString);
+            int keyframe = vm.readData.castInteger;
+            auto target = p.getBG(no).getBGAnimTarget(args[1].castDString);
+            int item = 2;
+            if((target & 7) == SpriteAnimTarget.XY || (target & 7) == SpriteAnimTarget.UV) item++;
+            animdata = new double[item * keyframe + 1];
+            int j;
+            for(int i = 0; i < keyframe; i++)
+            {
+                animdata[j] = vm.readData.castDouble;
+                animdata[j + 1] = vm.readData.castDouble;
+                if(item == 3)
+                    animdata[j + 2] = vm.readData.castDouble;
+                j += item;
+            }
+            if(args.length > 3)
+                animdata[j] = args[3].castInteger;
+            else
+                animdata[j] = 1;//loop count
+        }
+        else
+        {
+            int i;
+            animdata = new double[args.length - 2];
+            foreach(a; args[2..$])
+            {
+                animdata[i++] = a.castDouble;
+            }
+        }
+        if(args[1].isString)
+            p.getBG(no).bganim(args[1].castDString, animdata);
+        if(args[1].isNumber)
+            p.getBG(no).bganim(cast(SpriteAnimTarget)(args[1].castInteger), animdata);
+    }
     static void SPDEF(PetitComputer p, int id, out int U, out int V)
     {
         if (!p.sprite.isValidDef(id))

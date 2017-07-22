@@ -160,6 +160,73 @@ struct SpriteAnimData
         }
         return i;
     }
+
+    import otya.smilebasic.bg;
+    int load(int i, BG bg, SpriteAnimTarget target, double[] data, SpriteAnimData* old, bool r)
+    {
+        relative = r;
+        this.frame = cast(int)data[i];
+        if(this.frame < 0)
+        {
+            this.frame = -this.frame;
+            interpolation = true;
+        }
+        if(this.frame == 0)
+        {
+            throw new IllegalFunctionCall("BGANIM");
+        }
+        i++;
+        switch(target)
+        {
+            case SpriteAnimTarget.XY:
+                this.data.x = cast(int)data[i++];
+                this.data.y = cast(int)data[i++];
+                if (relative)
+                {
+                    this.data.x += bg.offsetx;
+                    this.data.y += bg.offsety;
+                }
+                this.old.x = old ? old.data.x : bg.offsetx;
+                this.old.y = old ? old.data.y : bg.offsety;
+                break;
+            case SpriteAnimTarget.Z:
+                this.data.z = cast(int)data[i++];
+                if (relative)
+                {
+                    this.data.z += bg.offsetz;
+                }
+                this.old.z = old ? old.data.z : bg.offsetz;
+                break;
+            case SpriteAnimTarget.R:
+                this.data.r = data[i++];
+                if (relative)
+                {
+                    this.data.r += bg.r;
+                }
+                this.old.r = old ? old.data.r : bg.r;
+                break;
+            case SpriteAnimTarget.S:
+                this.data.scalex = data[i++];
+                this.data.scaley = data[i++];
+                if (relative)
+                {
+                    this.data.scalex += bg.scalex;
+                    this.data.scaley += bg.scaley;
+                }
+                this.old.scalex = old ? old.data.scalex : bg.scalex;
+                this.old.scaley = old ? old.data.scaley : bg.scaley;
+                break;
+            case SpriteAnimTarget.C:
+                this.data.c = cast(uint)data[i++];
+                break;
+            case SpriteAnimTarget.V:
+                this.data.var = data[i++];
+                break;
+            default:
+                throw new IllegalFunctionCall("BGANIM");
+        }
+        return i;
+    }
 }
 struct SpriteDef
 {

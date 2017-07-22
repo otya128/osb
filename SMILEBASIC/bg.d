@@ -1,6 +1,7 @@
 module otya.smilebasic.bg;
 import otya.smilebasic.petitcomputer;
 import otya.smilebasic.error;
+import otya.smilebasic.sprite;
 import derelict.sdl2.sdl;
 import derelict.opengl3.gl;
 
@@ -46,9 +47,11 @@ class BG
         r = 0;
         show = true;
         bgcolor = 0xffffffff;
+        initBGAnimationTable();
     }
     void render(int display, float disw, float dish)
     {
+        animation();
         if (!show)
             return;
         float aspect = disw / dish;
@@ -291,5 +294,208 @@ class BG
     public int color()
     {
         return this.bgcolor;
+    }
+    bool isAnim;
+    SpriteAnimData[][SpriteAnimTarget.V + 1] anim;
+    int[SpriteAnimTarget.V + 1] animindex;
+    int[SpriteAnimTarget.V + 1] animloop;
+    int[SpriteAnimTarget.V + 1] animloopcnt;
+    void setAnimation(SpriteAnimData[] anim, SpriteAnimTarget sat, int loop)
+    {
+        this.anim[sat] = null;
+        if(loop < 0)
+        {
+            throw new IllegalFunctionCall("BGANIM");
+        }
+        animloop[sat] = loop;
+        animloopcnt[sat] = 0;
+        animindex[sat] = 0;
+        this.anim[sat] = anim;
+        isAnim = true;
+    }
+
+
+
+    void bganim(wstring target, double[] data)
+    {
+        static import std.uni;
+        bool relative = false;
+        if(target[$ - 1..$] == "+")
+        {
+            target = target[0..$-1];
+            relative = true;
+        }
+        target = std.uni.toUpper(target);
+        if (!(target in bgAnimTarget))
+            throw new IllegalFunctionCall("BGANIM");
+        auto tgete = bgAnimTarget[target];
+        bganim(tgete | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0), data);
+
+    }
+    SpriteAnimTarget[wstring] bgAnimTarget;
+    void initBGAnimationTable()
+    {
+        bgAnimTarget = [
+            "XY": SpriteAnimTarget.XY,
+            "Z": SpriteAnimTarget.Z,
+            "R": SpriteAnimTarget.R,
+            "S": SpriteAnimTarget.S,
+            "C": SpriteAnimTarget.C,
+            "V": SpriteAnimTarget.V,
+        ];
+    }
+    SpriteAnimTarget getBGAnimTarget(wstring target)
+    {
+        bool relative = false;
+        if(target[$ - 1..$] == "+")
+        {
+            target = target[0..$-1];
+            relative = true;
+        }
+        return bgAnimTarget[target] | (relative ? SpriteAnimTarget.relative : cast(SpriteAnimTarget)0);
+    }
+    void animation(SpriteAnimData* data, SpriteAnimTarget target)
+    {
+        if (!animationEnabled)
+            return;
+        auto frame = data.elapse;
+        if(frame == 1)
+        {
+            if(!data.interpolation)
+            {
+                switch(target)
+                {
+                    case SpriteAnimTarget.XY:
+                        offsetx = cast(int)data.data.x;
+                        offsety = cast(int)data.data.y;
+                        break;
+                    case SpriteAnimTarget.Z:
+                        offsetz = cast(int)data.data.z;
+                        break;
+                    case SpriteAnimTarget.R:
+                        r = data.data.r;
+                        break;
+                    case SpriteAnimTarget.S:
+                        scalex = data.data.scalex;
+                        scaley = data.data.scaley;
+                        break;
+                    case SpriteAnimTarget.C:
+                        break;
+                    case SpriteAnimTarget.V:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        if(data.interpolation)
+        {
+            //線形補完する奴
+            switch(target)
+            {
+                case SpriteAnimTarget.XY:
+                    offsetx = cast(int)(data.old.x + ((data.data.x - data.old.x) / data.frame) * frame);
+                    offsety = cast(int)(data.old.y + ((data.data.y - data.old.y) / data.frame) * frame);
+                    break;
+                case SpriteAnimTarget.Z:
+                    offsetz = cast(int)(data.old.z + ((data.data.z - data.old.z) / data.frame) * frame);
+                    break;
+                case SpriteAnimTarget.R:
+                    r = data.old.r + ((data.data.r - data.old.r) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.S:
+                    scalex = data.old.scalex + ((data.data.scalex - data.old.scalex) / data.frame) * frame;
+                    scaley = data.old.scaley + ((data.data.scaley - data.old.scaley) / data.frame) * frame;
+                    break;
+                case SpriteAnimTarget.C:
+                    break;
+                case SpriteAnimTarget.V:
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    void animation()
+    {
+        if (!animationEnabled)
+            return;
+        foreach(i, ref d; anim)
+        {
+            if(!d) continue;//未定義
+            SpriteAnimTarget target = cast(SpriteAnimTarget)i;
+            int index = animindex[i];
+            SpriteAnimData* data = &d[index];
+            data.elapse = data.elapse + 1;
+            auto frame = data.elapse;
+            animation(data, target);
+            if(frame >= data.frame)
+            {
+                animindex[i] = (animindex[i] + 1) % cast(int)d.length;
+                data.elapse = 0;
+                if(animloop[i] == 0)
+                {
+                    continue;
+                }
+                if(!animindex[i])
+                {
+                    animloop[i]++;
+                    if(animloop[i] >= animloopcnt[i])
+                    {
+                        anim[i] = null;
+                        continue;
+                    }
+                }
+                continue;
+            }
+        }
+    }
+    bool animationEnabled = true;
+    void bganim(SpriteAnimTarget target, double[] data)
+    {
+        synchronized (this)
+        {
+            bool relative;
+            if(SpriteAnimTarget.relative & target)
+            {
+                relative = true;
+                target ^= SpriteAnimTarget.relative;
+            }
+            int animcount = cast(int)data.length / ((target == SpriteAnimTarget.XY || target == SpriteAnimTarget.UV) ? 3 : 2);
+            SpriteAnimData[] animdata = new SpriteAnimData[animcount];
+            int j;
+            int loop = 1;
+            SpriteAnimData* old;
+            for(int i = 0; i < data.length;)
+            {
+                i = animdata[j].load(i, this, target, data, old, relative);
+                old = &animdata[j++];
+                if(data.length - i == 1)
+                {
+                    //loop
+                    loop = cast(int)data[i];
+                    break;
+                }
+            }
+            setAnimation(animdata, target, loop);
+            if(animdata[0].frame == 1)
+            {
+                animindex[target]++;
+                animation(&animdata[0], target);
+                if(animcount == 1)
+                {
+                    if(loop > 1 || loop == 0)
+                    {
+                        animindex[target] = 0;
+                        animloopcnt[target]++;
+                    }
+                    else
+                    {
+                        anim[target] = null;
+                    }
+                }
+            }
+        }
     }
 }
