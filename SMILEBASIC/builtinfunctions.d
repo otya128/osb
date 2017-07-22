@@ -2608,13 +2608,40 @@ class BuiltinFunction
         }
         return p.getBG(layer).rot;
     }
-    static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, int screendata)
+    static void BGFILL(PetitComputer p, int layer, int x, int y, int x2, int y2, Value sd)
     {
         if (!p.isValidLayer(layer))
         {
             throw new OutOfRange("BGFILL", 1);
         }
-        p.getBG(layer).fill(x, y, x2, y2, screendata);
+        if (sd.type == ValueType.String)
+        {
+            wstring screendata = sd.castDString;
+            if (screendata.length % 4 != 0)
+            {
+                throw new IllegalFunctionCall("BGFILL", 6);
+            }
+            ushort[] screendatas = new ushort[screendata.length / 4];
+            for (int i = 0; i < screendata.length; i += 4)
+            {
+                ushort a;
+                auto b = screendata[i..i + 4];
+                if (!tryParse(b, 16, a))
+                {
+                    throw new IllegalFunctionCall("BGFILL", 6);
+                }
+                screendatas[i / 4] = a;
+            }
+            p.getBG(layer).fill(x, y, x2, y2, screendatas);
+        }
+        else if (sd.isNumber)
+        {
+            p.getBG(layer).fill(x, y, x2, y2, sd.castInteger);
+        }
+        else
+        {
+            throw new TypeMismatch("BGFILL", 6);
+        }
     }
     static void BGPAGE(PetitComputer p, int page)
     {

@@ -213,6 +213,24 @@ class BG
                 chip[i + y * width].i = id;
             }*/
     }
+    void fill(int x, int y, int x2, int y2, ushort[] screendata)
+    {
+        import std.algorithm;
+        if(x > x2) swap(x, x2);
+        if(y > y2) swap(y, y2);
+        int index = 0;
+        if (screendata.length == 0)
+        {
+            fill(x, y, x2, y2, 0);
+            return;
+        }
+        for(; y <= y2; y++)
+            for(int i = x; i <= x2; i++)
+            {
+                chip[i + y * width] = BGChip(screendata[index] & 4095);
+                index = (index + 1) % screendata.length;
+            }
+    }
     int get(int x, int y, int flag)
     {
         if (flag)
