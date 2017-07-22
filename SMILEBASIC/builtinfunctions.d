@@ -2782,6 +2782,22 @@ class BuiltinFunction
             throw new IllegalFunctionCall("BGUNC"/*, 2*/);
         p.getBG(layer).callback = callback;
     }
+    static void BGCOLOR(PetitComputer p, int layer, int color)
+    {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGFUNC", 1);
+        }
+        p.getBG(layer).color = color;
+    }
+    static int BGCOLOR(PetitComputer p, int layer)
+    {
+        if (!p.isValidLayer(layer))
+        {
+            throw new OutOfRange("BGFUNC", 1);
+        }
+        return p.getBG(layer).color;
+    }
     static void EFCON()
     {
     }

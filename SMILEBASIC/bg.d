@@ -34,6 +34,7 @@ class BG
     int chipWidth = 16;
     int chipHeight = 16;
     int display;
+    int bgcolor;
     this(PetitComputer pc)
     {
         chip[] = BGChip(0);
@@ -44,6 +45,7 @@ class BG
         scaley = 1;
         r = 0;
         show = true;
+        bgcolor = 0xffffffff;
     }
     void render(int display, float disw, float dish)
     {
@@ -53,7 +55,11 @@ class BG
         disw /= 2;
         dish /= 2;
         float z = offsetz;
-        glColor3f(1.0, 1.0, 1.0);
+        {
+            ubyte r, g, b, a;
+            petitcom.RGBRead(bgcolor, r, g, b, a);
+            glColor4ub(r, g, b, 255);
+        }
         petitcom.chRenderingDisplay(display, clipx, clipx, clipx2 - clipx + 1, clipy2 - clipy + 1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
@@ -278,4 +284,12 @@ class BG
         }
     import otya.smilebasic.vm;
     Callback callback;
+    public void color(int color)
+    {
+        this.bgcolor = color;
+    }
+    public int color()
+    {
+        return this.bgcolor;
+    }
 }
