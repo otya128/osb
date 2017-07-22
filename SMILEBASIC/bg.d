@@ -213,7 +213,7 @@ class BG
         if(x > x2) swap(x, x2);
         if(y > y2) swap(y, y2);
         for(; y <= y2; y++)
-            chip[x + y * width .. x2 + y * width] = BGChip(id);
+            chip[x + y * width .. x2 + y * width + 1] = BGChip(id);
             /*for(int i = x; i <= x2; i++)
             {
                 chip[i + y * width].i = id;
