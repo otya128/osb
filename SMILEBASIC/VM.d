@@ -744,6 +744,11 @@ class PopG : Code
             vm.currentSlot.global[var] = Value(cast(int)v.doubleValue);
             return;
         }
+        if (g.isNonStringArray && v.isNonStringArray)
+        {
+            vm.currentSlot.global[var] = v;
+            return;
+        }
         if(g.type == ValueType.Void)
         {
             vm.currentSlot.global[var] = v;
@@ -814,6 +819,11 @@ class PopL : Code
         if(g.type == ValueType.Integer && v.type == ValueType.Double)
         {
             vm.stack[vm.bp + var] = Value(cast(int)v.doubleValue);
+            return;
+        }
+        if (g.isNonStringArray && v.isNonStringArray)
+        {
+            vm.stack[vm.bp + var] = v;
             return;
         }
         if(g.type == ValueType.Void)

@@ -184,6 +184,11 @@ struct Value
         return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray ||
             this.type == ValueType.StringArray || this.type == ValueType.String;
     }
+    bool isNonStringArray()
+    {
+        return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray ||
+            this.type == ValueType.StringArray;
+    }
     bool isNumberArray()
     {
         return this.type == ValueType.IntegerArray || this.type == ValueType.DoubleArray;

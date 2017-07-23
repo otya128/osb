@@ -1330,7 +1330,8 @@ class PetitComputer
                         for(int i = 0; !quit && maincntRender == oldmaincnt && !waitFlag && running; i++)
                         {
                             version (traceVM)
-                                std.stdio.stderr.writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
+                                if (vm.pc < vm.currentSlot.code.length)
+                                    std.stdio.stderr.writefln("%04X:%s", vm.pc, vm.getCurrent.toString(vm));
                             version (dumpStackVM)
                                 vm.dumpStack();
                             auto b = vm.runStep();
