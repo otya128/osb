@@ -237,7 +237,7 @@ class BG
             for(int i = x; i <= x2; i++)
             {
                 chip[i + y * width] = BGChip(screendata[index] & 4095);
-                index = (index + 1) % screendata.length;
+                index = (index + 1) % cast(int)screendata.length;
             }
     }
     int get(int x, int y, int flag)

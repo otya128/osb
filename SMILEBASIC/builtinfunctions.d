@@ -3590,42 +3590,32 @@ class BuiltinFunction
     }
     static void RSORT(Value[] arg)
     {
+        SORT(arg);
+
         import std.range;
         int start, count;
         auto args = getSortArgument(arg, start, count);
+        import std.algorithm;
 
         int[] iarray;
         double[] darray;
         Array!wchar[] sarray;
-        if (args[0].type == ValueType.IntegerArray)
+        foreach (a; args)
         {
-            iarray = args[0].integerArray.array[start..start + count];
-        }
-        if (args[0].type == ValueType.DoubleArray)
-        {
-            darray = args[0].doubleArray.array[start..start + count];
-        }
-        if (args[0].type == ValueType.StringArray)
-        {
-            sarray = args[0].stringArray.array[start..start + count];
-        }
-        if (args.length > 1)
-        {
-            mixin(sortGenerator!(8, "\"a[0]>b[0]\""));
-        }
-        else
-        {
-            if (args[0].type == ValueType.IntegerArray)
+            if (a.type == ValueType.IntegerArray)
             {
-                sort!("a > b", SwapStrategy.stable)(iarray);
+                iarray = a.integerArray.array[start..start + count];
+                reverse(iarray);
             }
-            if (args[0].type == ValueType.DoubleArray)
+            if (a.type == ValueType.DoubleArray)
             {
-                sort!("a > b", SwapStrategy.stable)(darray);
+                darray = a.doubleArray.array[start..start + count];
+                reverse(darray);
             }
-            if (args[0].type == ValueType.StringArray)
+            if (a.type == ValueType.StringArray)
             {
-                sort!("a > b", SwapStrategy.stable)(sarray);
+                sarray = a.stringArray.array[start..start + count];
+                reverse(sarray);
             }
         }
     }
